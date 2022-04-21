@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>AuthSetting</class>
+ <widget class="QDialog" name="AuthSetting">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>515</width>
+    <height>380</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>必要参数设置</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">font-family:&quot;Microsoft Yahei&quot;;</string>
+  </property>
+  <widget class="QTabWidget" name="tabWidget">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>491</width>
+     <height>291</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background:#fff;</string>
+   </property>
+   <property name="currentIndex">
+    <number>0</number>
+   </property>
+   <widget class="QWidget" name="tab">
+    <attribute name="title">
+     <string>必要的参数设置</string>
+    </attribute>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>451</width>
+       <height>51</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>设备ID</string>
+     </property>
+     <widget class="QLabel" name="label_machineUniqueId">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>20</y>
+        <width>411</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Microsoft Yahei</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>ID</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>70</y>
+       <width>451</width>
+       <height>181</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>API地址</string>
+     </property>
+     <widget class="QLineEdit" name="edit_socket_port">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>110</y>
+        <width>310</width>
+        <height>23</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_3">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>110</y>
+        <width>92</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Socket端口：</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="edit_socket_server">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>72</y>
+        <width>310</width>
+        <height>23</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_2">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>72</y>
+        <width>92</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Socket地址：</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>31</y>
+        <width>79</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>API接口地址：</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="edit_api_url">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>31</y>
+        <width>310</width>
+        <height>23</height>
+       </rect>
+      </property>
+     </widget>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QPushButton" name="btn_submit">
+   <property name="geometry">
+    <rect>
+     <x>250</x>
+     <y>320</y>
+     <width>111</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="cursor">
+    <cursorShape>PointingHandCursor</cursorShape>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">#btn_submit{background-color:#7B93FF;color:#fff;border:0px;border-radius:10px;font-size:16px;font-family: &quot;Microsoft Yahei&quot;;text-align:center;}</string>
+   </property>
+   <property name="text">
+    <string>设置</string>
+   </property>
+   <property name="autoDefault">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btn_cancel">
+   <property name="geometry">
+    <rect>
+     <x>380</x>
+     <y>320</y>
+     <width>111</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="cursor">
+    <cursorShape>PointingHandCursor</cursorShape>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">#btn_cancel{background-color:#f1f2f3;color:#000;border:0px;border-radius:10px;font-size:16px;font-family: &quot;Microsoft Yahei&quot;;text-align:center;}
+</string>
+   </property>
+   <property name="text">
+    <string>取消</string>
+   </property>
+   <property name="autoDefault">
+    <bool>false</bool>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

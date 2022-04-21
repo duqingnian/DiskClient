@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>AuthSms</class>
+ <widget class="QDialog" name="AuthSms">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>345</width>
+    <height>320</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

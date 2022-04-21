@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Welcome</class>
+ <widget class="QDialog" name="Welcome">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1024</width>
+    <height>768</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>1024</width>
+    <height>768</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Mylike disk client Welcome</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">#Welcome{border-width: 16px;border-image: url(:/Resources/shadow_wnd_bg.png) 16 16 16 16;}</string>
+  </property>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

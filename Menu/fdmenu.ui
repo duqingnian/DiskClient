@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FdMenu</class>
+ <widget class="QDialog" name="FdMenu">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>170</width>
+    <height>251</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">#FdMenu{border-width: 8px;border-image: url(:/Resources/menu_shadow.png) 16 16 16 16;}</string>
+  </property>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

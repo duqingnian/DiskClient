@@ -43,6 +43,16 @@ public:
     bool is_cn(QChar);
 
     void box(QString);
+
+    QString GetStrByQJsonObject(QJsonObject);
+
+    ////////////////////////////////////
+    // 客户端发送消息到服务器
+    ////////////////////////////////////
+    bool send(QString,QString);
+    bool sendJsonObject(QString,QJsonObject);
+
+
 signals:
 
 };

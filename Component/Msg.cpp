@@ -4,9 +4,9 @@
 #include <QPainter>
 #include <QStyleOption>
 #include <QPainterPath>
-#include "ui_MessageBox.h"
+#include "ui_Msg.h"
 
-MSGBOX::MSGBOX(QWidget *parent) :BaseWindow(parent),ui(new Ui::MessageBox)
+MSGBOX::MSGBOX(QWidget *parent) :BaseWindow(parent),ui(new Ui::MSGBOX)
 {
     ui->setupUi(this);
     initWindow();

@@ -60,6 +60,7 @@ HEADERS += \
     Menu/fdmenu.h \
     Menu/filewelcomemenu.h \
     Menu/menufileexplorercanvas.h \
+    SocketData/PDU.h \
     Stack/File/fileexplorer.h \
     Stack/File/filewelcome.h \
     Stack/stackchat.h \

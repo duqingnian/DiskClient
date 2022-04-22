@@ -7,7 +7,7 @@
 #include "BaseWindow.h"
 
 namespace Ui {
-class MessageBox;
+class MSGBOX;
 }
 
 enum ChosseResult
@@ -52,7 +52,7 @@ public:
     int static error(QWidget* parent, const QString);
     void closeEvent(QCloseEvent *event);
 private:
-    Ui::MessageBox *ui;
+    Ui::MSGBOX *ui;
     QEventLoop* m_eventLoop;
     ChosseResult m_chooseResult;
 private slots:

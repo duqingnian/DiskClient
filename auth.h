@@ -62,6 +62,8 @@ private slots:
     void set_auth_type(QString);
     void open_setting_dialog();
     void welcome(QString);
+    //socket来新消息了
+    void new_message();
 
 signals:
     void login_success();

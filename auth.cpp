@@ -24,6 +24,7 @@ Auth::Auth(QWidget *parent) : BaseWindow(parent),ui(new Ui::Auth)
     init_register();
 
     connect(this->m_TitleBar->m_pButtonSetting,&QPushButton::clicked,this,[this]{open_setting_dialog();});
+    connect(socket,&QTcpSocket::readyRead,this,&Auth::new_message);
 }
 
 void Auth::init()
@@ -133,6 +134,7 @@ void Auth::init_register()
             {
                 qDebug() << "Connected to Server["+server_ip+"]["+server_port+"]";
                 connect_ok = true;
+
             }
             else{
                 box(QString("socket连接失败了!  %1.").arg(socket->errorString()));
@@ -240,7 +242,6 @@ void Auth::open_setting_dialog()
 
 void Auth::welcome(QString res)
 {
-    qDebug() << "res=" << res;
     QJsonParseError err_rpt;
     QJsonDocument  jsonDoc = QJsonDocument::fromJson(res.toLatin1(), &err_rpt);
     if(err_rpt.error == QJsonParseError::NoError)
@@ -265,22 +266,8 @@ void Auth::welcome(QString res)
 
                 if(socket->isOpen())
                 {
-                    //socket发送普通消息
-                    /*
-                    QString str = "登录成功|"+user->name+"|"+user->depname+"|"+user->job_number;
-
-                    QDataStream socketStream(socket);
-                    socketStream.setVersion(QDataStream::Qt_5_12);
-
-                    QByteArray header;
-                    header.prepend(QString("fileType:message,fileName:null,fileSize:%1;").arg(str.size()).toUtf8());
-                    header.resize(128);
-
-                    QByteArray byteArray = str.toUtf8();
-                    byteArray.prepend(header);
-
-                    socketStream << byteArray;
-                    */
+                    QString header = "MSGTYPE:LOGIN,FROM:"+user->job_number+",TO:SYS,DATE_TYPE:JSON;";
+                    sendJsonObject(header,userObj);
 
                     _register->setValue("uid",user->uid);
                     emit login_success();
@@ -300,6 +287,32 @@ void Auth::welcome(QString res)
     else{
         init_stack_widgets();
     }
+}
+
+void Auth::new_message()
+{
+    QByteArray buffer;
+
+    QDataStream socketStream(socket);
+    socketStream.setVersion(QDataStream::Qt_5_12);
+
+    socketStream.startTransaction();
+    socketStream >> buffer;
+
+    if(!socketStream.commitTransaction())
+    {
+        QString message = QString("%1 :: Waiting for more data to come..").arg(socket->socketDescriptor());
+        qDebug() << message;
+        return;
+    }
+
+    QString header = buffer.mid(0,128);
+    QString fileType = header.split(",")[0].split(":")[1];
+
+    buffer = buffer.mid(128);
+
+    QString message = QString("%1 :: %2").arg(socket->socketDescriptor()).arg(QString::fromStdString(buffer.toStdString()));
+    qDebug() << message;
 }
 
 

@@ -117,3 +117,73 @@ void BaseController::box(QString msg)
     msgBox.exec();
 }
 
+QString BaseController::GetStrByQJsonObject(QJsonObject jsonObj)
+{
+    //QString strFromObj = QJsonDocument(jsonObject).toJson(QJsonDocument::Compact).toStdString().c_str();
+    /*
+        QJsonDocument doc(jsonObj);
+        QByteArray docByteArray = doc.toJson(QJsonDocument::Compact);
+        Qstring strJson = QLatin1String(docByteArray);
+    */
+    QJsonDocument doc(jsonObj);
+    QString str(doc.toJson(QJsonDocument::Compact));
+    return str;
+}
+
+/*
+ * header协议
+ * 1.MSGTYPE:  协议类型
+ * 2.FROM      来自，用户的job_number
+ * 3.TO        发给谁，也是job_number
+ * 4.STRUCT    用哪个结构体，方便服务器解包
+ * 5.DATE_TYPE 数据类型，是json还是结构体，还是字符串
+ *
+ * data协议
+ * header中的struct字符串
+ */
+
+bool BaseController::send(QString _header, QString _data)
+{
+    if(socket->isOpen())
+    {
+        QDataStream socketStream(socket);
+        socketStream.setVersion(QDataStream::Qt_5_12);
+
+        QByteArray header;
+        header.prepend(_header.toUtf8());
+        header.resize(128);
+
+        QByteArray byteArray = _data.toUtf8();
+        byteArray.prepend(header);
+
+        socketStream << byteArray;
+
+        return true;
+    }
+    return false;
+}
+
+bool BaseController::sendJsonObject(QString header, QJsonObject obj)
+{
+    return send(header,GetStrByQJsonObject(obj));
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

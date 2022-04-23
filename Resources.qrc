@@ -1574,5 +1574,8 @@
         <file>Resources/Chat/Gdi/setting_0.png</file>
         <file>Resources/Chat/Gdi/setting_1.png</file>
         <file>Resources/Chat/Gdi/setting_2.png</file>
+        <file>Resources/User/noavatar_big.gif</file>
+        <file>Resources/User/noavatar_middle.gif</file>
+        <file>Resources/User/noavatar_small.gif</file>
     </qresource>
 </RCC>

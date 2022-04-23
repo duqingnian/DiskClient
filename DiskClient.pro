@@ -24,6 +24,7 @@ SOURCES += \
     Menu/fdmenu.cpp \
     Menu/filewelcomemenu.cpp \
     Menu/menufileexplorercanvas.cpp \
+    Stack/Chat/chat.cpp \
     Stack/File/fileexplorer.cpp \
     Stack/File/filewelcome.cpp \
     Stack/stackchat.cpp \
@@ -61,6 +62,7 @@ HEADERS += \
     Menu/filewelcomemenu.h \
     Menu/menufileexplorercanvas.h \
     SocketData/PDU.h \
+    Stack/Chat/chat.h \
     Stack/File/fileexplorer.h \
     Stack/File/filewelcome.h \
     Stack/stackchat.h \

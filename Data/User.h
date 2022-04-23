@@ -8,6 +8,7 @@ struct USER
 {
     QString uid;
     QString name;
+    QString avatar;
     QString depid;
     QString depname;
     QString groupid;

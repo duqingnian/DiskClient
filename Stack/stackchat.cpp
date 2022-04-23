@@ -1,10 +1,11 @@
 ﻿#pragma execution_character_set("utf-8")
 #include "stackchat.h"
-#include <Component/Label.h>
 
 StackChat::StackChat(QWidget *parent) : BaseController(parent)
 {
     initLayout();
+    initStackWidgets();
+    SelectedGdi("GDI_CHAT");
 }
 
 
@@ -21,6 +22,20 @@ void StackChat::initLayout()
     tab->move(0,side->height() - tab->height());
 
     initGDi();
+}
+
+void StackChat::initStackWidgets()
+{
+    StackSide = new QStackedWidget(side);
+    StackSide->setObjectName("StackSide");
+    StackSide->move(0,0);
+
+    chat = new Chat(side);
+    chat->setObjectName("StackChat");
+
+    StackSide->addWidget(chat);
+
+    StackSide->setCurrentWidget(chat);
 }
 
 //初始化tab
@@ -63,23 +78,24 @@ void StackChat::renderGdi()
     {
         it.next();
 
-        QWidget* tab_item = new QWidget(tab);
+        Label* tab_item = new Label(tab);
         tab_item->setObjectName(it.value()->key);
-        tab_item->setStyleSheet("#"+it.value()->key+"{background:#fff;}#"+it.value()->key+":hover{background:#f1f1f1;}");
+        tab_item->setStyleSheet("#"+it.value()->key+"{background:#fff;}");
         tab_item->resize(72,51);
         tab_item->move(i*72,1);
         tab_item->setCursor(Qt::PointingHandCursor);
-        tab_item->setMouseTracking(true);
+        tab_item->setAttribute(Qt::WA_Hover,true);
+        tab_item->installEventFilter(this);
+        connect(tab_item,&Label::clicked,this,[=](){SelectedGdi(it.value()->key);});
 
         Label* ico = new Label(tab_item);
         ico->setObjectName(it.value()->key+"_ico");
         ico->setStyleSheet("background:transparent;");
-        QImage img(":/Resources/Chat/Gdi/"+it.value()->ico+"_0.png");
-        ico->setPixmap(QPixmap::fromImage(img));
+        ico->setPixmap(QPixmap::fromImage(QImage(":/Resources/Chat/Gdi/"+it.value()->ico+"_0.png")));
         ico->setScaledContents(true);
         ico->resize(24,24);
         ico->move(24,4);
-        ico->show();
+        connect(ico,&Label::clicked,this,[=](){SelectedGdi(it.value()->key);});
 
         Label* name = new Label(tab_item);
         name->setObjectName(it.value()->key+"_name");
@@ -88,14 +104,91 @@ void StackChat::renderGdi()
         name->move(0,32);
         name->setAlignment(Qt::AlignCenter);
         name->setStyleSheet("#"+it.value()->key+"_name{color:#8E94A2;font-size:12px;font-weight:400;margin-left:0px;font-family:Microsoft YaHei;}");
+        connect(name,&Label::clicked,this,[=](){SelectedGdi(it.value()->key);});
 
         i++;
     }
 }
 
-
 void StackChat::resizeEvent(QResizeEvent *)
 {
     side->resize(289,this->height());
     tab->move(0,side->height() - tab->height());
+
+    StackSide->resize(288,this->height() - 52);
 }
+
+bool StackChat::eventFilter(QObject *obj, QEvent *event)
+{
+    if (event->type() == QEvent::HoverEnter)
+    {
+        HoverEnter(obj);
+        return true;
+    }
+    else if (event->type() == QEvent::HoverLeave)
+    {
+        HoverLeave(obj);
+        return true;
+    }
+
+    return QWidget::eventFilter(obj, event);
+}
+
+void StackChat::HoverEnter(QObject* obj)
+{
+    //边栏tab
+    if("GDI_" == obj->objectName().mid(0,4))
+    {
+        if(selected_tab != obj->objectName())
+        {
+            Label* thumb = findChild<Label*>(obj->objectName()+"_ico");
+            thumb->setPixmap(QPixmap::fromImage(QImage(":/Resources/Chat/Gdi/"+obj->objectName().mid(4).toLower()+"_1.png")));
+        }
+    }
+}
+
+
+void StackChat::HoverLeave(QObject* obj)
+{
+    //边栏tab
+    if("GDI_" == obj->objectName().mid(0,4))
+    {
+        if(selected_tab != obj->objectName())
+        {
+            Label* thumb = findChild<Label*>(obj->objectName()+"_ico");
+            thumb->setPixmap(QPixmap::fromImage(QImage(":/Resources/Chat/Gdi/"+obj->objectName().mid(4).toLower()+"_0.png")));
+        }
+    }
+}
+
+void StackChat::SelectedGdi(QString key)
+{
+    selected_tab = key;
+
+    QMapIterator<int,Gdi*> it(Gdis);
+    while(it.hasNext())
+    {
+        it.next();
+        QString objname = it.value()->key;
+
+        Label* ico = findChild<Label*>(objname+"_ico");
+        Label* name = findChild<Label*>(objname+"_name");
+        if(selected_tab == objname)
+        {
+            ico->setPixmap(QPixmap::fromImage(QImage(":/Resources/Chat/Gdi/"+objname.mid(4).toLower()+"_2.png")));
+            name->setStyleSheet("#"+it.value()->key+"_name{color:#21D86A;font-size:12px;font-weight:400;margin-left:0px;font-family:Microsoft YaHei;}");
+        }
+        else
+        {
+            ico->setPixmap(QPixmap::fromImage(QImage(":/Resources/Chat/Gdi/"+objname.mid(4).toLower()+"_0.png")));
+            name->setStyleSheet("#"+it.value()->key+"_name{color:#8E94A2;font-size:12px;font-weight:400;margin-left:0px;font-family:Microsoft YaHei;}");
+        }
+    }
+}
+
+
+
+
+
+
+

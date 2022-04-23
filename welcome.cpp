@@ -12,6 +12,8 @@ Welcome::Welcome(QWidget *parent) : BaseWindow(parent) , ui(new Ui::Welcome)
 
     //uid= "ADOSTR445beeL4aAU5oWzIinw6S9SWp8RidNy7eJNb7HSpgkbApGwoAyYSRwZYCHeP=E=" ,  "杜庆年" , "营销中心" , "技术支持" , "程序员" , "CZML669"
     //qDebug() << "uid=" << user->uid << ", " <<user->name << "," << user->depname << "," << user->groupname<< "," << user->title << "," << user->job_number;
+
+    //初始化Sqlite数据库
 }
 
 void Welcome::set_auth(Auth* _auth)

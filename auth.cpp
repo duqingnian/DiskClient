@@ -257,6 +257,7 @@ void Auth::welcome(QString res)
 
                 user->uid = userObj.value("uid").toString();
                 user->name = userObj.value("name").toString();
+                user->avatar = userObj.value("avatar").toString();
                 user->depid = userObj.value("depid").toString();
                 user->depname = userObj.value("depname").toString();
                 user->groupid = userObj.value("groupid").toString();

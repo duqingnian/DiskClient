@@ -2,6 +2,7 @@
 #define WELCOME_H
 
 #include <QDialog>
+#include <QMap>
 #include "auth.h"
 #include <QVector>
 #include <QStackedWidget>
@@ -23,8 +24,10 @@ public:
     QScreen *screen;
     int _width = 1024;
     int _height = 768;
-    QVector<TABMETA*> left_tab_metas;
-    QVector<TABMETA*> right_tab_metas;
+
+    QMap<QString,TABMETA*> left_tab_metas;
+    QMap<QString,TABMETA*> right_tab_metas;
+
     QWidget* TAB;
     QWidget* TAB_ATTR;
     QString ActiveTAB=""; //当前选中的TAB

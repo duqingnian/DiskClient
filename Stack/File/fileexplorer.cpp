@@ -472,8 +472,6 @@ void FileExplorer::fd_menu_clicked(QString key)
 
 }
 
-
-
 //显示上传面板
 void FileExplorer::show_upload_pannel()
 {

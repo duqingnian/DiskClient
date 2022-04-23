@@ -73,25 +73,30 @@ void Welcome::render_tab()
     TABMETA* tab_chat = new TABMETA();
     tab_chat->objname = "tab_chat";
     tab_chat->txt = "云信";
-    left_tab_metas.append(tab_chat);
+    tab_chat->bgcolor = "#ffffff";
+    left_tab_metas[tab_chat->objname] = tab_chat;
 
 
     TABMETA* tab_disk = new TABMETA();
     tab_disk->objname = "tab_disk";
     tab_disk->txt = "云盘";
-    left_tab_metas.append(tab_disk);
+    tab_disk->bgcolor = "#F3F3F3";
+    left_tab_metas[tab_disk->objname] = tab_disk;
 
     TABMETA* tab_help = new TABMETA();
     tab_help->objname = "tab_help";
     tab_help->txt = "帮助信息";
-    right_tab_metas.append(tab_help);
+    tab_help->bgcolor = "#ffff00";
+    right_tab_metas[tab_help->objname] = tab_help;
 
     int x = 0;
-    for (int i=0;i<left_tab_metas.length(); i++) {
+    QMapIterator<QString,TABMETA*> it(left_tab_metas);
+    while(it.hasNext()){
+        it.next();
         Label* tab_item = new Label(TAB);
-        tab_item->setObjectName(left_tab_metas[i]->objname);
-        tab_item->resize(left_tab_metas[i]->width,32);
-        tab_item->setText(left_tab_metas[i]->txt);
+        tab_item->setObjectName(it.value()->objname);
+        tab_item->resize(it.value()->width,32);
+        tab_item->setText(it.value()->txt);
         tab_item->setAlignment(Qt::AlignCenter);
         tab_item->move(x,0);
         x += tab_item->width();
@@ -109,12 +114,13 @@ void Welcome::render_tab()
 void Welcome::render_tab_attr()
 {
     int x = 0;
-    //TabItems.clear();
-    for (int i=0;i<right_tab_metas.length(); i++) {
-        int width = right_tab_metas[i]->txt.length() * 15 + 35;
+    QMapIterator<QString,TABMETA*> it(right_tab_metas);
+    while(it.hasNext()) {
+        it.next();
+        int width = it.value()->txt.length() * 15 + 35;
         Label* tab_item = new Label(TAB_ATTR);
-        tab_item->setObjectName(right_tab_metas[i]->objname);
-        tab_item->setText(right_tab_metas[i]->txt);
+        tab_item->setObjectName(it.value()->objname);
+        tab_item->setText(it.value()->txt);
         tab_item->setAlignment(Qt::AlignCenter);
         tab_item->resize(width,32);
         tab_item->move(x,0);
@@ -134,7 +140,16 @@ void Welcome::SelectTab(QString tab_key)
         if(TabItems[i]->objectName() == tab_key)
         {
             ActiveTAB = tab_key;
-            TabItems[i]->setStyleSheet("#"+TabItems[i]->objectName()+"{font-size:12px;font-weight:bold;font-family: \"Microsoft Yahei\";color:#2B579A;background:#F3F3F3;}");
+            QString bgcolor = "#FFF";
+            if(left_tab_metas.contains(tab_key))
+            {
+                bgcolor = left_tab_metas[tab_key]->bgcolor;
+            }
+            else if(right_tab_metas.contains(tab_key))
+            {
+                bgcolor = right_tab_metas[tab_key]->bgcolor;
+            }
+            TabItems[i]->setStyleSheet("#"+TabItems[i]->objectName()+"{font-size:12px;font-weight:bold;font-family: \"Microsoft Yahei\";color:#2B579A;background:"+bgcolor+";}");
         }
         else
         {

@@ -1562,5 +1562,17 @@
         <file>Resources/fd/zip.png</file>
         <file>Resources/Common/upload.png</file>
         <file>Resources/empty_folder.png</file>
+        <file>Resources/Chat/Gdi/chat_0.png</file>
+        <file>Resources/Chat/Gdi/chat_1.png</file>
+        <file>Resources/Chat/Gdi/chat_2.png</file>
+        <file>Resources/Chat/Gdi/dep_0.png</file>
+        <file>Resources/Chat/Gdi/dep_1.png</file>
+        <file>Resources/Chat/Gdi/dep_2.png</file>
+        <file>Resources/Chat/Gdi/group_0.png</file>
+        <file>Resources/Chat/Gdi/group_1.png</file>
+        <file>Resources/Chat/Gdi/group_2.png</file>
+        <file>Resources/Chat/Gdi/setting_0.png</file>
+        <file>Resources/Chat/Gdi/setting_1.png</file>
+        <file>Resources/Chat/Gdi/setting_2.png</file>
     </qresource>
 </RCC>

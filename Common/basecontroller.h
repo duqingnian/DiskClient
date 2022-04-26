@@ -15,6 +15,12 @@ extern TABMETA  *tab_meta;
 extern SIMPLE   *simple;
 extern FD       *fd;
 
+struct SELECT_UNIT{
+    int index = 0;
+    QString job_number = "";
+    USER* unit;
+};
+
 class BaseController : public QDialog
 {
     Q_OBJECT

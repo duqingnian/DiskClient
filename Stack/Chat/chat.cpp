@@ -11,10 +11,16 @@ Chat::Chat(QWidget *parent) : BaseController(parent)
     initFriendList();
 
     for (int i=0; i<45; i++) {
-        FRIEND_UNIT* AI = new FRIEND_UNIT();
-        AI->name = "AI机器人-"+QString::number(i);
+        USER* AI = new USER();
+        AI->name = "文件小助手-"+QString::number(i);
         AI->job_number = "SYS"+QString::number(i);
         AI->avatar = "";
+        AI->depid = "0";
+        AI->depname = "技术部"+QString::number(i);
+        AI->groupid = "0";
+        AI->groupname = "软件研发组"+QString::number(i);
+        AI->title = "文件小助手";
+        AI->uid = "0";
 
         friends.insert("SYS"+QString::number(i),AI);
         ref.insert(i,"SYS"+QString::number(i));
@@ -25,11 +31,6 @@ Chat::Chat(QWidget *parent) : BaseController(parent)
     selected_unit->job_number = "";
 
     render_friends();
-}
-
-void Chat::resizeEvent(QResizeEvent *)
-{
-    scrollArea->resize(WIDTH,this->height() - (top->height() + search->height()));
 }
 
 void Chat::initTop()
@@ -80,9 +81,18 @@ void Chat::initTop()
 
 void Chat::initFriendList()
 {
+    QLabel* FriendListTip = new QLabel(this);
+    FriendListTip->setObjectName("FriendListTip");
+    FriendListTip->setText("好友列表");
+    FriendListTip->move(10,top->height() + search->height() + 8);
+    FriendListTip->setStyleSheet("#FriendListTip{font-size:14px;color:#838690;}");
+
     scrollArea = new QScrollArea(this);
-    scrollArea->move(0,top->height() + search->height());
+    scrollArea->setObjectName("scrollAreaChatList");
+    scrollArea->move(0,117);
     scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scrollArea->setStyleSheet("#scrollAreaChatList{border:0px;}");
 
     friend_list = new QWidget(scrollArea);
     friend_list->setObjectName("friend_list");
@@ -103,12 +113,12 @@ void Chat::render_friends()
     {
         it.next();
         QString job_number = it.value();
-        FRIEND_UNIT* funit = friends[job_number];
+        USER* funit = friends[job_number];
 
         Label* _friend = new Label(friend_list);
         _friend->setObjectName("funit_"+funit->job_number);
         _friend->resize(WIDTH,65);
-        _friend->setStyleSheet("#funit_"+funit->job_number+"{background:#fff;border-bottom:1px solid #F3F5F8;}#funit_"+funit->job_number+":hover{background:#F3F5F8;}");
+        _friend->setStyleSheet("#funit_"+funit->job_number+"{background:#fff;}#funit_"+funit->job_number+":hover{background:#F3F5F8;}");
         _friend->move(0,i*65);
         _friend->setCursor(Qt::PointingHandCursor);
 
@@ -117,9 +127,9 @@ void Chat::render_friends()
         avatar->resize(40,40);
         avatar->setScaledContents(true);
         avatar->move(12,(_friend->height() - avatar->height())/2);
-        QPixmap map = QPixmap::fromImage(QImage(":/Resources/User/noavatar_middle.gif"));
+        QPixmap map = QPixmap::fromImage(QImage(":/Resources/ico.ico"));
         avatar->setPixmap(map);
-        avatar->setStyleSheet("#funit_avatar_"+funit->job_number+"{border-radius: 18px;background:red;}");
+        avatar->setStyleSheet("#funit_avatar_"+funit->job_number+"{border-radius: 18px;}");
 
         Label* name = new Label(_friend);
         name->setObjectName("funit_name_"+funit->job_number);\
@@ -127,7 +137,69 @@ void Chat::render_friends()
         name->setText(funit->name);
         name->move(62,avatar->y());
 
+        //时间
+        Label* last_time = new Label(_friend);
+        last_time->setObjectName("last_time_"+funit->job_number);
+        last_time->setStyleSheet("#last_time_"+funit->job_number+"{color:#B9B9B9;font-size:12px;}");
+        last_time->setMinimumWidth(68);
+        last_time->move(WIDTH - 80, name->y());
+        last_time->setText("22/04/20");
+        last_time->setAlignment(Qt::AlignRight);
+
+        //消息
+        QString msg = "我是消息，我是测试消息，测试消息长度最长可以到多少";
+        if(msg.length() > 14)
+        {
+            msg = msg.mid(0,14)+"...";
+        }
+        Label* last_msg = new Label(_friend);
+        last_msg->setObjectName("last_msg_"+funit->job_number);
+        last_msg->setMaximumWidth(210);
+        last_msg->setStyleSheet("#last_msg_"+funit->job_number+"{color:#999999;font-size:13px;}");
+        last_msg->move(name->x(),35 );
+        last_msg->setText(msg);
+
+        connect(avatar,&Label::clicked,this,[=](){
+
+            prev_jobnumber = selected_unit->job_number;
+
+            selected_unit->index = it.key();
+            selected_unit->job_number = funit->job_number;
+            selected_unit->unit = funit;
+
+            touch_friend();
+        });
         connect(_friend,&Label::clicked,this,[=](){
+
+            prev_jobnumber = selected_unit->job_number;
+
+            selected_unit->index = it.key();
+            selected_unit->job_number = funit->job_number;
+            selected_unit->unit = funit;
+
+            touch_friend();
+        });
+        connect(name,&Label::clicked,this,[=](){
+
+            prev_jobnumber = selected_unit->job_number;
+
+            selected_unit->index = it.key();
+            selected_unit->job_number = funit->job_number;
+            selected_unit->unit = funit;
+
+            touch_friend();
+        });
+        connect(last_msg,&Label::clicked,this,[=](){
+
+            prev_jobnumber = selected_unit->job_number;
+
+            selected_unit->index = it.key();
+            selected_unit->job_number = funit->job_number;
+            selected_unit->unit = funit;
+
+            touch_friend();
+        });
+        connect(last_time,&Label::clicked,this,[=](){
 
             prev_jobnumber = selected_unit->job_number;
 
@@ -147,45 +219,40 @@ void Chat::touch_friend()
     //解除已经选中的
     if("" != prev_jobnumber)
     {
-        Label* _prev_selected = findChild<Label*>("funit_"+prev_jobnumber);
-        Label* _prev_selected_name = findChild<Label*>("funit_name_"+prev_jobnumber);
+        Label* _prev_selected           = findChild<Label*>("funit_"+prev_jobnumber);
+        Label* _prev_selected_name      = findChild<Label*>("funit_name_"+prev_jobnumber);
+        Label* _prev_selected_last_time = findChild<Label*>("last_time_"+prev_jobnumber);
+        Label* _prev_selected_last_msg  = findChild<Label*>("last_msg_"+prev_jobnumber);
+
         _prev_selected->setStyleSheet("#funit_"+prev_jobnumber+"{background:#fff;border-bottom:1px solid #F3F5F8;}#funit_"+prev_jobnumber+":hover{background:#F3F5F8;}");
         _prev_selected_name->setStyleSheet("#funit_name_"+prev_jobnumber+"{color:#000;font-size:14px;}");
+        _prev_selected_last_time->setStyleSheet("#last_time_"+prev_jobnumber+"{color:#B9B9B9;font-size:12px;}");
+        _prev_selected_last_msg->setStyleSheet("#last_msg_"+prev_jobnumber+"{color:#999999;font-size:14px;}");
     }
 
     //设置新的选中的
     if("" != selected_unit->job_number)
     {
-        Label* _prev_selected = findChild<Label*>("funit_"+selected_unit->job_number);
-        Label* _prev_selected_name = findChild<Label*>("funit_name_"+selected_unit->job_number);
-        _prev_selected->setStyleSheet("#funit_"+selected_unit->job_number+"{background:#1DCF67;color:#fff;border-bottom:1px solid #F3F5F8;}#funit_"+selected_unit->job_number+":hover{background:#1DCF67;}");
-        _prev_selected_name->setStyleSheet("#funit_name_"+selected_unit->job_number+"{color:#fff;font-size:14px;}");
+        Label* _curr_selected      = findChild<Label*>("funit_"+selected_unit->job_number);
+        Label* _curr_selected_name = findChild<Label*>("funit_name_"+selected_unit->job_number);
+        Label* _curr_last_time     = findChild<Label*>("last_time_"+selected_unit->job_number);
+        Label* _curr_last_msg      = findChild<Label*>("last_msg_"+selected_unit->job_number);
+
+        _curr_selected->setStyleSheet("#funit_"+selected_unit->job_number+"{background:#1DCF67;color:#fff;border-bottom:1px solid #F3F5F8;}#funit_"+selected_unit->job_number+":hover{background:#1DCF67;}");
+        _curr_selected_name->setStyleSheet("#funit_name_"+selected_unit->job_number+"{color:#fff;font-size:14px;}");
+        _curr_last_time->setStyleSheet("#last_time_"+selected_unit->job_number+"{color:#fff;font-size:12px;}");
+        _curr_last_msg->setStyleSheet("#last_msg_"+selected_unit->job_number+"{color:#fff;font-size:13px;}");
+
+        //改变主界面
+        emit friend_touched(selected_unit);
     }
 
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+void Chat::resizeEvent(QResizeEvent *)
+{
+    scrollArea->resize(WIDTH,this->height() - (top->height() + search->height() + 27));
+}
 
 
 

@@ -6,8 +6,10 @@
 #include <Component/Label.h>
 #include <QStackedWidget>
 #include <Stack/Chat/chat.h>
+#include <Stack/Chat/stackempty.h>
+#include <Stack/Chat/stackpannel.h>
 
-struct Gdi{
+struct SIDE_TAB{
     QString key = "";
     QString txt = "";
     QString ico = "";
@@ -18,31 +20,50 @@ class StackChat : public BaseController
     Q_OBJECT
 public:
     explicit StackChat(QWidget *parent = nullptr);
+
+    //全局方法
     void resizeEvent(QResizeEvent *) override;
     bool eventFilter(QObject*,QEvent*) override;
 
-    void initLayout(); //初始化布局
-    void initStackWidgets();
-    void initGDi(); //初始化全局TAB
-    void renderGdi();
-    void SelectedGdi(QString);
+    //侧边栏方法
+    void initSide();
+    void renderSide();
+    void SelectedTab(QString);
 
     void HoverEnter(QObject*);
     void HoverLeave(QObject*);
 
+    //内容区域
+    void initMain();
+    void renderMain();
+
 private:
-    QWidget* side; //侧边栏
+    //侧边栏
+    QWidget* side;
     QStackedWidget* StackSide;
-    QWidget* main; //主面板
-    QStackedWidget* StackMain;
-    QLabel* start_tip;
 
-    //StackWidgets
-    Chat* chat;   //聊天主窗体
-
+    //TAB
     QWidget* tab;
-    QMap<int,Gdi*>Gdis;
+    QMap<int,SIDE_TAB*>side_tabs;
     QString selected_tab = "";
+
+    //侧边栏Stacks
+    Chat* chat;
+
+    //主面板
+    QWidget* main;
+    QStackedWidget* StackMain;
+
+    //主面板Stacks
+    StackEmpty*  stack_empty;
+    StackPannel* stack_chat_pannel;
+
+    //当前选中的好友
+    SELECT_UNIT* selected_unit;
+
+    void friend_targeted(SELECT_UNIT*);
+private slots:
+
 
 };
 

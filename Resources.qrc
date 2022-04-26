@@ -1580,5 +1580,6 @@
         <file>Resources/Chat/add.png</file>
         <file>Resources/Chat/more.png</file>
         <file>Resources/Chat/magnifier.png</file>
+        <file>Resources/Chat/info.png</file>
     </qresource>
 </RCC>

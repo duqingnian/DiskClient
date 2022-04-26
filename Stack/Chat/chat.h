@@ -4,15 +4,8 @@
 #include <QWidget>
 #include <Common/basecontroller.h>
 #include <QLabel>
-#include <SocketData/FriendUnit.h>
 #include <QResizeEvent>
 #include <QScrollArea>
-
-struct SELECT_UNIT{
-    int index = 0;
-    QString job_number = "";
-    FRIEND_UNIT* unit;
-};
 
 class Chat : public BaseController
 {
@@ -29,13 +22,13 @@ public:
     //点击选择了好友
     void touch_friend();
 signals:
-
+    void friend_touched(SELECT_UNIT*);
 private:
     SELECT_UNIT* selected_unit;
     QString prev_jobnumber = "";
 
     QMap<int,QString> ref;
-    QMap<QString, FRIEND_UNIT*> friends;
+    QMap<QString, USER*> friends;
 
     QWidget* top;
     QWidget* friend_list;

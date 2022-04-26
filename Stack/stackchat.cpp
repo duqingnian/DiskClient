@@ -1,13 +1,14 @@
 ﻿#pragma execution_character_set("utf-8")
 #include "stackchat.h"
 
+#define WIDTH 289
+
 StackChat::StackChat(QWidget *parent) : BaseController(parent)
 {
     initLayout();
     initStackWidgets();
     SelectedGdi("GDI_CHAT");
 }
-
 
 void StackChat::initLayout()
 {
@@ -17,11 +18,21 @@ void StackChat::initLayout()
 
     tab = new QWidget(side);
     tab->setObjectName("GLOBAL_TAB");
-    tab->resize(288,52);
+    tab->resize(WIDTH - 1,52);
     tab->setStyleSheet("#GLOBAL_TAB{border-top:1px solid #ECEEF3;}");
     tab->move(0,side->height() - tab->height());
 
     initGDi();
+
+    main = new QWidget(this);
+    main->setObjectName("GLOBAL_MAIN");
+
+    start_tip = new QLabel(main);
+    start_tip->setText("请选择一个聊天，开始发送信息");
+    start_tip->setObjectName("start_tip");
+    start_tip->resize(258,38);
+    start_tip->setStyleSheet("#start_tip{background:#fff;border-radius: 15px;font-size:16px;border: 1px solid #DBDEE0;}");
+    start_tip->setAlignment(Qt::AlignCenter);
 }
 
 void StackChat::initStackWidgets()
@@ -110,14 +121,6 @@ void StackChat::renderGdi()
     }
 }
 
-void StackChat::resizeEvent(QResizeEvent *)
-{
-    side->resize(289,this->height());
-    tab->move(0,side->height() - tab->height());
-
-    StackSide->resize(288,this->height() - 52);
-}
-
 bool StackChat::eventFilter(QObject *obj, QEvent *event)
 {
     if (event->type() == QEvent::HoverEnter)
@@ -186,8 +189,18 @@ void StackChat::SelectedGdi(QString key)
     }
 }
 
+void StackChat::resizeEvent(QResizeEvent *)
+{
+    side->resize(WIDTH,this->height());
+    tab->move(0,side->height() - tab->height());
 
+    StackSide->resize(WIDTH - 1,this->height() - 52);
 
+    main->resize(this->width() - WIDTH,this->height());
+    main->move(WIDTH,0);
+
+    start_tip->move((main->width() - start_tip->width())/2,(main->height() - start_tip->height())/2);
+}
 
 
 

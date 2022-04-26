@@ -1577,5 +1577,8 @@
         <file>Resources/User/noavatar_big.gif</file>
         <file>Resources/User/noavatar_middle.gif</file>
         <file>Resources/User/noavatar_small.gif</file>
+        <file>Resources/Chat/add.png</file>
+        <file>Resources/Chat/more.png</file>
+        <file>Resources/Chat/magnifier.png</file>
     </qresource>
 </RCC>

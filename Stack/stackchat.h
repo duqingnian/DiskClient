@@ -35,6 +35,7 @@ private:
     QStackedWidget* StackSide;
     QWidget* main; //主面板
     QStackedWidget* StackMain;
+    QLabel* start_tip;
 
     //StackWidgets
     Chat* chat;   //聊天主窗体

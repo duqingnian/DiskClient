@@ -9,8 +9,10 @@
 #include <QSysInfo>
 #include <QJsonParseError>
 #include <QJsonObject>
+#include <QTimer>
 #include <Lib/HttpClient.h>
 #include <Component/Msg.h>
+#include <Windows.h>
 
 Auth::Auth(QWidget *parent) : BaseWindow(parent),ui(new Ui::Auth)
 {
@@ -265,10 +267,14 @@ void Auth::welcome(QString res)
                 user->title = userObj.value("title").toString();
                 user->job_number = userObj.value("job_number").toString();
 
-                if(socket->isOpen())
+                if(socket && socket->isOpen())
                 {
                     QString header = "MSGTYPE:LOGIN,FROM:"+user->job_number+",TO:SYS,DATE_TYPE:JSON;";
-                    sendJsonObject(header,userObj);
+                    //sendJsonObject(header,userObj);
+
+                    send( "MSGTYPE:MSG1,FROM:"+user->job_number+",TO:SYS;","A1");
+                    send( "MSGTYPE:MSG2,FROM:"+user->job_number+",TO:SYS;","B2");
+                    send( "MSGTYPE:MSG3,FROM:"+user->job_number+",TO:SYS;","C3");
 
                     _register->setValue("uid",user->uid);
                     emit login_success();
@@ -276,7 +282,7 @@ void Auth::welcome(QString res)
                 }
                 else
                 {
-                    box("无法连接到socket服务器！");
+                    box("Invalidate socket or cann't connect to socket server.");
                 }
             }
             else

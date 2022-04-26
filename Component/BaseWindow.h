@@ -6,7 +6,6 @@
 #include <Common/basecontroller.h>
 #include "TitleBar.h"
 #include <QSettings>
-#include "SocketData/PDU.h"
 
 class BaseWindow : public BaseController
 {

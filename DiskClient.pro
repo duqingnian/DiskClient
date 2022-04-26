@@ -61,7 +61,7 @@ HEADERS += \
     Menu/fdmenu.h \
     Menu/filewelcomemenu.h \
     Menu/menufileexplorercanvas.h \
-    SocketData/PDU.h \
+    SocketData/FriendUnit.h \
     Stack/Chat/chat.h \
     Stack/File/fileexplorer.h \
     Stack/File/filewelcome.h \

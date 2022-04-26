@@ -25,6 +25,8 @@ BaseController::~BaseController()
     if(socket->isOpen())
     {
         socket->close();
+        socket->deleteLater();
+        socket = nullptr;
     }
 }
 
@@ -157,8 +159,13 @@ bool BaseController::send(QString _header, QString _data)
         byteArray.prepend(header);
 
         socketStream << byteArray;
+        byteArray.clear();
 
         return true;
+    }
+    else
+    {
+        qDebug() << "socket is closed!";
     }
     return false;
 }

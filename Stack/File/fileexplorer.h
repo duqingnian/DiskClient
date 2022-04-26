@@ -7,6 +7,7 @@
 #include <QWidget>
 #include <QPoint>
 #include <QScrollArea>
+#include <QNetworkReply>
 #include "Data/UrlMeta.h"
 #include "DropDown/dropdowncreate.h"
 #include "Dialog/dialogcreate.h"
@@ -14,6 +15,7 @@
 #include <DropDown/dropdownupload.h>
 #include <Menu/fdmenu.h>
 #include <Menu/menufileexplorercanvas.h>
+#include <QNetworkAccessManager>
 
 class FileExplorer : public BaseController
 {
@@ -85,15 +87,24 @@ public:
 
     //没有任何文件的提示
     QLabel* EmptyTip;
-private:
+
+    QNetworkAccessManager* AccessManage;
+    QNetworkReply *reply;
+
     UrlMeta* meta;
     QPoint pos;
+    QFile *handle;
 
 public slots:
     void OpenCreateDropDown();  //打开创建下拉
     void OpenUploadDropDown();  //打开上传下拉
     void menu_clicked(QString);
     void fd_menu_clicked(QString);
+
+    //上传文件
+    void replyFinished(QNetworkReply*);
+    void loadError(QNetworkReply::NetworkError);
+    void loadProgress(qint64 ,qint64);
 signals:
     void append_urlbar(FD*);
 

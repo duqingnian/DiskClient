@@ -12,6 +12,9 @@
 
 FileExplorer::FileExplorer(QWidget *parent) : BaseController(parent)
 {
+    AccessManage = new QNetworkAccessManager(this);
+    connect(AccessManage,SIGNAL(finished(QNetworkReply*)),this,SLOT(replyFinished(QNetworkReply*)));
+
     canvas = new QWidget(this);
     canvas->setObjectName("canvas");
     canvas->setStyleSheet("#canvas{background:#ffffff;}");
@@ -405,6 +408,12 @@ void FileExplorer::PrepareIntentType(QString IntentType)
 {
     dropdown_upload->hide();
 
+    if(!socket->isOpen())
+    {
+        MSGBOX::error(this,"无法连接socket服务器,错误码:60528");
+        return;
+    }
+
     if("file" == IntentType)
     {
         QStringList str_path_list = QFileDialog::getOpenFileNames(this,"选择上传文件","d:\\","所有文件 (*.*)");
@@ -421,11 +430,11 @@ void FileExplorer::PrepareIntentType(QString IntentType)
     }
     else if("folder" == IntentType)
     {
-
+        qDebug() << "上传文件夹";
     }
     else if("drag" == IntentType)
     {
-
+        qDebug() << "拖动上传";
     }
     else
     {
@@ -435,25 +444,40 @@ void FileExplorer::PrepareIntentType(QString IntentType)
 
 void FileExplorer::menu_clicked(QString key)
 {
-    if("refresh" == key)
-    {
-        load_files();
-    }
-    if("cfolder" == key)
-    {
-        QTimer::singleShot(50, this, [=](){
+    QTimer::singleShot(50, this, [=](){
+        //刷新
+        if("refresh" == key)
+        {
+            load_files();
+        }
+        //创建文件夹
+        if("cfolder" == key)
+        {
+
             dlg_create->setType("folder");
             dlg_create->exec();
-        });
-    }
-    if("ctxt" == key)
-    {
-        QTimer::singleShot(50, this, [=](){
-            dlg_create->setType("txt");
-            dlg_create->exec();
-        });
-    }
 
+        }
+        //创建TXT文件
+        if("ctxt" == key)
+        {
+            QTimer::singleShot(50, this, [=](){
+                dlg_create->setType("txt");
+                dlg_create->exec();
+            });
+        }
+        //上传文件
+        if("upload_file" == key)
+        {
+            PrepareIntentType("file");
+        }
+        //上传文件夹
+        if("upload_folder" == key)
+        {
+            PrepareIntentType("folder");
+        }
+
+    });
     fd_menu->hide();
     MenuCanvas->hide();
     dropdown_upload->hide();
@@ -472,19 +496,63 @@ void FileExplorer::fd_menu_clicked(QString key)
 
 }
 
+void FileExplorer::replyFinished(QNetworkReply * _reply)
+{
+    if(reply->error() == QNetworkReply::NoError)
+    {
+        qDebug() << "read all:" << _reply->readAll();
+        reply->deleteLater();
+        handle->flush();
+        handle->close();
+
+        qDebug() << "上传结束了";
+    }
+    else
+    {
+        //出错了
+    }
+}
+
+void FileExplorer::loadError(QNetworkReply::NetworkError)
+{
+    qDebug()<<"Error: "<<reply->error();
+}
+
+void FileExplorer::loadProgress(qint64 bytesSent, qint64 bytesTotal)
+{
+    qDebug() << "loaded" << bytesSent << "of" << bytesTotal;
+    //progressBar->setMaximum(bytesTotal); //最大值
+    //progressBar->setValue(bytesSent);  //当前值
+}
+
 //显示上传面板
 void FileExplorer::show_upload_pannel()
 {
+    QString url = path("/client/file/upload");
+
     for (int i=0; i<upload_queue.count(); i++) {
-        qDebug() << "file=" << upload_queue[i];
+        QTimer::singleShot(100, this, [=](){
+            QString file = upload_queue[i];
+            //普通的http文件上传形式
+            /*
+                handle = new QFile(file);
+                handle->open(QIODevice::ReadOnly);
+
+                QByteArray byte_file = handle->readAll();
+                QNetworkRequest request(url);
+                request.setHeader(QNetworkRequest::ContentTypeHeader, QLatin1String("application/octet-stream"));
+
+                QString   disposition = QString("form-data; file_size=\"%1\"").arg(QString::number(file_size));
+                request.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant(disposition));
+
+                reply = AccessManage->post(request,byte_file);
+
+                connect(reply, SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(loadError(QNetworkReply::NetworkError)));
+                connect(reply, SIGNAL(uploadProgress(qint64 ,qint64)), this, SLOT(loadProgress(qint64 ,qint64)));
+                */
+        });
     }
 
-    QString file = "d:\\pexels-qingnian-du-5779813.jpg";
-    QString url = "http://disk.czmylike.com/client/file/upload";
-
-//    HttpClient(path("/client/file/upload")).success([this](const QString &response) {
-//        qDebug() << "res=" << response.toUtf8();
-//    }).param("uid", "bb").header("uid", "aa").upload(file);
 }
 
 

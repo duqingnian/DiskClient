@@ -21,6 +21,10 @@ struct SELECT_UNIT{
     USER* unit;
 };
 
+static bool setting_ok = true;
+static bool connect_ok = false;
+static bool conn = false;
+
 class BaseController : public QDialog
 {
     Q_OBJECT
@@ -56,6 +60,7 @@ public:
     // 客户端发送消息到服务器
     ////////////////////////////////////
     bool send(QString,QString);
+    bool sendmsg(QString,QString);
     bool sendJsonObject(QString,QJsonObject);
 
 

@@ -49,7 +49,7 @@ void Chat::initTop()
     Label* add = new Label(top);
     add->resize(24,24);
     add->move(250,20);
-    add->setPixmap(QPixmap::fromImage(QImage(":/Resources/Chat/add.png")));
+    add->setPixmap(QPixmap::fromImage(QImage(":/Resources/Chat/write.png")));
 
     Label* avatar = new Label(top);
     avatar->setObjectName("avatar");
@@ -91,7 +91,7 @@ void Chat::initFriendList()
     scrollArea->setObjectName("scrollAreaChatList");
     scrollArea->move(0,117);
     scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    //scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     scrollArea->setStyleSheet("#scrollAreaChatList{border:0px;}");
 
     friend_list = new QWidget(scrollArea);

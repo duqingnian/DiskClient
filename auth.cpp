@@ -12,6 +12,8 @@
 #include <QTimer>
 #include <Lib/HttpClient.h>
 #include <Component/Msg.h>
+#include <QMessageBox>
+#include <QTimer>
 #include <Windows.h>
 
 Auth::Auth(QWidget *parent) : BaseWindow(parent),ui(new Ui::Auth)
@@ -22,9 +24,27 @@ Auth::Auth(QWidget *parent) : BaseWindow(parent),ui(new Ui::Auth)
     this->m_TitleBar->display_setting(true);
 
     dlg_setting = new AuthSetting(this);
-    init();
-    init_register();
-
+    if(!setting_ok)
+    {
+        dlg_setting->show();
+    }
+    else
+    {
+//        while(!connect_ok)
+//        {
+//            //init();
+//            //init_register();
+//            QTimer::singleShot(1000, this, [](){
+//                qDebug() << "aaaaaaaaaa";
+//            });
+//        }
+//        else
+//        {
+//            QMessageBox msgBox;
+//            msgBox.setText("无法连接到socket服务器");
+//            msgBox.exec();
+//        }
+    }
     connect(this->m_TitleBar->m_pButtonSetting,&QPushButton::clicked,this,[this]{open_setting_dialog();});
     connect(socket,&QTcpSocket::readyRead,this,&Auth::new_message);
 }
@@ -112,65 +132,26 @@ void Auth::init_register()
 {
     _register = new QSettings("HKEY_CURRENT_USER\\SOFTWARE\\AdoDisk", QSettings::NativeFormat);
     api_url = _register->value("api_url").toString();
-    socket_server = _register->value("socket_server").toString();
-    machineUniqueId = _register->value("machineUniqueId").toString();
-    //如果注册表里的电脑ID不等于计算出来的id，就弹出设置，让用户设置
-    if(QString(QSysInfo::machineUniqueId()) != machineUniqueId)
+    uid = _register->value("uid").toString();
+    if(uid.length() > 20)
     {
-        dlg_setting->show();
+        if(uid.mid(0,6) == "ADOSTR" && uid.right(3) == "=E=")
+        {
+            //uid格式正确，开始网络请求
+            HttpClient(api_url+"client/auth/ding/fetch.html").success([this](const QString &response) {
+                autologin(response.toUtf8());
+            }).param("uid", uid).header("uid", uid).header("token", md5(uid)).header("content-type", "application/x-www-form-urlencoded").post();
+        }
+        else
+        {
+            //uid格式不正确，删除各项数据
+            _register->setValue("uid","");
+            init_stack_widgets();
+        }
     }
     else
     {
-        bool connect_ok = false;
-        //如果socket设置为空或者不合理，也提示
-        QString socket_server = _register->value("socket_server").toString();
-        QString socket_port = _register->value("socket_port").toString();
-        if("" == api_url || "" == socket_server || "" == socket_port)
-        {
-            dlg_setting->show();
-        }
-        else
-        {
-            socket->connectToHost(server_ip,server_port.toInt());
-            if(socket->waitForConnected())
-            {
-                qDebug() << "Connected to Server["+server_ip+"]["+server_port+"]";
-                connect_ok = true;
-
-            }
-            else{
-                box(QString("socket连接失败了!  %1.").arg(socket->errorString()));
-            }
-        }
-        if(connect_ok)
-        {
-            uid = _register->value("uid").toString();
-            if(uid.length() > 20)
-            {
-                if(uid.mid(0,6) == "ADOSTR" && uid.right(3) == "=E=")
-                {
-                    //uid格式正确，开始网络请求
-                    HttpClient(api_url+"client/auth/ding/fetch.html").success([this](const QString &response) {
-                        autologin(response.toUtf8());
-                    }).param("uid", uid).header("uid", uid).header("token", md5(uid)).header("content-type", "application/x-www-form-urlencoded").post();
-                }
-                else
-                {
-                    //uid格式不正确，删除各项数据
-                    _register->setValue("uid","");
-                    init_stack_widgets();
-                }
-            }
-            else
-            {
-                init_stack_widgets();
-            }
-        }
-        else
-        {
-
-            box("无法连接到socket服务端,请检查服务端是否开启.");
-        }
+        init_stack_widgets();
     }
 }
 
@@ -267,23 +248,15 @@ void Auth::welcome(QString res)
                 user->title = userObj.value("title").toString();
                 user->job_number = userObj.value("job_number").toString();
 
-                if(socket && socket->isOpen())
-                {
-                    QString header = "MSGTYPE:LOGIN,FROM:"+user->job_number+",TO:SYS,DATE_TYPE:JSON;";
-                    //sendJsonObject(header,userObj);
 
-                    send( "MSGTYPE:MSG1,FROM:"+user->job_number+",TO:SYS;","A1");
-                    send( "MSGTYPE:MSG2,FROM:"+user->job_number+",TO:SYS;","B2");
-                    send( "MSGTYPE:MSG3,FROM:"+user->job_number+",TO:SYS;","C3");
+                QString header = "MSGTYPE:LOGIN,FROM:"+user->job_number+",TO:SYS,DATE_TYPE:JSON;";
+                //sendJsonObject(header,userObj);
+                send( "MSGTYPE:MSG1,FROM:"+user->job_number+",TO:SYS;","A1");
 
-                    _register->setValue("uid",user->uid);
-                    emit login_success();
-                    accept();
-                }
-                else
-                {
-                    box("Invalidate socket or cann't connect to socket server.");
-                }
+                _register->setValue("uid",user->uid);
+                emit login_success();
+                accept();
+
             }
             else
             {

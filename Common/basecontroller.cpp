@@ -18,6 +18,38 @@ BaseController::BaseController(QWidget *parent) : QDialog(parent)
     socket = new QTcpSocket(this);
     server_ip = get_reg("socket_server");
     server_port = get_reg("socket_port");
+
+    QString css  = "";
+    css += "QScrollBar:vertical{border: 0px;background:#fff;width:5px;margin: 0px 0px 0px 0px;}";
+    css += "QScrollBar::handle:vertical {min-height: 0px;border: 0px;border-radius: 0px;background-color: #CAC7C6;}";
+    css += "QScrollBar::add-line:vertical {height: 0px;subcontrol-position: bottom;subcontrol-origin: margin;}";
+    this->setStyleSheet(css);
+
+    QString api_url = get_reg("api_url");
+
+    if("" == api_url || "" == server_ip || "" == server_port)
+    {
+        setting_ok = false;
+    }
+    else
+    {
+        if(!conn && !socket->isOpen())
+        {qDebug() << "ccccccccccccc";
+            conn = true;
+            socket->connectToHost(server_ip,server_port.toInt());
+            if(socket->waitForConnected())
+            {
+                qDebug() << "Connected to Server["+server_ip+"]["+server_port+"]";
+                connect_ok = true;
+
+            }
+            else{
+                connect_ok = false;
+                qDebug() << QString("socket连接失败了!  %1.").arg(socket->errorString());
+                box(QString("socket连接失败了!  %1.").arg(socket->errorString()));
+            }
+        }
+    }
 }
 
 BaseController::~BaseController()
@@ -146,28 +178,41 @@ QString BaseController::GetStrByQJsonObject(QJsonObject jsonObj)
 
 bool BaseController::send(QString _header, QString _data)
 {
-    if(socket->isOpen())
+    if(!socket)
     {
-        QDataStream socketStream(socket);
-        socketStream.setVersion(QDataStream::Qt_5_12);
-
-        QByteArray header;
-        header.prepend(_header.toUtf8());
-        header.resize(128);
-
-        QByteArray byteArray = _data.toUtf8();
-        byteArray.prepend(header);
-
-        socketStream << byteArray;
-        byteArray.clear();
-
-        return true;
+        qDebug() << "invalidate socket!";
     }
     else
     {
-        qDebug() << "socket is closed!";
+        if(socket->isOpen())
+        {
+            QDataStream socketStream(socket);
+            socketStream.setVersion(QDataStream::Qt_5_12);
+
+            QByteArray header;
+            header.prepend(_header.toUtf8());
+            header.resize(128);
+
+            QByteArray byteArray = _data.toUtf8();
+            byteArray.prepend(header);
+
+            socketStream << byteArray;
+            byteArray.clear();
+
+            return true;
+        }
+        else
+        {
+            qDebug() << "socket is closed!";
+        }
     }
     return false;
+}
+
+bool BaseController::sendmsg(QString sendto,QString msg)
+{
+    QString header = "MSGTYPE:MSG,FROM:"+user->job_number+",TO:"+sendto;
+    return send(header,msg);
 }
 
 bool BaseController::sendJsonObject(QString header, QJsonObject obj)

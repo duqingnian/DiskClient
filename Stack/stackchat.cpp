@@ -11,6 +11,15 @@ StackChat::StackChat(QWidget *parent) : BaseController(parent)
 
     initMain();
     renderMain();
+
+    if(!socket->isOpen())
+    {
+        qDebug() << "socket connect is not open";
+    }
+    else
+    {
+        qDebug() << "socket connect success!";
+    }
 }
 
 void StackChat::initSide()
@@ -152,12 +161,12 @@ void StackChat::SelectedTab(QString key)
 void StackChat::HoverEnter(QObject* obj)
 {
     //边栏tab
-    if("SIDE_TAB_" == obj->objectName().mid(0,4))
+    if("SIDE_TAB_" == obj->objectName().mid(0,9))
     {
         if(selected_tab != obj->objectName())
         {
             Label* thumb = findChild<Label*>(obj->objectName()+"_ico");
-            thumb->setPixmap(QPixmap::fromImage(QImage(":/Resources/Chat/Gdi/"+obj->objectName().mid(4).toLower()+"_1.png")));
+            thumb->setPixmap(QPixmap::fromImage(QImage(":/Resources/Chat/Gdi/"+obj->objectName().mid(9).toLower()+"_1.png")));
         }
     }
 }
@@ -166,12 +175,12 @@ void StackChat::HoverEnter(QObject* obj)
 void StackChat::HoverLeave(QObject* obj)
 {
     //边栏tab
-    if("SIDE_TAB_" == obj->objectName().mid(0,4))
+    if("SIDE_TAB_" == obj->objectName().mid(0,9))
     {
         if(selected_tab != obj->objectName())
         {
             Label* thumb = findChild<Label*>(obj->objectName()+"_ico");
-            thumb->setPixmap(QPixmap::fromImage(QImage(":/Resources/Chat/Gdi/"+obj->objectName().mid(4).toLower()+"_0.png")));
+            thumb->setPixmap(QPixmap::fromImage(QImage(":/Resources/Chat/Gdi/"+obj->objectName().mid(9).toLower()+"_0.png")));
         }
     }
 }

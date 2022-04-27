@@ -1583,5 +1583,6 @@
         <file>Resources/Chat/info.png</file>
         <file>Resources/Chat/write.png</file>
         <file>Resources/Chat/send.png</file>
+        <file>Resources/loading.gif</file>
     </qresource>
 </RCC>

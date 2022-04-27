@@ -135,8 +135,14 @@ void StackPannel::send_msg()
     QString msg = input->toPlainText().trimmed();
     if("" != msg)
     {
-        sendmsg("zhangsan",msg);
-        input->clear();
+        if(sendmsg("zhangsan",msg))
+        {
+            input->clear();
+        }
+        else
+        {
+            qDebug() << "消息发送失败了";
+        }
     }
 }
 

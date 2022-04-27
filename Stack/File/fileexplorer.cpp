@@ -408,12 +408,6 @@ void FileExplorer::PrepareIntentType(QString IntentType)
 {
     dropdown_upload->hide();
 
-    if(!socket->isOpen())
-    {
-        MSGBOX::error(this,"无法连接socket服务器,错误码:60528");
-        return;
-    }
-
     if("file" == IntentType)
     {
         QStringList str_path_list = QFileDialog::getOpenFileNames(this,"选择上传文件","d:\\","所有文件 (*.*)");

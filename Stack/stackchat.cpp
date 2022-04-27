@@ -11,15 +11,6 @@ StackChat::StackChat(QWidget *parent) : BaseController(parent)
 
     initMain();
     renderMain();
-
-    if(!socket->isOpen())
-    {
-        qDebug() << "socket connect is not open";
-    }
-    else
-    {
-        qDebug() << "socket connect success!";
-    }
 }
 
 void StackChat::initSide()

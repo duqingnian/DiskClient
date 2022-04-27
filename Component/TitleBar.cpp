@@ -144,7 +144,7 @@ void TitleBar::setTitleContent(QString title)
 
 void TitleBar::set_width(int width)
 {
-    this->title_width = width-18;
+    this->title_width = width-16;
 }
 void TitleBar::initConnections()
 {

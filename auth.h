@@ -39,6 +39,9 @@ public:
     QString socket_server = "";
     QString machineUniqueId = ""; //电脑唯一ID
 
+    //尝试连接socket
+    bool try_connect_server();
+
     //stack组件
     QStackedWidget* auth_canvas;
 
@@ -62,8 +65,6 @@ private slots:
     void set_auth_type(QString);
     void open_setting_dialog();
     void welcome(QString);
-    //socket来新消息了
-    void new_message();
 
 signals:
     void login_success();

@@ -13,51 +13,46 @@
 #include <Lib/HttpClient.h>
 #include <Component/Msg.h>
 #include <QMessageBox>
-#include <QTimer>
-#include <Windows.h>
+#include <QMovie>
+
+int border = 8;
 
 Auth::Auth(QWidget *parent) : BaseWindow(parent),ui(new Ui::Auth)
 {
     ui->setupUi(this);
     this->m_TitleBar->set_width(this->width());
-    this->m_TitleBar->set_bg_color(236,239,255);
+    this->m_TitleBar->set_bg_color(240,243,245);
     this->m_TitleBar->display_setting(true);
 
     dlg_setting = new AuthSetting(this);
-    if(!setting_ok)
+    if("" == get_reg("api_url") || "" == get_reg("socket_server") || "" == get_reg("socket_port"))
     {
         dlg_setting->show();
     }
     else
     {
-//        while(!connect_ok)
-//        {
-//            //init();
-//            //init_register();
-//            QTimer::singleShot(1000, this, [](){
-//                qDebug() << "aaaaaaaaaa";
-//            });
-//        }
-//        else
-//        {
-//            QMessageBox msgBox;
-//            msgBox.setText("无法连接到socket服务器");
-//            msgBox.exec();
-//        }
+        //先尝试连接socket
+        if(try_connect_server())
+        {
+            init();
+            init_register();
+        }
+        else
+        {
+            box("无法连接到socket服务器");
+        }
     }
     connect(this->m_TitleBar->m_pButtonSetting,&QPushButton::clicked,this,[this]{open_setting_dialog();});
-    connect(socket,&QTcpSocket::readyRead,this,&Auth::new_message);
 }
 
 void Auth::init()
 {
-    int border = 8;
     //淡蓝色背景图
     QWidget* bg = new QWidget(this);
     bg->setObjectName("bg");
     bg->resize(this->width()-border*2,this->height()-(this->m_TitleBar->pos().y() + this->m_TitleBar->height()+border));
     bg->move(border,this->m_TitleBar->pos().y() + this->m_TitleBar->height());
-    bg->setStyleSheet("#bg{background-color:#ECEFFF;}");
+    bg->setStyleSheet("#bg{background-color:#F0F3F5;}");
 
     //logo
     QLabel* logo = new QLabel(this);
@@ -115,19 +110,6 @@ void Auth::init()
     qa_tip->setStyleSheet("#qa_tip{color:#153160;font-size:12px;}");
 }
 
-/**
- * 注册表中保存的信息：
- * 1.二维码生成的url地址
- * 2.socket服务器的地址
- * 3.cpuid+硬盘id+网卡id的md5
- * 4.用户信息
- *      4.1 钉钉userid
- *      4.2 微信openid
- *      4.3 部门id
- *      4.4 部门名称
- * 5.是否自动登录
- * 6.上次登录的时间
- */
 void Auth::init_register()
 {
     _register = new QSettings("HKEY_CURRENT_USER\\SOFTWARE\\AdoDisk", QSettings::NativeFormat);
@@ -153,6 +135,33 @@ void Auth::init_register()
     {
         init_stack_widgets();
     }
+}
+
+bool Auth::try_connect_server()
+{
+    //淡蓝色背景图
+    QWidget* bg = new QWidget(this);
+    bg->setObjectName("bg");
+    bg->resize(this->width()-border*2,this->height()-(this->m_TitleBar->pos().y() + this->m_TitleBar->height()+border));
+    bg->move(border,this->m_TitleBar->pos().y() + this->m_TitleBar->height());
+    bg->setStyleSheet("#bg{background-color:#F0F3F5;}");
+
+    //logo
+    QLabel* logo = new QLabel(this);
+    QImage logo_src(":/Resources/Auth/logo.png");
+    logo->setPixmap(QPixmap::fromImage(logo_src));
+    logo->move(150,75);
+
+    QLabel* loading_label = new QLabel(this);
+    loading_label->resize(160,50);
+    loading_label->setScaledContents(true);
+    loading_label->move(167,270);
+
+    QMovie* movie = new QMovie(":/Resources/loading.gif");
+    loading_label->setMovie(movie);
+    movie->start();
+
+    return Socket::Instance()->isOpen();
 }
 
 
@@ -248,10 +257,7 @@ void Auth::welcome(QString res)
                 user->title = userObj.value("title").toString();
                 user->job_number = userObj.value("job_number").toString();
 
-
-                QString header = "MSGTYPE:LOGIN,FROM:"+user->job_number+",TO:SYS,DATE_TYPE:JSON;";
-                //sendJsonObject(header,userObj);
-                send( "MSGTYPE:MSG1,FROM:"+user->job_number+",TO:SYS;","A1");
+                sendJsonObject("zhangsan",userObj);
 
                 _register->setValue("uid",user->uid);
                 emit login_success();
@@ -268,34 +274,6 @@ void Auth::welcome(QString res)
         init_stack_widgets();
     }
 }
-
-void Auth::new_message()
-{
-    QByteArray buffer;
-
-    QDataStream socketStream(socket);
-    socketStream.setVersion(QDataStream::Qt_5_12);
-
-    socketStream.startTransaction();
-    socketStream >> buffer;
-
-    if(!socketStream.commitTransaction())
-    {
-        QString message = QString("%1 :: Waiting for more data to come..").arg(socket->socketDescriptor());
-        qDebug() << message;
-        return;
-    }
-
-    QString header = buffer.mid(0,128);
-    QString fileType = header.split(",")[0].split(":")[1];
-
-    buffer = buffer.mid(128);
-
-    QString message = QString("%1 :: %2").arg(socket->socketDescriptor()).arg(QString::fromStdString(buffer.toStdString()));
-    qDebug() << message;
-}
-
-
 
 Auth::~Auth()
 {

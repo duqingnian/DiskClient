@@ -31,17 +31,9 @@
    <string>Mylike disk client Auth</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">/*
-#Auth{
+   <string notr="true">#Auth{
 border-width: 16px;
 border-image: url(:/Resources/shadow_wnd_bg.png) 16 16 16 16;
-}
-*/
-
-
-#Auth{
-border-width: 8px;
-border-image: url(:/Resources/shadow.png) 8 8 8 8;
 }
 </string>
   </property>

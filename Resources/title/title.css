@@ -63,3 +63,19 @@ QPushButton#ButtonRestore:pressed
 {
     border-image:url(:/Resources/title/restore.png) 0 27 0 54 ;
 }
+
+/*设置*/
+QPushButton#ButtonSetting
+{
+    border-image:url(:/Resources/title/setting.png) 0 81 0 0 ;
+}
+
+QPushButton#ButtonSetting:hover
+{
+    border-image:url(:/Resources/title/setting.png) 0 54 0 27 ;
+}
+
+QPushButton#ButtonSetting:pressed
+{
+    border-image:url(:/Resources/title/setting.png) 0 27 0 54 ;
+}

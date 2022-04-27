@@ -10,6 +10,7 @@ SOURCES += \
     Auth/authsetting.cpp \
     Auth/authsms.cpp \
     Common/basecontroller.cpp \
+    Common/socket.cpp \
     Component/BaseWindow.cpp \
     Component/FlowLayout.cpp \
     Component/Msg.cpp \
@@ -42,6 +43,7 @@ HEADERS += \
     Auth/authsetting.h \
     Auth/authsms.h \
     Common/basecontroller.h \
+    Common/socket.h \
     Component/BaseWindow.h \
     Component/FlowLayout.h \
     Component/Msg.h \

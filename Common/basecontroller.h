@@ -7,8 +7,10 @@
 #include <Data/TabMeta.h>
 #include <Data/Simple.h>
 #include <Data/FD.h>
+#include <QMutex>
 #include <QSettings>
 #include <QTcpSocket>
+#include "socket.h"
 
 extern USER     *user;
 extern TABMETA  *tab_meta;
@@ -21,10 +23,6 @@ struct SELECT_UNIT{
     USER* unit;
 };
 
-static bool setting_ok = true;
-static bool connect_ok = false;
-static bool conn = false;
-
 class BaseController : public QDialog
 {
     Q_OBJECT
@@ -32,14 +30,13 @@ public:
     explicit BaseController(QWidget *parent = nullptr);
     ~BaseController();
 
-    int border_width = 9;
+    int border_width = 8;
     QString md5(QString);
     QString random(int);
     int get_time();
 
     QSettings* regedit;
 
-    QTcpSocket* socket;
     QString server_ip;
     QString server_port;
 
@@ -51,19 +48,11 @@ public:
     SIMPLE SimpleParse(QString);
     //是不是汉字
     bool is_cn(QChar);
-
     void box(QString);
-
     QString GetStrByQJsonObject(QJsonObject);
 
-    ////////////////////////////////////
-    // 客户端发送消息到服务器
-    ////////////////////////////////////
-    bool send(QString,QString);
-    bool sendmsg(QString,QString);
-    bool sendJsonObject(QString,QJsonObject);
-
-
+    bool sendmsg(QString sendto,QString msg="",QString header="");
+    bool sendJsonObject(QString sendto,QJsonObject,QString header="");
 signals:
 
 };

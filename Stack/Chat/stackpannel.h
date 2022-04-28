@@ -1,14 +1,15 @@
 ﻿#ifndef STACKPANNEL_H
 #define STACKPANNEL_H
 
-#include "bubblelist.h"
-
 #include <QWidget>
 #include <Common/basecontroller.h>
 #include <QResizeEvent>
 #include <Component/Label.h>
+#include <QListWidget>
 #include <QScrollArea>
 #include <QTextEdit>
+#include "qnchatmessage.h"
+#include <QPaintEvent>
 
 class StackPannel : public BaseController
 {
@@ -22,7 +23,10 @@ public:
     void init_action_pannel();
     void init_chat_list();
     void set_target(SELECT_UNIT*);
-    void sendTimeMsg(qint64 time, QString msg);
+    void dealMessage(QNChatMessage *messageW, QListWidgetItem *item, QString text, QString time, QNChatMessage::User_Type type);
+    void dealMessageTime(QString curMsgTime);
+    void paintEvent(QPaintEvent *event) override;
+    bool eventFilter(QObject *obj, QEvent *event) override;
 private:
     QWidget* infoPannel;
     Label* avatar;
@@ -35,11 +39,14 @@ private:
     Label* action_add;
     QTextEdit* input;
     QScrollArea* scrollArea;
-    BubbleList *bubble_list;
     qint64 lastMsgTime = 0;
+    QListWidget* bubblelist;
+    bool isSending = true;
+    bool key_control = false;
 private slots:
     void resize_input();
     void send_msg();
+    void reset_input();
 };
 
 #endif // STACKPANNEL_H

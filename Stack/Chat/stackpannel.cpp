@@ -1,5 +1,4 @@
 ﻿#pragma execution_character_set("utf-8")
-#include "bubbleinfo.h"
 #include "stackpannel.h"
 #include <QDateTime>
 #include <QDebug>
@@ -63,7 +62,7 @@ void StackPannel::init_action_pannel()
 {
     actionPannel = new QWidget(this);
     actionPannel->setObjectName("actionPannel");
-    //actionPannel->setStyleSheet("#actionPannel{background:red;}");
+    actionPannel->setStyleSheet("#actionPannel{background:#F0F3F5;}");
 
     action_add = new Label(actionPannel);
     action_add->setObjectName("action_add");
@@ -86,7 +85,10 @@ void StackPannel::init_action_pannel()
     input = new QTextEdit(actionPannel);
     input->setObjectName("input");
     input->move(53,8);
+    input->setPlaceholderText("信息");
     input->setStyleSheet("#input{background:#fff;border-bottom:1px solid #DBDDE0;border-radius:16px;padding:3px 7px;font-size:15px;}");
+    input->setAcceptRichText(false);
+    input->installEventFilter(this);
     connect(input,&QTextEdit::textChanged,this,&StackPannel::resize_input);
 }
 
@@ -100,43 +102,18 @@ void StackPannel::init_chat_list()
     scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     scrollArea->setStyleSheet("#scrollAreaChatList{border:0px;}");
 
-    bubble_list = new BubbleList();
-    bubble_list->setObjectName("bubble_list");
-    bubble_list->move(0,0);
-    bubble_list->resize(scrollArea->width(),scrollArea->height());
-    bubble_list->setStyleSheet("#bubble_list{border:0px}");
+    QString css = "#bubblelist{border:0px;background:#F0F3F5;}";
+    css += "QListWidget{background-color: rgb(240, 243, 245); color:rgb(51,51,51); border: 1px solid  rgb(240, 243, 245);outline:0px;}";
+    css += "QListWidget::Item{background-color: rgb(240, 243, 245);}";
+    css += "QListWidget::Item:hover{background-color: rgb(240, 243, 245); }";
+    css += "QListWidget::item:selected{background-color: rgb(240, 243, 245);color:black;     border: 1px solid  rgb(240, 243, 245);}";
+    css += "QListWidget::item:selected:!active{border: 1px solid  rgb(240, 243, 245); background-color: rgb(240, 243, 245); color:rgb(51,51,51); }";
 
-    scrollArea->setWidget(bubble_list);
-}
-
-void StackPannel::sendTimeMsg(qint64 time, QString msg)
-{
-    bool send = false;
-    if(bubble_list->count() > 0){
-        send = ( (time - lastMsgTime) > 60 );
-    }else{
-        send = true;
-    }
-
-    lastMsgTime = time;
-
-    if(send){
-        BubbleInfo *info = new BubbleInfo;
-
-//        info->msg = QDateTime::fromSecsSinceEpoch(time).toString("hh:mm:ss");
-//        info->sender = System;
-//        info->myID = MyApp::m_nId;
-//        if(tag == 0)
-//            info->yourID = cell->id;
-//        if(tag == 1)
-//            info->groupID = cell->id;
-//        info->msgType = Notice;
-
-//        info->tag = tag;
-
-//        msgWindow->insertBubble(info);
-//        writeMsgToDatabase(info);
-    }
+    bubblelist = new QListWidget(this);
+    bubblelist->setObjectName("bubblelist");
+    bubblelist->setStyleSheet(css);
+    bubblelist->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scrollArea->setWidget(bubblelist);
 }
 
 void StackPannel::resize_input()
@@ -170,7 +147,7 @@ void StackPannel::resize_input()
     input->setFixedHeight(height);
 
     scrollArea->resize(this->width(),this->height() - infoPannel->height() - actionPannel->height());
-    bubble_list->resize(scrollArea->width(),scrollArea->height());
+    bubblelist->resize(scrollArea->width(),scrollArea->height());
 }
 
 //发送聊天信息
@@ -179,24 +156,121 @@ void StackPannel::send_msg()
     QString msg = input->toPlainText().trimmed();
     if("" != msg)
     {
+        input->clear();
+        input->setEnabled(false);
         if(sendmsg(target->job_number,msg))
         {
-            BubbleInfo *info = new BubbleInfo;
-            info->msg_sendor = target->unit;
-            info->msg = msg;
-            info->msgtype = MSGTYPE::TEXT;
-            qint64 curTime = QDateTime::currentSecsSinceEpoch();//时间戳
-            info->time = curTime;
+            QString time = QString::number(QDateTime::currentDateTime().toTime_t()); //时间戳
+            dealMessageTime(time);
 
-            bubble_list->insertBubble(info);
+            QNChatMessage* messageW = new QNChatMessage(this);
+            QListWidgetItem* item = new QListWidgetItem(bubblelist);
+            dealMessage(messageW, item, msg, time, QNChatMessage::User_Me);
+            //messageW->setTextSuccess();
 
-            input->clear();
+            bubblelist->setCurrentRow(bubblelist->count()-1);
+
+            input->setEnabled(true);
+            input->setFocus();
         }
         else
         {
+            input->setEnabled(true);
             qDebug() << "消息发送失败了";
         }
     }
+}
+
+void StackPannel::reset_input()
+{
+    input->setEnabled(true);
+    input->clear();
+    input->setFocus();
+}
+
+void StackPannel::dealMessage(QNChatMessage *messageW, QListWidgetItem *item, QString text, QString time,  QNChatMessage::User_Type type)
+{
+    messageW->setFixedWidth(this->width());
+    QSize size = messageW->fontRect(text);
+    item->setSizeHint(size);
+    messageW->setText(text, time, size, type);
+    bubblelist->setItemWidget(item, messageW);
+}
+
+void StackPannel::dealMessageTime(QString curMsgTime)
+{
+    bool isShowTime = false;
+    if(bubblelist->count() > 0) {
+        QListWidgetItem* lastItem = bubblelist->item(bubblelist->count() - 1);
+        QNChatMessage* messageW = (QNChatMessage*)bubblelist->itemWidget(lastItem);
+        int lastTime = messageW->time().toInt();
+        int curTime = curMsgTime.toInt();
+        isShowTime = ((curTime - lastTime) > 60);
+    } else {
+        isShowTime = true;
+    }
+    if(isShowTime) {
+        QNChatMessage* messageTime = new QNChatMessage(bubblelist->parentWidget());
+        QListWidgetItem* itemTime = new QListWidgetItem(bubblelist);
+
+        QSize size = QSize(this->width(), 40);
+        messageTime->resize(size);
+        itemTime->setSizeHint(size);
+        messageTime->setText(curMsgTime, curMsgTime, size, QNChatMessage::User_Time);
+        bubblelist->setItemWidget(itemTime, messageTime);
+    }
+}
+
+void StackPannel::paintEvent(QPaintEvent *event)
+{
+    input->setFocus();
+}
+
+bool StackPannel::eventFilter(QObject *obj, QEvent *event)
+{
+    QKeyEvent *K = static_cast<QKeyEvent *>(event);
+
+    //按下
+    if(event->type() == QEvent::KeyPress)
+    {
+        if(Qt::Key_Control == K->key())
+        {
+            key_control = true;
+        }
+    }
+
+    //抬起
+    if(event->type() == QEvent::KeyRelease)
+    {
+        if(Qt::Key_Control == K->key())
+        {
+            key_control = false;
+        }
+    }
+
+    if(event->type() == QEvent::KeyPress && obj->objectName() == "input")
+    {
+        if(K->key() == Qt::Key_Enter || K->key() == Qt::Key_Return)
+        {
+            if(key_control)
+            {
+                QTextCursor oldCursor = input->textCursor();
+                QTextCursor textCursor(input->document());
+                textCursor.setPosition(oldCursor.position());
+                input->setUndoRedoEnabled(false);
+                textCursor.insertBlock();
+                input->setUndoRedoEnabled(true);
+                return true;
+            }
+            else
+            {
+                send_msg();
+                return true;
+            }
+        }
+    }
+    return false;
+    //return QWidget::eventFilter( obj, event);
 }
 
 void StackPannel::resizeEvent(QResizeEvent *)
@@ -212,5 +286,5 @@ void StackPannel::resizeEvent(QResizeEvent *)
     input->resize(this->width() - 100,36);
 
     scrollArea->resize(this->width(),this->height() - infoPannel->height() - actionPannel->height());
-    bubble_list->resize(scrollArea->width(),scrollArea->height());
+    bubblelist->resize(scrollArea->width(),scrollArea->height());
 }

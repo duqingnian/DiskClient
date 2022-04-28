@@ -27,10 +27,8 @@ SOURCES += \
     Menu/fdmenu.cpp \
     Menu/filewelcomemenu.cpp \
     Menu/menufileexplorercanvas.cpp \
-    Stack/Chat/bubbleinfo.cpp \
-    Stack/Chat/bubblelist.cpp \
-    Stack/Chat/bubbleview.cpp \
     Stack/Chat/chat.cpp \
+    Stack/Chat/qnchatmessage.cpp \
     Stack/Chat/stackempty.cpp \
     Stack/Chat/stackpannel.cpp \
     Stack/File/fileexplorer.cpp \
@@ -73,10 +71,8 @@ HEADERS += \
     Menu/fdmenu.h \
     Menu/filewelcomemenu.h \
     Menu/menufileexplorercanvas.h \
-    Stack/Chat/bubbleinfo.h \
-    Stack/Chat/bubblelist.h \
-    Stack/Chat/bubbleview.h \
     Stack/Chat/chat.h \
+    Stack/Chat/qnchatmessage.h \
     Stack/Chat/stackempty.h \
     Stack/Chat/stackpannel.h \
     Stack/File/fileexplorer.h \

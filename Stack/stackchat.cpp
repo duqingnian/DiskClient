@@ -11,6 +11,16 @@ StackChat::StackChat(QWidget *parent) : BaseController(parent)
 
     initMain();
     renderMain();
+
+    socket = Socket::Instance()->handle();
+    connect(socket, &QTcpSocket::readyRead, this, &StackChat::new_message);
+}
+
+void StackChat::new_message()
+{
+    //收到消息，解析出job_number，侧边栏消息数量+1 右侧消息面板+1
+    QString msg = socket->readAll();
+    qDebug() << "msg=" << msg;
 }
 
 void StackChat::initSide()
@@ -187,11 +197,7 @@ void StackChat::initMain()
     StackMain->move(0,0);
 
     stack_empty = new StackEmpty(main);
-    stack_chat_pannel = new StackPannel(main);
-
     StackMain->addWidget(stack_empty);
-    StackMain->addWidget(stack_chat_pannel);
-
     StackMain->setCurrentWidget(stack_empty);
 }
 
@@ -205,8 +211,13 @@ void StackChat::renderMain()
 void StackChat::friend_targeted(SELECT_UNIT* unit)
 {
     selected_unit = unit;
-    stack_chat_pannel->set_target(selected_unit);
-    StackMain->setCurrentWidget(stack_chat_pannel);
+    if(chatPannelList.count(selected_unit->job_number) == 0)
+    {
+        StackPannel* stack_chat_pannel = new StackPannel(main,selected_unit);
+        chatPannelList[selected_unit->job_number] = stack_chat_pannel;
+        StackMain->addWidget(chatPannelList[selected_unit->job_number]);
+    }
+    StackMain->setCurrentWidget(chatPannelList[selected_unit->job_number]);
 }
 
 void StackChat::resizeEvent(QResizeEvent *)
@@ -218,6 +229,7 @@ void StackChat::resizeEvent(QResizeEvent *)
     main->resize(this->width() - WIDTH,this->height());
     main->move(WIDTH,0);
     StackMain->resize(main->size());
+    //StackMain->currentWidget()->resize(main->size());
 }
 
 

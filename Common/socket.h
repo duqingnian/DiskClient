@@ -12,6 +12,8 @@ public:
     QString getErr();
     bool isOpen();
     bool send(QString header,QString msg);
+    QTcpSocket* handle();
+    void disconnect();
 private:
     QString err = "";
     QTcpSocket* client;

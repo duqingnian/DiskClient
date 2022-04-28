@@ -10,10 +10,10 @@ Chat::Chat(QWidget *parent) : BaseController(parent)
     initTop();
     initFriendList();
 
-    for (int i=0; i<45; i++) {
+    for (int i=0; i<5; i++) {
         USER* AI = new USER();
         AI->name = "文件小助手-"+QString::number(i);
-        AI->job_number = "SYS"+QString::number(i);
+        AI->job_number = "TEST"+QString::number(i);
         AI->avatar = "";
         AI->depid = "0";
         AI->depname = "技术部"+QString::number(i);
@@ -22,8 +22,8 @@ Chat::Chat(QWidget *parent) : BaseController(parent)
         AI->title = "文件小助手";
         AI->uid = "0";
 
-        friends.insert("SYS"+QString::number(i),AI);
-        ref.insert(i,"SYS"+QString::number(i));
+        friends.insert("TEST"+QString::number(i),AI);
+        ref.insert(i,"TEST"+QString::number(i));
     }
 
     selected_unit = new SELECT_UNIT();

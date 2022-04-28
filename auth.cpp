@@ -34,8 +34,16 @@ Auth::Auth(QWidget *parent) : BaseWindow(parent),ui(new Ui::Auth)
         //先尝试连接socket
         if(try_connect_server())
         {
-            init();
-            init_register();
+            QTcpSocket* socket = Socket::Instance()->handle();
+            if(socket->socketDescriptor() != -1)
+            {
+                init();
+                init_register();
+            }
+            else
+            {
+                box("socketDescriptor == -1");
+            }
         }
         else
         {
@@ -257,7 +265,7 @@ void Auth::welcome(QString res)
                 user->title = userObj.value("title").toString();
                 user->job_number = userObj.value("job_number").toString();
 
-                sendJsonObject("zhangsan",userObj);
+                sendJsonObject("SYS",userObj,"SYNC_INFO");
 
                 _register->setValue("uid",user->uid);
                 emit login_success();

@@ -22,7 +22,7 @@ BaseController::BaseController(QWidget *parent) : QDialog(parent)
 
 BaseController::~BaseController()
 {
-
+    Socket::Instance()->disconnect();
 }
 
 //md5加密
@@ -121,20 +121,21 @@ QString BaseController::GetStrByQJsonObject(QJsonObject jsonObj)
     return str;
 }
 
-bool BaseController::sendmsg(QString sendto,QString msg,QString header)
+bool BaseController::sendmsg(QString sendto,QString msg,QString type)
 {
     if("" == sendto)
         return false;
-    if("" == header)
+    if("" == type)
     {
-        header = "MSGTYPE:MSG,FROM:"+user->job_number+",TO:"+sendto;
+        type = "MSG";
     }
+    QString header = "MSGTYPE:"+type+",FROM:"+user->job_number+",TO:"+sendto;
     return Socket::Instance()->send(header,msg);
 }
 
-bool BaseController::sendJsonObject(QString sendto,QJsonObject obj,QString header)
+bool BaseController::sendJsonObject(QString sendto,QJsonObject obj,QString type)
 {
-    return sendmsg(sendto,GetStrByQJsonObject(obj),header);
+    return sendmsg(sendto,GetStrByQJsonObject(obj),type);
 }
 
 

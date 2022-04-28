@@ -38,6 +38,7 @@ public:
     void renderMain();
 
 private:
+    QTcpSocket* socket;
     //侧边栏
     QWidget* side;
     QStackedWidget* StackSide;
@@ -53,15 +54,19 @@ private:
     //主面板
     QWidget* main;
     QStackedWidget* StackMain;
+    QMap<QString,StackPannel*> chatPannelList;
 
     //主面板Stacks
     StackEmpty*  stack_empty;
-    StackPannel* stack_chat_pannel;
 
     //当前选中的好友
     SELECT_UNIT* selected_unit;
 
     void friend_targeted(SELECT_UNIT*);
+
+    //新消息
+    void new_message();
+
 private slots:
 
 

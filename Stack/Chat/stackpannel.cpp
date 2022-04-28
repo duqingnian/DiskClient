@@ -1,18 +1,20 @@
 ﻿#pragma execution_character_set("utf-8")
+#include "bubbleinfo.h"
 #include "stackpannel.h"
+#include <QDateTime>
 #include <QDebug>
 
-StackPannel::StackPannel(QWidget *parent) : BaseController(parent)
+StackPannel::StackPannel(QWidget *parent,SELECT_UNIT* unit) : BaseController(parent)
 {
     this->setStyleSheet("font-family: \"Microsoft Yahei\";");
     init_info_pannel();
-    init_action_pannel();
 
-    chatList = new QWidget(this);
-    chatList->setObjectName("chatList");
-    chatList->move(0,infoPannel->height());
-    chatList->resize(this->width(),300);
-    //chatList->setStyleSheet("#chatList{background:red;}");
+    target = unit;
+    name->setText(unit->unit->name);
+    summary->setText(unit->unit->depname+"-"+unit->unit->groupname+"-"+unit->unit->title+"-"+unit->unit->job_number);
+
+    init_action_pannel();
+    init_chat_list();
 }
 
 //初始化顶部面板
@@ -88,12 +90,53 @@ void StackPannel::init_action_pannel()
     connect(input,&QTextEdit::textChanged,this,&StackPannel::resize_input);
 }
 
-void StackPannel::set_target(SELECT_UNIT* unit)
+//初始化聊天列表
+void StackPannel::init_chat_list()
 {
-    target = unit;
+    scrollArea = new QScrollArea(this);
+    scrollArea->setObjectName("scrollAreaChatList");
+    scrollArea->move(0,infoPannel->height());
+    scrollArea->resize(this->width(),300);
+    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scrollArea->setStyleSheet("#scrollAreaChatList{border:0px;}");
 
-    name->setText(unit->unit->name);
-    summary->setText(unit->unit->depname+"-"+unit->unit->groupname+"-"+unit->unit->title+"-"+unit->unit->job_number);
+    bubble_list = new BubbleList();
+    bubble_list->setObjectName("bubble_list");
+    bubble_list->move(0,0);
+    bubble_list->resize(scrollArea->width(),scrollArea->height());
+    bubble_list->setStyleSheet("#bubble_list{border:0px}");
+
+    scrollArea->setWidget(bubble_list);
+}
+
+void StackPannel::sendTimeMsg(qint64 time, QString msg)
+{
+    bool send = false;
+    if(bubble_list->count() > 0){
+        send = ( (time - lastMsgTime) > 60 );
+    }else{
+        send = true;
+    }
+
+    lastMsgTime = time;
+
+    if(send){
+        BubbleInfo *info = new BubbleInfo;
+
+//        info->msg = QDateTime::fromSecsSinceEpoch(time).toString("hh:mm:ss");
+//        info->sender = System;
+//        info->myID = MyApp::m_nId;
+//        if(tag == 0)
+//            info->yourID = cell->id;
+//        if(tag == 1)
+//            info->groupID = cell->id;
+//        info->msgType = Notice;
+
+//        info->tag = tag;
+
+//        msgWindow->insertBubble(info);
+//        writeMsgToDatabase(info);
+    }
 }
 
 void StackPannel::resize_input()
@@ -126,7 +169,8 @@ void StackPannel::resize_input()
     doc->setTextWidth(this->width() - 130);
     input->setFixedHeight(height);
 
-    chatList->resize(this->width(),this->height() - infoPannel->height() - actionPannel->height());
+    scrollArea->resize(this->width(),this->height() - infoPannel->height() - actionPannel->height());
+    bubble_list->resize(scrollArea->width(),scrollArea->height());
 }
 
 //发送聊天信息
@@ -135,8 +179,17 @@ void StackPannel::send_msg()
     QString msg = input->toPlainText().trimmed();
     if("" != msg)
     {
-        if(sendmsg("zhangsan",msg))
+        if(sendmsg(target->job_number,msg))
         {
+            BubbleInfo *info = new BubbleInfo;
+            info->msg_sendor = target->unit;
+            info->msg = msg;
+            info->msgtype = MSGTYPE::TEXT;
+            qint64 curTime = QDateTime::currentSecsSinceEpoch();//时间戳
+            info->time = curTime;
+
+            bubble_list->insertBubble(info);
+
             input->clear();
         }
         else
@@ -158,5 +211,6 @@ void StackPannel::resizeEvent(QResizeEvent *)
 
     input->resize(this->width() - 100,36);
 
-    chatList->resize(this->width(),this->height() - infoPannel->height() - actionPannel->height());
+    scrollArea->resize(this->width(),this->height() - infoPannel->height() - actionPannel->height());
+    bubble_list->resize(scrollArea->width(),scrollArea->height());
 }

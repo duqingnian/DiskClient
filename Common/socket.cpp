@@ -28,6 +28,7 @@ Socket::Socket(QObject *parent) : QObject(parent)
     if("" != server_ip && "" != server_port)
     {
         client = new QTcpSocket(this);
+        client->abort();
         if(!client->isOpen())
         {
             client->connectToHost(server_ip,server_port.toInt());
@@ -80,6 +81,20 @@ bool Socket::send(QString _header, QString msg)
     byteArray.clear();
 
     return true;
+}
+
+QTcpSocket *Socket::handle()
+{
+    return client;
+}
+
+void Socket::disconnect()
+{
+    if(client && client->isOpen())
+    {
+        client->disconnect();
+    }
+    client->deleteLater();
 }
 
 

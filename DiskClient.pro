@@ -9,12 +9,14 @@ SOURCES += \
     Auth/authqrcode.cpp \
     Auth/authsetting.cpp \
     Auth/authsms.cpp \
+    Common/adohelper.cpp \
     Common/basecontroller.cpp \
     Common/socket.cpp \
     Component/BaseWindow.cpp \
     Component/FlowLayout.cpp \
     Component/Msg.cpp \
     Component/Toast.cpp \
+    Component/adobutton.cpp \
     Dialog/dialogcreate.cpp \
     DropDown/dropdowncreate.cpp \
     DropDown/dropdownupload.cpp \
@@ -25,6 +27,9 @@ SOURCES += \
     Menu/fdmenu.cpp \
     Menu/filewelcomemenu.cpp \
     Menu/menufileexplorercanvas.cpp \
+    Stack/Chat/bubbleinfo.cpp \
+    Stack/Chat/bubblelist.cpp \
+    Stack/Chat/bubbleview.cpp \
     Stack/Chat/chat.cpp \
     Stack/Chat/stackempty.cpp \
     Stack/Chat/stackpannel.cpp \
@@ -42,15 +47,18 @@ HEADERS += \
     Auth/authqrcode.h \
     Auth/authsetting.h \
     Auth/authsms.h \
+    Common/adohelper.h \
     Common/basecontroller.h \
     Common/socket.h \
     Component/BaseWindow.h \
     Component/FlowLayout.h \
     Component/Msg.h \
     Component/Toast.h \
+    Component/adobutton.h \
     Data/FD.h \
     Data/Filter.h \
     Data/MenuItem.h \
+    Data/Pdu.h \
     Data/Simple.h \
     Data/TabMeta.h \
     Data/UrlMeta.h \
@@ -65,6 +73,9 @@ HEADERS += \
     Menu/fdmenu.h \
     Menu/filewelcomemenu.h \
     Menu/menufileexplorercanvas.h \
+    Stack/Chat/bubbleinfo.h \
+    Stack/Chat/bubblelist.h \
+    Stack/Chat/bubbleview.h \
     Stack/Chat/chat.h \
     Stack/Chat/stackempty.h \
     Stack/Chat/stackpannel.h \

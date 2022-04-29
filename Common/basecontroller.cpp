@@ -127,9 +127,9 @@ bool BaseController::sendmsg(QString sendto,QString msg,QString type)
         return false;
     if("" == type)
     {
-        type = "MSG";
+        type = "TEXT";
     }
-    QString header = "MSGTYPE:"+type+",FROM:"+user->job_number+",TO:"+sendto;
+    QString header = "MSGTYPE:"+type+"|FROM:"+user->job_number+"|TO:"+sendto;
     return Socket::Instance()->send(header,msg);
 }
 

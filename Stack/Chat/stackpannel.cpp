@@ -273,6 +273,19 @@ bool StackPannel::eventFilter(QObject *obj, QEvent *event)
     //return QWidget::eventFilter( obj, event);
 }
 
+void StackPannel::new_message(QString type, QString msg)
+{
+    QString time = QString::number(QDateTime::currentDateTime().toTime_t()); //时间戳
+    dealMessageTime(time);
+
+    QNChatMessage* messageW = new QNChatMessage(this);
+    QListWidgetItem* item = new QListWidgetItem(bubblelist);
+    dealMessage(messageW, item, msg, time, QNChatMessage::User_She);
+
+    bubblelist->setCurrentRow(bubblelist->count()-1);
+}
+
+
 void StackPannel::resizeEvent(QResizeEvent *)
 {
     infoPannel->resize(this->width(),56);

@@ -27,6 +27,7 @@ public:
     void dealMessageTime(QString curMsgTime);
     void paintEvent(QPaintEvent *event) override;
     bool eventFilter(QObject *obj, QEvent *event) override;
+    void new_message(QString type,QString msg);
 private:
     QWidget* infoPannel;
     Label* avatar;

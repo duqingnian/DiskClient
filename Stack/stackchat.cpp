@@ -19,8 +19,53 @@ StackChat::StackChat(QWidget *parent) : BaseController(parent)
 void StackChat::new_message()
 {
     //收到消息，解析出job_number，侧边栏消息数量+1 右侧消息面板+1
-    QString msg = socket->readAll();
-    qDebug() << "msg=" << msg;
+    QByteArray buffer;
+
+    QDataStream socketStream(socket);
+    socketStream.setVersion(QDataStream::Qt_5_12);
+
+    socketStream.startTransaction();
+    socketStream >> buffer;
+
+    if(!socketStream.commitTransaction())
+    {
+        QString message = QString("%1 :: Waiting for more data to come..").arg(socket->socketDescriptor());
+        qDebug() << message;
+        return;
+    }
+
+    if(buffer.length() > 128)
+    {
+        QString header = buffer.mid(0,128);
+        QStringList headers = header.split("|");
+        QString msg_type = "";
+        QString msg_from = "";
+        QString msg_to = "";
+        for(QString hi : headers)
+        {
+            QStringList his = hi.split(":");
+            if("MSGTYPE" == his[0])
+            {
+                msg_type = his[1];
+            }
+            if("FROM" == his[0])
+            {
+                msg_from = his[1];
+            }
+            if("TO" == his[0])
+            {
+                msg_to = his[1];
+            }
+        }
+        qDebug() << "MSGTYPE=" << msg_type << "FROM=" << msg_from << "TO=" << msg_to;
+        QString MSG_BODY = buffer.mid(128);
+        qDebug() << "MSG_BODY=" << MSG_BODY;
+
+        if(chatPannelList.count(selected_unit->job_number) > 0)
+        {
+            chatPannelList[msg_from]->new_message(msg_type,MSG_BODY);
+        }
+    }
 }
 
 void StackChat::initSide()

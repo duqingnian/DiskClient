@@ -67,6 +67,26 @@ bool Socket::send(QString _header, QString msg)
     {
         return false;
     }
+    msg = "ADO"+_header+"#"+msg;
+    int len = client->write(msg.toUtf8());
+    if(len > 0)
+    {
+        return true;
+    }
+    return false;
+}
+
+/*
+bool Socket::send(QString _header, QString msg)
+{
+    if(!client)
+    {
+        return false;
+    }
+    if(!client->isOpen())
+    {
+        return false;
+    }
     QDataStream socketStream(client);
     socketStream.setVersion(QDataStream::Qt_5_12);
 
@@ -82,6 +102,7 @@ bool Socket::send(QString _header, QString msg)
 
     return true;
 }
+*/
 
 QTcpSocket *Socket::handle()
 {

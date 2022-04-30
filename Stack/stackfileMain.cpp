@@ -138,8 +138,8 @@ void StackFileMain::InitAction()
         btn_create->move(20,0);
         btn_create->setStyleSheet("#create_widget{border:0px;}#create_widget:hover{border:0px;color: rgb(32, 31, 30);color:#605e5c;background:#E5F3FF;border:1px solid #CCE8FF;}");
         btn_create->resize(88,50);
+        btn_create->setEnabled(false);
         btn_create->setCursor(QCursor(Qt::PointingHandCursor));
-        connect(btn_create,&QPushButton::clicked,stack_file_explorer,&FileExplorer::OpenCreateDropDown);
 
         //新建文件
         Label* ico1 = new Label(btn_create);
@@ -156,6 +156,10 @@ void StackFileMain::InitAction()
         ico_down->setStyleSheet("background:transparent;");
         ico_down->setPixmap(QPixmap::fromImage(QImage(":/Resources/Common/down.png")));
         ico_down->move(btn_create->width()-20,18);
+
+        connect(btn_create,&QPushButton::clicked,stack_file_explorer,&FileExplorer::OpenCreateDropDown);
+        connect(ico1,&Label::clicked,stack_file_explorer,&FileExplorer::OpenCreateDropDown);
+        connect(ico_down,&Label::clicked,stack_file_explorer,&FileExplorer::OpenCreateDropDown);
     }
 
     {
@@ -164,8 +168,8 @@ void StackFileMain::InitAction()
         btn_upload->move(20 + btn_create->width() +5,0);
         btn_upload->setStyleSheet("#upload_widget{border:0px;}#upload_widget:hover{border:0px;color: rgb(32, 31, 30);color:#605e5c;background:#E5F3FF;border:1px solid #CCE8FF;}");
         btn_upload->resize(88,50);
+        btn_upload->setEnabled(false);
         btn_upload->setCursor(QCursor(Qt::PointingHandCursor));
-        connect(btn_upload,&QPushButton::clicked,stack_file_explorer,&FileExplorer::OpenUploadDropDown);
 
         Label* ico_up = new Label(btn_upload);
         ico_up->setStyleSheet("background:transparent;");
@@ -181,6 +185,10 @@ void StackFileMain::InitAction()
         ico_down_up->setStyleSheet("background:transparent;");
         ico_down_up->setPixmap(QPixmap::fromImage(QImage(":/Resources/Common/down.png")));
         ico_down_up->move(btn_upload->width()-20,18);
+
+        connect(btn_upload,&QPushButton::clicked,stack_file_explorer,&FileExplorer::OpenUploadDropDown);
+        connect(ico_up,&Label::clicked,stack_file_explorer,&FileExplorer::OpenUploadDropDown);
+        connect(ico_down_up,&Label::clicked,stack_file_explorer,&FileExplorer::OpenUploadDropDown);
     }
 
 
@@ -254,6 +262,9 @@ void StackFileMain::InitContent()
         stack_file_explorer->flush(content->width(),content->height());
 
         render_urlbar();
+
+        btn_create->setEnabled(true);
+        btn_upload->setEnabled(true);
     });
 }
 
@@ -366,6 +377,9 @@ void StackFileMain::url_meta_clicked(UrlMeta* meta)
         home->id = 0;
         UrlMetas.append(home);
         content->setCurrentWidget(stack_file_welcome);
+
+        btn_create->setEnabled(false);
+        btn_upload->setEnabled(false);
     }
     else
     {
@@ -396,6 +410,9 @@ void StackFileMain::url_meta_clicked(UrlMeta* meta)
             }
             stack_file_explorer->change_folder(meta);
         }
+
+        btn_create->setEnabled(true);
+        btn_upload->setEnabled(true);
     }
     render_urlbar();
 }

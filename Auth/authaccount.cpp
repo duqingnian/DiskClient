@@ -2,7 +2,15 @@
 #include "authaccount.h"
 #include "ui_authaccount.h"
 
-AuthAccount::AuthAccount(QWidget *parent) : QDialog(parent) , ui(new Ui::AuthAccount)
+#include <Lib/HttpClient.h>
+
+#include <QJsonDocument>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QMessageBox>
+
+
+AuthAccount::AuthAccount(QWidget *parent) : BaseController(parent) , ui(new Ui::AuthAccount)
 {
     ui->setupUi(this);
     init();
@@ -24,6 +32,7 @@ void AuthAccount::init()
 
     edit_password = new QLineEdit(this);
     edit_password->setObjectName("edit_password");
+    edit_password->setEchoMode(QLineEdit::Password);
     edit_password->resize(305,50);
     edit_password->setPlaceholderText("登录密码");
     edit_password->move(25,80);
@@ -37,6 +46,9 @@ void AuthAccount::init()
     btn_submit->move(25,155);
     btn_submit->setCursor(Qt::PointingHandCursor);
     btn_submit->setStyleSheet("#btn_submit{background-color:#7B93FF;color:#fff;border:0px;border-radius:10px;font-size:16px;font-family: \"Microsoft Yahei\";text-align:center;}");
+    connect(btn_submit,&QPushButton::clicked,this,[=](){
+        do_login();
+    });
 
     //自动登录
     auto_check = new Label(this);
@@ -60,6 +72,75 @@ void AuthAccount::init()
     label_forget_passwd->setText("忘记密码?");
     label_forget_passwd->move(265,220);
     label_forget_passwd->setStyleSheet("color:#333;font-size:12px;font-family: \"Microsoft Yahei\";");
+}
+
+void AuthAccount::do_login()
+{
+    QString username = edit_account->text();
+    QString password = edit_password->text();
+
+    if(username.length() < 2)
+    {
+        box("请输入账号");
+    }
+    else if(password.length() < 2)
+    {
+        box("请输入密码");
+    }
+    else
+    {
+        QString rand = random(8);
+        int ts = get_time();
+        QString token = md5("DUQINGNIAN10985-"+username+rand); //qDebug() << "DUQINGNIAN10985-"+username+rand << " , token=" << token<< " , rand=" << rand;
+        //token = token+QString(ts);
+        //token = md5(token);
+
+        QSettings* _register = new QSettings("HKEY_CURRENT_USER\\SOFTWARE\\AdoDisk", QSettings::NativeFormat);
+        QString api_url =  _register->value("api_url").toString();qDebug() << api_url+"client/auth/login.form";
+        HttpClient(api_url+"client/auth/login.form").success([=](const QString &response) {
+            QJsonParseError err_rpt;
+            QJsonDocument  jsonDoc = QJsonDocument::fromJson(response.toUtf8(), &err_rpt);
+            if(err_rpt.error != QJsonParseError::NoError)
+            {
+                QMessageBox msgBox;
+                msgBox.setText("登录时服务器返回了错误的数据格式");
+                msgBox.exec();
+            }
+            else
+            {
+                QJsonObject rootObj = jsonDoc.object();
+                if(!rootObj.contains("code"))
+                {
+                    QMessageBox msgBox;
+                    msgBox.setText("服务器未返回code");
+                    msgBox.exec();
+                }
+                else
+                {
+                    QJsonValue _code = rootObj.value("code");
+                    int code = _code.toInt();
+                    if(0 == code)
+                    {
+                        emit open_welcome(response.toUtf8());
+                    }
+                    else
+                    {
+                        QJsonValue _msg = rootObj.value("msg");
+                        QString msg = _msg.toString();
+
+                        QMessageBox msgBox;
+                        msgBox.setText(msg);
+                        msgBox.exec();
+                    }
+                }
+            }
+        })
+                .param("username", username).param("password", password)
+                .header("rand", rand)
+                .header("ts", QString::number(ts))
+                .header("token", token)
+                .header("content-type", "application/x-www-form-urlencoded").post();
+    }
 }
 
 

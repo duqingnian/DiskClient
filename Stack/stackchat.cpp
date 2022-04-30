@@ -18,53 +18,41 @@ StackChat::StackChat(QWidget *parent) : BaseController(parent)
 
 void StackChat::new_message()
 {
-    //收到消息，解析出job_number，侧边栏消息数量+1 右侧消息面板+1
-    QByteArray buffer;
-
-    QDataStream socketStream(socket);
-    socketStream.setVersion(QDataStream::Qt_5_12);
-
-    socketStream.startTransaction();
-    socketStream >> buffer;
-
-    if(!socketStream.commitTransaction())
+    QString buffer = Socket::Instance()->handle()->readAll();
+    if("DQN" != buffer.mid(0,3))
     {
-        QString message = QString("%1 :: Waiting for more data to come..").arg(socket->socketDescriptor());
-        qDebug() << message;
         return;
     }
 
-    if(buffer.length() > 128)
-    {
-        QString header = buffer.mid(0,128);
-        QStringList headers = header.split("|");
-        QString msg_type = "";
-        QString msg_from = "";
-        QString msg_to = "";
-        for(QString hi : headers)
-        {
-            QStringList his = hi.split(":");
-            if("MSGTYPE" == his[0])
-            {
-                msg_type = his[1];
-            }
-            if("FROM" == his[0])
-            {
-                msg_from = his[1];
-            }
-            if("TO" == his[0])
-            {
-                msg_to = his[1];
-            }
-        }
-        qDebug() << "MSGTYPE=" << msg_type << "FROM=" << msg_from << "TO=" << msg_to;
-        QString MSG_BODY = buffer.mid(128);
-        qDebug() << "MSG_BODY=" << MSG_BODY;
+    buffer = buffer.mid(3);
+    int splitIndex = buffer.indexOf("#");
 
-        if(chatPannelList.count(selected_unit->job_number) > 0)
+    QString header = buffer.mid(0,splitIndex);
+    QString MSG_BODY = buffer.mid(splitIndex+1);
+
+    QStringList headers = header.split("|");
+    QString msg_type = "";
+    QString msg_from = "";
+    QString msg_to = "";
+    for(QString hi : headers)
+    {
+        QStringList his = hi.split(":");
+        if("MSGTYPE" == his[0])
         {
-            chatPannelList[msg_from]->new_message(msg_type,MSG_BODY);
+            msg_type = his[1];
         }
+        if("FROM" == his[0])
+        {
+            msg_from = his[1];
+        }
+        if("TO" == his[0])
+        {
+            msg_to = his[1];
+        }
+    }
+    if(chatPannelList.count(selected_unit->job_number) > 0)
+    {
+        chatPannelList[msg_from]->new_message(msg_type,MSG_BODY);
     }
 }
 
@@ -117,7 +105,6 @@ void StackChat::initSide()
     });
 
     StackSide->addWidget(chat);
-
     StackSide->setCurrentWidget(chat);
 }
 
@@ -183,7 +170,7 @@ void StackChat::renderSide()
 void StackChat::SelectedTab(QString key)
 {
     selected_tab = key;
-
+    qDebug() << "selected_tab=" << selected_tab;
     QMapIterator<int,SIDE_TAB*> it(side_tabs);
     while(it.hasNext())
     {
@@ -201,6 +188,15 @@ void StackChat::SelectedTab(QString key)
             ico->setPixmap(QPixmap::fromImage(QImage(":/Resources/Chat/Gdi/"+objname.mid(9).toLower()+"_0.png")));
             name->setStyleSheet("#"+it.value()->key+"_name{color:#8E94A2;font-size:12px;font-weight:400;margin-left:0px;font-family:Microsoft YaHei;}");
         }
+    }
+
+    if("SIDE_TAB_SETTING" == selected_tab)
+    {
+        //显示设置
+    }
+    else
+    {
+        StackSide->setCurrentWidget(chat);
     }
 }
 

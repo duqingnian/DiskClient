@@ -412,9 +412,9 @@ void FileExplorer::PrepareIntentType(QString IntentType)
     {
         QStringList str_path_list = QFileDialog::getOpenFileNames(this,"选择上传文件","d:\\","所有文件 (*.*)");
         for (int i = 0; i < str_path_list.size(); i++){
-            QString full_path = str_path_list[i];
+            QString full_path = str_path_list[i]; //包含文件名称的绝对路径
             QFileInfo file = QFileInfo(full_path);
-            QString file_name = file.fileName();
+            QString file_name = file.fileName(); //文件的名称
 
             upload_queue.append(full_path);
             upload_array.append(file_name);
@@ -522,28 +522,13 @@ void FileExplorer::loadProgress(qint64 bytesSent, qint64 bytesTotal)
 //显示上传面板
 void FileExplorer::show_upload_pannel()
 {
-    QString url = path("/client/file/upload");
+    //QString url = path("/client/file/upload");
+    QString header = "MSGTYPE:FILE|FROM:"+user->job_number+"|TO:SYS";
 
+    QTcpSocket* socket = Socket::Instance()->handle();
     for (int i=0; i<upload_queue.count(); i++) {
         QTimer::singleShot(100, this, [=](){
-            QString file = upload_queue[i];
-            //普通的http文件上传形式
-            /*
-                handle = new QFile(file);
-                handle->open(QIODevice::ReadOnly);
-
-                QByteArray byte_file = handle->readAll();
-                QNetworkRequest request(url);
-                request.setHeader(QNetworkRequest::ContentTypeHeader, QLatin1String("application/octet-stream"));
-
-                QString   disposition = QString("form-data; file_size=\"%1\"").arg(QString::number(file_size));
-                request.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant(disposition));
-
-                reply = AccessManage->post(request,byte_file);
-
-                connect(reply, SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(loadError(QNetworkReply::NetworkError)));
-                connect(reply, SIGNAL(uploadProgress(qint64 ,qint64)), this, SLOT(loadProgress(qint64 ,qint64)));
-                */
+            //
         });
     }
 

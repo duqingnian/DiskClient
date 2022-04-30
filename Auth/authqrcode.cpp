@@ -181,7 +181,6 @@ void AuthQrcode::loop_result()
     }
     QString api_url =  _register->value("api_url").toString();
     HttpClient(api_url+"client/auth/ding/sync.html").success([this](const QString &response) {
-        qDebug() << "response.toUtf8()=" << response.toUtf8();
         QJsonParseError err_rpt;
         QJsonDocument  jsonDoc = QJsonDocument::fromJson(response.toUtf8(), &err_rpt);
         if(err_rpt.error != QJsonParseError::NoError)

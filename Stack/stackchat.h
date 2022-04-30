@@ -48,6 +48,7 @@ private:
     QMap<int,SIDE_TAB*>side_tabs;
     QString selected_tab = "";
 
+
     //侧边栏Stacks
     Chat* chat;
 

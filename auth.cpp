@@ -190,8 +190,10 @@ void Auth::init_stack_widgets()
 
     //保存配置后重新生成二维码
     connect(dlg_setting,SIGNAL(save_setting()),auth_widget_qrcode,SLOT(refresh_qrcode()));
-    connect(auth_widget_qrcode,&AuthQrcode::open_welcome,this,&Auth::welcome);
     connect(this,&Auth::login_success,auth_widget_qrcode,&AuthQrcode::pause);
+
+    connect(auth_widget_qrcode,&AuthQrcode::open_welcome,this,&Auth::welcome);
+    connect(auth_widget_account,&AuthAccount::open_welcome,this,&Auth::welcome);
 }
 
 void Auth::render_auth_component()

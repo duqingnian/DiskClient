@@ -3,16 +3,18 @@
 
 #include <QWidget>
 
+#include <Common/basecontroller.h>
+
 class QPaintEvent;
 class QPainter;
 class QLabel;
 class QMovie;
 
-class QNChatMessage : public QWidget
+class QNChatMessage : public BaseController
 {
     Q_OBJECT
 public:
-    explicit QNChatMessage(QWidget *parent = nullptr);
+    explicit QNChatMessage(SELECT_UNIT*,QWidget *parent = nullptr);
 
     enum User_Type{
         User_System,//系统
@@ -32,6 +34,7 @@ public:
 protected:
     void paintEvent(QPaintEvent *event);
 private:
+    SELECT_UNIT* target;
     QString m_msg;
     QString m_time;
     QString m_curTime;

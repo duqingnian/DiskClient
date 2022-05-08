@@ -2,18 +2,29 @@
 #include "stackpannel.h"
 #include <QDateTime>
 #include <QDebug>
+#include <QSqlQueryModel>
+#include <QTimer>
+#include <Thread/syncmsgthread.h>
 
-StackPannel::StackPannel(QWidget *parent,SELECT_UNIT* unit) : BaseController(parent)
+StackPannel::StackPannel(QWidget *parent,SELECT_UNIT* unit, bool init_msg) : BaseController(parent)
 {
     this->setStyleSheet("font-family: \"Microsoft Yahei\";");
     init_info_pannel();
 
     target = unit;
+    avatar->setPixmap(GetAvatar(unit->unit->job_number));
     name->setText(unit->unit->name);
     summary->setText(unit->unit->depname+"-"+unit->unit->groupname+"-"+unit->unit->title+"-"+unit->unit->job_number);
 
     init_action_pannel();
     init_chat_list();
+
+    if(init_msg)
+    {
+        QTimer::singleShot(100, this, [=](){
+            this->loadMsg();
+        });
+    }
 }
 
 //初始化顶部面板
@@ -116,6 +127,68 @@ void StackPannel::init_chat_list()
     scrollArea->setWidget(bubblelist);
 }
 
+//初始化中载入消息
+void StackPannel::loadMsg()
+{
+    //    SyncMsgThread* t = new SyncMsgThread(target->unit->job_number);
+    //    connect(t,&SyncMsgThread::sync_msg,this,[=](QString str){qDebug() << str;});
+    //    t->start();
+    QString sql = "select * from `MSG` where `send_from`='"+target->unit->job_number+"' or send_to='"+target->unit->job_number+"' order by id desc limit 35";
+    QSqlQuery query;
+    if(!query.exec(sql))
+    {
+        qDebug()<<query.lastError();
+    }
+    else
+    {
+        QSqlQueryModel *queryModel = new QSqlQueryModel();
+        queryModel->setQuery(query);
+        int nRecordCount = queryModel->rowCount();
+
+        if(nRecordCount > 0)
+        {
+            SELECT_UNIT* me = new SELECT_UNIT();
+            me->index = 0;
+            me->job_number = user->job_number;
+            me->unit = user;
+
+            QString time = QString::number(QDateTime::currentDateTime().toTime_t());
+            dealMessageTime(time);
+
+            for (int i=0; i < nRecordCount ; i++) {
+                query.next();
+
+                WORD* word = new WORD();
+                word->id = query.value("id").toString();
+                word->from = query.value("send_from").toString();
+                word->to = query.value("send_to").toString();
+                word->content = query.value("content").toString();
+                word->time = query.value("timestamp").toString();
+
+                words.append(word);
+            }
+
+            for (int i=words.count()-1; i>=0; i--) {
+                if(words[i]->from == target->unit->job_number)
+                {
+                    QNChatMessage* messageW = new QNChatMessage(target,this);
+                    QListWidgetItem* item = new QListWidgetItem(bubblelist);
+                    dealMessage(messageW, item, "["+words[i]->id+"]"+words[i]->content, time, QNChatMessage::User_She);
+                }
+                else
+                {
+                    QNChatMessage* messageW = new QNChatMessage(me,this);
+                    QListWidgetItem* item = new QListWidgetItem(bubblelist);
+                    dealMessage(messageW, item, "["+words[i]->id+"]"+words[i]->content, time, QNChatMessage::User_Me);
+                }
+                bubblelist->setCurrentRow(bubblelist->count()-1);
+            }
+
+            emit post_msg(target->job_number,"text",words[0]->content,words[0]->time);
+        }
+    }
+}
+
 void StackPannel::resize_input()
 {
     QTextDocument *doc = input->document();
@@ -160,18 +233,28 @@ void StackPannel::send_msg()
         input->setEnabled(false);
         if(sendmsg(target->job_number,msg))
         {
-            QString time = QString::number(QDateTime::currentDateTime().toTime_t()); //时间戳
+            QString time = QString::number(QDateTime::currentDateTime().toTime_t());
             dealMessageTime(time);
 
-            QNChatMessage* messageW = new QNChatMessage(this);
+            QNChatMessage* messageW = new QNChatMessage(target,this);
             QListWidgetItem* item = new QListWidgetItem(bubblelist);
             dealMessage(messageW, item, msg, time, QNChatMessage::User_Me);
-            //messageW->setTextSuccess();
 
             bubblelist->setCurrentRow(bubblelist->count()-1);
 
             input->setEnabled(true);
             input->setFocus();
+
+            int ms = get_time();
+
+            //消息入库
+            QString sql = "INSERT INTO `MSG` VALUES (NULL, 'TEXT', '"+user->job_number.toUpper()+"', '"+target->job_number.toUpper()+"', '"+msg+"', "+QString::number(ms)+", 0)";
+            Db::Instance()->query(sql);
+
+            QString meta_sql = "update `friend` set `last_msg`='"+msg+"', `last_time`="+time+" where `job_number`='"+target->job_number+"'";
+            Db::Instance()->query(meta_sql);
+
+            emit post_msg(target->job_number,"text",msg,"");
         }
         else
         {
@@ -188,13 +271,14 @@ void StackPannel::reset_input()
     input->setFocus();
 }
 
-void StackPannel::dealMessage(QNChatMessage *messageW, QListWidgetItem *item, QString text, QString time,  QNChatMessage::User_Type type)
+bool StackPannel::dealMessage(QNChatMessage *messageW, QListWidgetItem *item, QString text, QString time,  QNChatMessage::User_Type type)
 {
     messageW->setFixedWidth(this->width());
     QSize size = messageW->fontRect(text);
     item->setSizeHint(size);
     messageW->setText(text, time, size, type);
     bubblelist->setItemWidget(item, messageW);
+    return true;
 }
 
 void StackPannel::dealMessageTime(QString curMsgTime)
@@ -210,7 +294,7 @@ void StackPannel::dealMessageTime(QString curMsgTime)
         isShowTime = true;
     }
     if(isShowTime) {
-        QNChatMessage* messageTime = new QNChatMessage(bubblelist->parentWidget());
+        QNChatMessage* messageTime = new QNChatMessage(target,bubblelist->parentWidget());
         QListWidgetItem* itemTime = new QListWidgetItem(bubblelist);
 
         QSize size = QSize(this->width(), 40);
@@ -221,7 +305,7 @@ void StackPannel::dealMessageTime(QString curMsgTime)
     }
 }
 
-void StackPannel::paintEvent(QPaintEvent *event)
+void StackPannel::paintEvent(QPaintEvent*)
 {
     input->setFocus();
 }
@@ -278,13 +362,12 @@ void StackPannel::new_message(QString type, QString msg)
     QString time = QString::number(QDateTime::currentDateTime().toTime_t()); //时间戳
     dealMessageTime(time);
 
-    QNChatMessage* messageW = new QNChatMessage(this);
+    QNChatMessage* messageW = new QNChatMessage(target,this);
     QListWidgetItem* item = new QListWidgetItem(bubblelist);
     dealMessage(messageW, item, msg, time, QNChatMessage::User_She);
 
     bubblelist->setCurrentRow(bubblelist->count()-1);
 }
-
 
 void StackPannel::resizeEvent(QResizeEvent *)
 {

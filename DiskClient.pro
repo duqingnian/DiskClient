@@ -1,5 +1,7 @@
 QT += core gui
 QT += network
+QT += sql
+
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11
@@ -11,6 +13,7 @@ SOURCES += \
     Auth/authsms.cpp \
     Common/adohelper.cpp \
     Common/basecontroller.cpp \
+    Common/db.cpp \
     Common/socket.cpp \
     Component/BaseWindow.cpp \
     Component/FlowLayout.cpp \
@@ -28,14 +31,19 @@ SOURCES += \
     Menu/filewelcomemenu.cpp \
     Menu/menufileexplorercanvas.cpp \
     Stack/Chat/chat.cpp \
+    Stack/Chat/chatfrienditem.cpp \
     Stack/Chat/qnchatmessage.cpp \
     Stack/Chat/stackempty.cpp \
     Stack/Chat/stackpannel.cpp \
     Stack/File/fileexplorer.cpp \
     Stack/File/filewelcome.cpp \
+    Stack/File/uploadfilelisteitem.cpp \
+    Stack/File/uploadpannel.cpp \
     Stack/stackchat.cpp \
     Stack/stackfileMain.cpp \
     Stack/stackhelp.cpp \
+    Thread/downloadthread.cpp \
+    Thread/syncmsgthread.cpp \
     auth.cpp \
     main.cpp \
     welcome.cpp
@@ -47,6 +55,7 @@ HEADERS += \
     Auth/authsms.h \
     Common/adohelper.h \
     Common/basecontroller.h \
+    Common/db.h \
     Common/socket.h \
     Component/BaseWindow.h \
     Component/FlowLayout.h \
@@ -59,6 +68,7 @@ HEADERS += \
     Data/Pdu.h \
     Data/Simple.h \
     Data/TabMeta.h \
+    Data/UploadFileUnit.h \
     Data/UrlMeta.h \
     Dialog/dialogcreate.h \
     DropDown/dropdowncreate.h \
@@ -72,14 +82,19 @@ HEADERS += \
     Menu/filewelcomemenu.h \
     Menu/menufileexplorercanvas.h \
     Stack/Chat/chat.h \
+    Stack/Chat/chatfrienditem.h \
     Stack/Chat/qnchatmessage.h \
     Stack/Chat/stackempty.h \
     Stack/Chat/stackpannel.h \
     Stack/File/fileexplorer.h \
     Stack/File/filewelcome.h \
+    Stack/File/uploadfilelisteitem.h \
+    Stack/File/uploadpannel.h \
     Stack/stackchat.h \
     Stack/stackfileMain.h \
     Stack/stackhelp.h \
+    Thread/downloadthread.h \
+    Thread/syncmsgthread.h \
     auth.h \
     welcome.h
 
@@ -96,6 +111,9 @@ FORMS += \
     Menu/fdmenu.ui \
     Menu/filewelcomemenu.ui \
     Menu/menufileexplorercanvas.ui \
+    Stack/Chat/chatfrienditem.ui \
+    Stack/File/uploadfilelisteitem.ui \
+    Stack/File/uploadpannel.ui \
     Stack/stackhelp.ui \
     auth.ui \
     welcome.ui

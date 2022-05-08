@@ -10,7 +10,9 @@
 #include <QMutex>
 #include <QSettings>
 #include <QTcpSocket>
+#include <QFile>
 #include "socket.h"
+#include "db.h"
 
 extern USER     *user;
 extern TABMETA  *tab_meta;
@@ -34,11 +36,14 @@ public:
     QString md5(QString);
     QString random(int);
     int get_time();
+    QString get_mtime();
 
     QSettings* regedit;
 
     QString server_ip;
     QString server_port;
+
+    QString basepath = "";
 
     //根据键值获取注册表的属性值
     QString get_reg(QString);
@@ -53,6 +58,14 @@ public:
 
     bool sendmsg(QString sendto,QString msg="",QString header="");
     bool sendJsonObject(QString sendto,QJsonObject,QString header="");
+
+    //计算文件的md5
+    QString md5_file(const QString &sourceFilePath);
+
+    //获取用户头像
+    QPixmap GetAvatar();
+    QPixmap GetAvatar(QString);
+
 signals:
 
 };

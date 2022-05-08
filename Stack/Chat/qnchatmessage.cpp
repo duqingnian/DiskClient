@@ -7,18 +7,17 @@
 #include <QLabel>
 #include <QDebug>
 
-QNChatMessage::QNChatMessage(QWidget *parent) : QWidget(parent)
+QNChatMessage::QNChatMessage(SELECT_UNIT* _target,QWidget *parent) : BaseController(parent)
 {
     QFont te_font = this->font();
     te_font.setFamily("MicrosoftYaHei");
     te_font.setPointSize(11);
-    //    te_font.setWordSpacing(0);
-    //    te_font.setLetterSpacing(QFont::PercentageSpacing,0);
-    //    te_font.setLetterSpacing(QFont::PercentageSpacing, 100);          //300%,100为默认  //设置字间距%
-    //    te_font.setLetterSpacing(QFont::AbsoluteSpacing, 0);             //设置字间距为3像素 //设置字间距像素值
+
+    target = _target;
+
     this->setFont(te_font);
-    m_leftPixmap = QPixmap(":/Resources/User/noavatar_middle.gif");
-    m_rightPixmap = QPixmap(":/Resources/User/noavatar_middle.gif");
+    m_leftPixmap = GetAvatar(target->unit->job_number);
+    m_rightPixmap = GetAvatar();
 
     m_loadingMovie = new QMovie(this);
     m_loadingMovie->setFileName(":/Resources/Chat/loading4.gif");

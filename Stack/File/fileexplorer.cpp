@@ -84,6 +84,13 @@ FileExplorer::FileExplorer(QWidget *parent) : BaseController(parent)
     connect(dropdown_upload,&DropDownUpload::IntentUpload,this,[=](QString IntentType){
         PrepareIntentType(IntentType);
     });
+
+    upload_pannel = new UploadPannel(this);
+    upload_pannel->setObjectName("upload_pannel");
+    upload_pannel->setStyleSheet("#upload_pannel{background:#fff;border: 1px solid #ddd;border-radius: 5px;}");
+    upload_pannel->resize(495,375);
+    upload_pannel->move(this->width() - upload_pannel->width() - 15,this->height() - upload_pannel->height() - 15);
+    upload_pannel->show();
 }
 
 void FileExplorer::set_meta(UrlMeta *_meta)
@@ -162,6 +169,8 @@ void FileExplorer::flush(int width, int height)
 
     dlg_create->move((width - dlg_create->width())/2,(height - dlg_create->height())/2 -80);
     EmptyTip->move((canvas->width() - EmptyTip->width()) / 2,(canvas->height() - EmptyTip->height()) / 2 - 120);
+
+    upload_pannel->move(this->width() - upload_pannel->width() - 15,this->height() - upload_pannel->height() - 15);
 }
 
 //渲染文件
@@ -293,7 +302,7 @@ void FileExplorer::mousePressEvent(QMouseEvent *event)
 }
 
 //鼠标移动
-void FileExplorer::mouseMoveEvent(QMouseEvent *event)
+void FileExplorer::mouseMoveEvent(QMouseEvent *)
 {
     //qDebug() << "移动 x=" << event->pos().x() << ",y=" << event->pos().y();
 }
@@ -412,15 +421,43 @@ void FileExplorer::PrepareIntentType(QString IntentType)
     {
         QStringList str_path_list = QFileDialog::getOpenFileNames(this,"选择上传文件","d:\\","所有文件 (*.*)");
         for (int i = 0; i < str_path_list.size(); i++){
-            QString full_path = str_path_list[i]; //包含文件名称的绝对路径
-            QFileInfo file = QFileInfo(full_path);
-            QString file_name = file.fileName(); //文件的名称
+            QString abs_path = str_path_list[i]; //包含文件名称的绝对路径
+            QFileInfo file = QFileInfo(abs_path);
+            QString file_name = file.fileName(); qDebug() << "file_name=" << file_name;
+            unsigned long long fize_size = file.size();
 
-            upload_queue.append(full_path);
-            upload_array.append(file_name);
+            QString type = "null";
+            if(file_name.contains("."))
+            {
+                type = file_name.mid(file_name.lastIndexOf(".")+1).toLower();
+
+                QStringList typesRes = {"null",
+                                        "js","css","html","xml","ini"
+                                        "mp3","mp4","avi","rm","wmv","mov","3gp"
+                                        "bmp","psd","jpeg","jpg","png","gif"
+                                        "doc","docx","csv","ppt","xls","xlsx","pptx"
+                                        "7z","rar","zip",
+                                        "ai","pdf","fl",
+                                        "php","cpp"
+                                        "aep","bat","email","emf","eps","cdr","exe","iso","raw","swf","tif","ttf","txt","wmf","ico","chm","dll","sql","log"
+                                       };
+                if(typesRes.count(type) == 0)
+                {
+                    type = "null";
+                }
+            }
+            UP_FILE* upload_file = new UP_FILE();
+            upload_file->type = type;
+            upload_file->md5 = md5(abs_path);
+            upload_file->name = file_name;
+            upload_file->path = abs_path;
+            upload_file->size = fize_size;
+            upload_file->state = UP_STATE::WAIT_UP;
+
+            upload_pannel->add_upload(upload_file);
         }
-        //开始上传
-        show_upload_pannel();
+        upload_pannel->show();
+        upload_pannel->raise();
     }
     else if("folder" == IntentType)
     {
@@ -519,20 +556,6 @@ void FileExplorer::loadProgress(qint64 bytesSent, qint64 bytesTotal)
     //progressBar->setValue(bytesSent);  //当前值
 }
 
-//显示上传面板
-void FileExplorer::show_upload_pannel()
-{
-    //QString url = path("/client/file/upload");
-    QString header = "MSGTYPE:FILE|FROM:"+user->job_number+"|TO:SYS";
-
-    QTcpSocket* socket = Socket::Instance()->handle();
-    for (int i=0; i<upload_queue.count(); i++) {
-        QTimer::singleShot(100, this, [=](){
-            //
-        });
-    }
-
-}
 
 
 

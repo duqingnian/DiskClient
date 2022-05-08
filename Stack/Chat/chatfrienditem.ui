@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ChatFriendItem</class>
+ <widget class="QDialog" name="ChatFriendItem">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>289</width>
+    <height>65</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">#ChatFriendItem{
+background:#fff;
+}</string>
+  </property>
+  <widget class="QLabel" name="label_avatar">
+   <property name="geometry">
+    <rect>
+     <x>12</x>
+     <y>12</y>
+     <width>40</width>
+     <height>40</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true"/>
+   </property>
+   <property name="text">
+    <string>avatar</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_name">
+   <property name="geometry">
+    <rect>
+     <x>62</x>
+     <y>12</y>
+     <width>141</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">#label_name{
+font-size:14px;color:#000;
+}</string>
+   </property>
+   <property name="text">
+    <string>name</string>
+   </property>
+  </widget>
+  <widget class="QWidget" name="bg" native="true">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>289</width>
+     <height>65</height>
+    </rect>
+   </property>
+   <widget class="QLabel" name="last_msg">
+    <property name="geometry">
+     <rect>
+      <x>62</x>
+      <y>35</y>
+      <width>210</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>last_msg</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="last_time">
+    <property name="geometry">
+     <rect>
+      <x>219</x>
+      <y>12</y>
+      <width>54</width>
+      <height>12</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>last_time</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -68,6 +68,12 @@ private:
     //新消息
     void new_message();
 
+    //分发消息
+    void dispatch_msg();
+
+    //初始化文件助手
+    void init_file_helper();
+
 private slots:
 
 

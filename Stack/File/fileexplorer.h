@@ -11,6 +11,7 @@
 #include "Data/UrlMeta.h"
 #include "DropDown/dropdowncreate.h"
 #include "Dialog/dialogcreate.h"
+#include "uploadpannel.h"
 #include <Component/FlowLayout.h>
 #include <DropDown/dropdownupload.h>
 #include <Menu/fdmenu.h>
@@ -78,12 +79,11 @@ public:
     //处理上传
     void PrepareIntentType(QString);
 
-    //上传队列
-    QVector<QString> upload_queue;
-    QVector<QString> upload_array;
+//    //上传队列
+//    QVector<QString> upload_queue;
 
-    //显示上传面板
-    void show_upload_pannel();
+//    //显示上传面板
+//    void show_upload_pannel();
 
     //没有任何文件的提示
     QLabel* EmptyTip;
@@ -94,6 +94,8 @@ public:
     UrlMeta* meta;
     QPoint pos;
     QFile *handle;
+
+    UploadPannel* upload_pannel;
 
 public slots:
     void OpenCreateDropDown();  //打开创建下拉

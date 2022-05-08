@@ -1,6 +1,11 @@
 ﻿#pragma execution_character_set("utf-8")
 #include "stackchat.h"
 
+#include <Lib/HttpClient.h>
+
+#include <QJsonDocument>
+#include <QJsonObject>
+
 #define WIDTH 289
 
 StackChat::StackChat(QWidget *parent) : BaseController(parent)
@@ -12,8 +17,27 @@ StackChat::StackChat(QWidget *parent) : BaseController(parent)
     initMain();
     renderMain();
 
+    //因为文件助手为系统内置的用户，很特殊，所以单独初始化一下
+    init_file_helper();
+
     socket = Socket::Instance()->handle();
     connect(socket, &QTcpSocket::readyRead, this, &StackChat::new_message);
+}
+
+void StackChat::init_file_helper()
+{
+    USER* SYS = new USER();
+    SYS->name = "文件助手";
+    SYS->job_number = "SYS";
+    SYS->avatar = ":/Resources/ico.ico";
+    SYS->depid = "0";
+    SYS->depname = "技术部";
+    SYS->groupid = "0";
+    SYS->groupname = "软件研发组";
+    SYS->title = "文件小助手";
+    SYS->uid = "0";
+
+    chat->append(SYS);
 }
 
 void StackChat::new_message()
@@ -27,33 +51,104 @@ void StackChat::new_message()
     buffer = buffer.mid(3);
     int splitIndex = buffer.indexOf("#");
 
-    QString header = buffer.mid(0,splitIndex);
+    QString HEADER = buffer.mid(0,splitIndex);
     QString MSG_BODY = buffer.mid(splitIndex+1);
 
-    QStringList headers = header.split("|");
-    QString msg_type = "";
-    QString msg_from = "";
-    QString msg_to = "";
-    for(QString hi : headers)
+    QStringList HEADERs = HEADER.split("|");
+    QString MSG_TYPE = "";
+    QString MSG_FROM = "";
+    QString MSG_TO = "";
+    for(QString hi : HEADERs)
     {
         QStringList his = hi.split(":");
         if("MSGTYPE" == his[0])
         {
-            msg_type = his[1];
+            MSG_TYPE = his[1];
         }
         if("FROM" == his[0])
         {
-            msg_from = his[1];
+            MSG_FROM = his[1].toUpper();
         }
         if("TO" == his[0])
         {
-            msg_to = his[1];
+            MSG_TO = his[1].toUpper();
         }
     }
-    if(chatPannelList.count(selected_unit->job_number) > 0)
+
+    int ms = get_time();
+
+    //消息入库
+    QString sql = "INSERT INTO `MSG` VALUES (NULL, '"+MSG_TYPE+"', '"+MSG_FROM+"', '"+MSG_TO+"', '"+MSG_BODY+"', "+QString::number(ms)+", 0)";
+    Db::Instance()->query(sql);
+
+    //已经聊天过
+    if(chat->in_list(MSG_FROM))
     {
-        chatPannelList[msg_from]->new_message(msg_type,MSG_BODY);
+        chat->new_msg(MSG_FROM,MSG_TYPE,MSG_BODY);
     }
+    else
+    {
+        //新的聊天
+        QString timestamp = QString::number(get_time());
+
+        QString token = md5("DUQINGNIAN"+MSG_FROM+timestamp+"10985");
+        token = md5(token+timestamp+"10985");
+
+        HttpClient(path("/client/user/get_detail_by_jobnumber")).success([=](const QString &response) {
+            QJsonParseError err_rpt;
+            QJsonDocument  jsonDoc = QJsonDocument::fromJson(response.toUtf8(), &err_rpt);
+            if(err_rpt.error == QJsonParseError::NoError)
+            {
+                QJsonObject rootObj = jsonDoc.object();
+                if(rootObj.contains("code"))
+                {
+                    QJsonValue _code = rootObj.value("code");
+                    int code = _code.toInt();
+                    if(0 == code)
+                    {
+                        QJsonObject userObj = rootObj.value("user").toObject();
+
+                        USER* EMP = new USER();
+                        EMP->name =userObj.value("name").toString();
+                        EMP->job_number = userObj.value("job_number").toString().toUpper();
+                        EMP->avatar = userObj.value("avatar").toString();
+                        EMP->depid = userObj.value("depid").toString();
+                        EMP->depname = userObj.value("depname").toString();
+                        EMP->groupid = userObj.value("groupid").toString();
+                        EMP->groupname = userObj.value("groupname").toString();
+                        EMP->title = userObj.value("title").toString();
+                        EMP->uid = userObj.value("uid").toString();
+
+                        chat->insert(EMP);
+                        chat->new_msg(MSG_FROM,MSG_TYPE,MSG_BODY);
+
+                        QString sql = "INSERT INTO `FRIEND` (`id`, `idx`, `uid`, `job_number`, `name`, `avatar`, `last_msg`, `last_time`, `depid`, `depname`, `groupid`, `groupname`, `title`) VALUES (NULL, '0', '', '"+EMP->job_number+"', '"+EMP->name+"', '"+EMP->avatar+"', '"+MSG_BODY+"', '"+timestamp+"', '"+EMP->depid+"', '"+EMP->depname+"', '"+EMP->groupid+"', '"+EMP->depname+"', '"+EMP->title+"')";
+                        qDebug() << sql;
+                        Db::Instance()->query(sql);
+                    }
+                }
+            }
+        }).param("token", token).param("timestamp", timestamp).param("job_number", MSG_FROM).header("content-type", "application/x-www-form-urlencoded").post();
+    }
+
+    if(chatPannelList.count(MSG_FROM) > 0)
+    {
+        chatPannelList[MSG_FROM]->new_message(MSG_TYPE,MSG_BODY);
+    }
+}
+
+//左侧点击了好友
+void StackChat::friend_targeted(SELECT_UNIT* unit)
+{
+    selected_unit = unit;
+    if(chatPannelList.count(selected_unit->job_number) == 0)
+    {
+        StackPannel* stack_chat_pannel = new StackPannel(main,selected_unit,true);
+        connect(stack_chat_pannel,&StackPannel::post_msg,chat,&Chat::post_msg);
+        chatPannelList[selected_unit->job_number] = stack_chat_pannel;
+        StackMain->addWidget(chatPannelList[selected_unit->job_number]);
+    }
+    StackMain->setCurrentWidget(chatPannelList[selected_unit->job_number]);
 }
 
 void StackChat::initSide()
@@ -170,7 +265,6 @@ void StackChat::renderSide()
 void StackChat::SelectedTab(QString key)
 {
     selected_tab = key;
-    qDebug() << "selected_tab=" << selected_tab;
     QMapIterator<int,SIDE_TAB*> it(side_tabs);
     while(it.hasNext())
     {
@@ -246,19 +340,6 @@ void StackChat::initMain()
 void StackChat::renderMain()
 {
 
-}
-
-//左侧点击了好友
-void StackChat::friend_targeted(SELECT_UNIT* unit)
-{
-    selected_unit = unit;
-    if(chatPannelList.count(selected_unit->job_number) == 0)
-    {
-        StackPannel* stack_chat_pannel = new StackPannel(main,selected_unit);
-        chatPannelList[selected_unit->job_number] = stack_chat_pannel;
-        StackMain->addWidget(chatPannelList[selected_unit->job_number]);
-    }
-    StackMain->setCurrentWidget(chatPannelList[selected_unit->job_number]);
 }
 
 void StackChat::resizeEvent(QResizeEvent *)

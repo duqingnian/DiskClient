@@ -1,6 +1,8 @@
 ﻿#include "basecontroller.h"
+#include <QCoreApplication>
 #include <QCryptographicHash>
 #include <QDateTime>
+#include <QDir>
 #include <QJsonObject>
 #include <QJsonParseError>
 #include <QMessageBox>
@@ -18,6 +20,8 @@ BaseController::BaseController(QWidget *parent) : QDialog(parent)
     css += "QScrollBar::handle:vertical {min-height: 0px;border: 0px;border-radius: 0px;background-color: #CAC7C6;}";
     css += "QScrollBar::add-line:vertical {height: 0px;subcontrol-position: bottom;subcontrol-origin: margin;}";
     this->setStyleSheet(css);
+
+    basepath = QCoreApplication::applicationDirPath();
 }
 
 BaseController::~BaseController()
@@ -47,9 +51,20 @@ QString BaseController::random(int length)
 //获取时间戳
 int BaseController::get_time()
 {
-    QDateTime time = QDateTime::currentDateTime();   //获取当前时间
+    QDateTime time = QDateTime::currentDateTime();
     int timeT = time.toTime_t();
     return timeT;
+}
+
+QString BaseController::get_mtime()
+{
+    QDateTime time = QDateTime::currentDateTime();
+    int timeT = time.toTime_t();
+
+    int ms = time.time().msec();
+    QString tmp = QString::number(timeT) + QString::number(ms);
+    return tmp;
+
 }
 
 //根据注册表的键获取值
@@ -139,3 +154,46 @@ bool BaseController::sendJsonObject(QString sendto,QJsonObject obj,QString type)
 }
 
 
+QString BaseController::md5_file(const QString &sourceFilePath)
+{
+
+    QFile sourceFile(sourceFilePath);
+    qint64 fileSize = sourceFile.size();
+    const qint64 bufferSize = 10240;
+
+    if (sourceFile.open(QIODevice::ReadOnly)) {
+        char buffer[bufferSize];
+        int bytesRead;
+        int readSize = qMin(fileSize, bufferSize);
+
+        QCryptographicHash hash(QCryptographicHash::Md5);
+
+        while (readSize > 0 && (bytesRead = sourceFile.read(buffer, readSize)) > 0) {
+            fileSize -= bytesRead;
+            hash.addData(buffer, bytesRead);
+            readSize = qMin(fileSize, bufferSize);
+        }
+
+        sourceFile.close();
+        return QString(hash.result().toHex());
+    }
+    return QString();
+}
+QPixmap BaseController::GetAvatar()
+{
+    return GetAvatar(user->job_number);
+}
+QPixmap BaseController::GetAvatar(QString job_number)
+{
+    if("SYS" == job_number)
+    {
+        return QPixmap(":/Resources/ico.ico");
+    }
+    QString ava = basepath+"/avatar/"+job_number.toUpper()+".jpg";
+    QFile file(ava);
+    if(file.exists())
+    {
+        return QPixmap::fromImage(QImage(ava));
+    }
+    return QPixmap::fromImage(QImage(":/Resources/User/noavatar_small.gif"));
+}

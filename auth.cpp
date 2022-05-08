@@ -14,6 +14,8 @@
 #include <Component/Msg.h>
 #include <QMessageBox>
 #include <QMovie>
+#include <Thread/downloadthread.h>
+#include <Common/db.h>
 
 int border = 8;
 
@@ -31,23 +33,30 @@ Auth::Auth(QWidget *parent) : BaseWindow(parent),ui(new Ui::Auth)
     }
     else
     {
-        //先尝试连接socket
-        if(try_connect_server())
+        if(!Db::Instance()->isOpen())
         {
-            QTcpSocket* socket = Socket::Instance()->handle();
-            if(socket->socketDescriptor() != -1)
-            {
-                init();
-                init_register();
-            }
-            else
-            {
-                box("socketDescriptor == -1");
-            }
+            box("无法打开数据库");
         }
         else
         {
-            box("无法连接到socket服务器");
+            //先尝试连接socket
+            if(try_connect_server())
+            {
+                QTcpSocket* socket = Socket::Instance()->handle();
+                if(socket->socketDescriptor() != -1)
+                {
+                    init();
+                    init_register();
+                }
+                else
+                {
+                    box("socketDescriptor == -1");
+                }
+            }
+            else
+            {
+                box("无法连接到socket服务器");
+            }
         }
     }
     connect(this->m_TitleBar->m_pButtonSetting,&QPushButton::clicked,this,[this]{open_setting_dialog();});
@@ -265,14 +274,32 @@ void Auth::welcome(QString res)
                 user->groupid = userObj.value("groupid").toString();
                 user->groupname = userObj.value("groupname").toString();
                 user->title = userObj.value("title").toString();
-                user->job_number = userObj.value("job_number").toString();
-
-                sendJsonObject("SYS",userObj,"SYNC_INFO");
+                user->job_number = userObj.value("job_number").toString().toLower();
 
                 _register->setValue("uid",user->uid);
+                sendJsonObject("SYS",userObj,"SYNC_INFO");
+                //尝试头像
+                //qDebug() << "QSslSocket::sslLibraryBuildVersionString()" << QSslSocket::sslLibraryBuildVersionString();
+                //qDebug() << "QSslSocket::sslLibraryVersionString()" << QSslSocket::sslLibraryVersionString();
+                //qDebug() << "Supports SSL: " << QSslSocket::supportsSsl();
+
+                QString avatar_jpg = basepath+"/avatar/"+user->job_number.toUpper()+".jpg";
+                QFile avatar_file(avatar_jpg);
+                if(!avatar_file.exists())
+                {
+                    if("" != user->avatar && user->avatar.mid(0,4)=="http")
+                    {
+                        //下载头像
+                        //DownLoadThread* t_down = new DownLoadThread(user->avatar,avatar_jpg);
+                        //t_down->start();
+                        HttpClient(user->avatar).success([=](const QString &response) {
+                            emit login_success();
+                            accept();
+                        }).download(avatar_jpg);
+                    }
+                }
                 emit login_success();
                 accept();
-
             }
             else
             {

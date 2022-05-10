@@ -47,15 +47,17 @@ void Chat::load_friends()
             f->depname = sql_query.value("depname").toString();
             f->groupid = sql_query.value("groupid").toString();
             f->groupname = sql_query.value("groupname").toString();
-            f->title = sql_query.value("last_time").toString();
+            f->title = sql_query.value("title").toString();
 
             append(f);
 
             QTimer::singleShot(100, this, [=](){
                 ChatFriendItem* fw = findChild<ChatFriendItem*>("friend_"+f->job_number);
 
+                QString t = QDateTime::fromTime_t(last_time.toInt()).toString("MM-dd hh:mm");
+
                 fw->set_last_msg(last_msg);
-                fw->set_last_time(last_time);
+                fw->set_last_time(t);
             });
         }
     }

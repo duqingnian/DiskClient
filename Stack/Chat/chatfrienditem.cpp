@@ -61,8 +61,8 @@ void ChatFriendItem::selected()
 {
     ui->bg->setStyleSheet("background:#1DCF67;");
     ui->label_name->setStyleSheet("font-size:14px;color:#fff;");
-    ui->last_msg->setStyleSheet("font-size:14px;color:#fff;");
-    ui->last_time->setStyleSheet("font-size:14px;color:#fff;");
+    ui->last_msg->setStyleSheet("font-size:12px;color:#fff;");
+    ui->last_time->setStyleSheet("font-size:12px;color:#fff;");
 }
 
 
@@ -70,8 +70,8 @@ void ChatFriendItem::unselected()
 {
     ui->bg->setStyleSheet("background:#fff;");
     ui->label_name->setStyleSheet("font-size:14px;color:#000;");
-    ui->last_msg->setStyleSheet("font-size:14px;color:#000;");
-    ui->last_time->setStyleSheet("font-size:14px;color:#000;");
+    ui->last_msg->setStyleSheet("font-size:12px;color:#000;");
+    ui->last_time->setStyleSheet("font-size:12px;color:#000;");
 }
 
 void ChatFriendItem::set_last_msg(QString last_msg)

@@ -14,6 +14,7 @@ SOURCES += \
     Common/adohelper.cpp \
     Common/basecontroller.cpp \
     Common/db.cpp \
+    Common/filemanager.cpp \
     Common/socket.cpp \
     Component/BaseWindow.cpp \
     Component/FlowLayout.cpp \
@@ -56,6 +57,7 @@ HEADERS += \
     Common/adohelper.h \
     Common/basecontroller.h \
     Common/db.h \
+    Common/filemanager.h \
     Common/socket.h \
     Component/BaseWindow.h \
     Component/FlowLayout.h \

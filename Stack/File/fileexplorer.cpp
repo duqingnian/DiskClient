@@ -91,6 +91,66 @@ FileExplorer::FileExplorer(QWidget *parent) : BaseController(parent)
     upload_pannel->resize(495,375);
     upload_pannel->move(this->width() - upload_pannel->width() - 15,this->height() - upload_pannel->height() - 15);
     upload_pannel->show();
+
+    fm = FileManager::Instance()->handle();
+    connect(fm, &QTcpSocket::readyRead, this, &FileExplorer::fm_callback);
+}
+
+//文件服务器回调
+void FileExplorer::fm_callback()
+{
+    QByteArray buffer;
+
+    QDataStream socketStream(fm);
+    socketStream.setVersion(QDataStream::Qt_5_12);
+
+    socketStream.startTransaction();
+    socketStream >> buffer;
+
+    if(!socketStream.commitTransaction())
+    {
+        return;
+    }
+
+    QString header  = buffer.mid(0,128);
+    QString content = buffer.mid(128);
+
+    if("DQN|" == header.mid(0,4))
+    {
+        header = buffer.mid(4,buffer.indexOf(";")-4);
+qDebug() << "GET header=" << header;
+        QString MD5 ="";
+        QString META ="";
+        QString STATE = "";
+        qint64 LEFT_SIZE = 0;
+
+        QStringList headers = header.split(",");
+        for(QString hi : headers)
+        {
+            QStringList his = hi.split(":");
+            if("MD5" == his[0])
+            {
+                MD5 = his[1];
+            }
+            if("META" == his[0])
+            {
+                META = his[1].toLower();
+            }
+            if("LEFT_SIZE" == his[0])
+            {
+                LEFT_SIZE = his[1].toInt();
+            }
+            if("STATE" == his[0])
+            {
+                STATE = his[1].toInt();
+            }
+        }
+        //更新上传进度条
+        if("sync_upload_state" == META)
+        {
+            upload_pannel->sync_upload_state(MD5,LEFT_SIZE);
+        }
+    }
 }
 
 void FileExplorer::set_meta(UrlMeta *_meta)
@@ -458,6 +518,7 @@ void FileExplorer::PrepareIntentType(QString IntentType)
         }
         upload_pannel->show();
         upload_pannel->raise();
+        upload_pannel->start_upload();
     }
     else if("folder" == IntentType)
     {

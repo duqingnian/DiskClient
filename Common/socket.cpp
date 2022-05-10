@@ -32,15 +32,9 @@ Socket::Socket(QObject *parent) : QObject(parent)
         if(!client->isOpen())
         {
             client->connectToHost(server_ip,server_port.toInt());
-            if(client->waitForConnected())
+            if(!client->waitForConnected())
             {
-                qDebug() << "socket connect success";
-                err = "";
-
-            }
-            else
-            {
-                err = QString("socket connect failed, err:%1.").arg(client->errorString());
+                err = QString("socket连接失败, err:%1.").arg(client->errorString());
                 qDebug() << err; //"socket connect failed, err:Connection refused."
             }
         }
@@ -75,34 +69,6 @@ bool Socket::send(QString _header, QString msg)
     }
     return false;
 }
-
-/*
-bool Socket::send(QString _header, QString msg)
-{
-    if(!client)
-    {
-        return false;
-    }
-    if(!client->isOpen())
-    {
-        return false;
-    }
-    QDataStream socketStream(client);
-    socketStream.setVersion(QDataStream::Qt_5_12);
-
-    QByteArray header;
-    header.prepend(_header.toUtf8());
-    header.resize(128);
-
-    QByteArray byteArray = msg.toUtf8();
-    byteArray.prepend(header);
-
-    socketStream << byteArray;
-    byteArray.clear();
-
-    return true;
-}
-*/
 
 QTcpSocket *Socket::handle()
 {

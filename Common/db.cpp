@@ -8,8 +8,6 @@
 
 Db::Db(QObject *parent) : QObject(parent)
 {
-    qDebug() << QSqlDatabase::drivers();
-
     db = QSqlDatabase::addDatabase("QMYSQL");
     db.setHostName("127.0.0.1");
     db.setUserName("root");
@@ -41,12 +39,11 @@ Db *Db::Instance()
 
 bool Db::isOpen()
 {
-    if (!db.open())//判断数据库是否打开
+    if (!db.open())
     {
-        qDebug() << "db open faild! err:" << db.lastError();
+        qDebug() << "数据库打开失败! err:" << db.lastError();
         return false;
     }
-    qDebug() << "数据库打开成功";
     return true;
 }
 

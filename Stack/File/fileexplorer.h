@@ -17,6 +17,7 @@
 #include <Menu/fdmenu.h>
 #include <Menu/menufileexplorercanvas.h>
 #include <QNetworkAccessManager>
+#include "Common/filemanager.h"
 
 class FileExplorer : public BaseController
 {
@@ -79,11 +80,8 @@ public:
     //处理上传
     void PrepareIntentType(QString);
 
-//    //上传队列
-//    QVector<QString> upload_queue;
-
-//    //显示上传面板
-//    void show_upload_pannel();
+    //文件服务器回调
+    void fm_callback();
 
     //没有任何文件的提示
     QLabel* EmptyTip;
@@ -96,6 +94,8 @@ public:
     QFile *handle;
 
     UploadPannel* upload_pannel;
+
+    QTcpSocket* fm;
 
 public slots:
     void OpenCreateDropDown();  //打开创建下拉

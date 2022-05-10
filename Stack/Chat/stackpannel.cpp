@@ -183,8 +183,8 @@ void StackPannel::loadMsg()
                 }
                 bubblelist->setCurrentRow(bubblelist->count()-1);
             }
-
-            emit post_msg(target->job_number,"text",words[0]->content,words[0]->time);
+            QString t = QDateTime::fromTime_t(words[0]->time.toInt()).toString("MM-dd hh:mm");
+            emit post_msg(target->job_number,"text",words[0]->content,t);
         }
     }
 }

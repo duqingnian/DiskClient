@@ -198,7 +198,6 @@ void StackChat::initSide()
     connect(chat,&Chat::friend_touched,this,[=](SELECT_UNIT* unit){
         friend_targeted(unit);
     });
-
     StackSide->addWidget(chat);
     StackSide->setCurrentWidget(chat);
 }

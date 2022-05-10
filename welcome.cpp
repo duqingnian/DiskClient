@@ -188,6 +188,12 @@ void Welcome::resizeEvent(QResizeEvent *e)
 Welcome::~Welcome()
 {
     delete ui;
+
+    Socket::Instance()->disconnect();
+    FileManager::Instance()->disconnect();
+    Db::Instance()->disconnect();
+
+    qDebug() << "已关闭.";
 }
 
 

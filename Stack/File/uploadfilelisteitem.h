@@ -21,6 +21,8 @@ public:
 
     QString ConverSize(unsigned long long);
 
+    void set_progress(float);
+
 private:
     Ui::UploadFileListeItem *ui;
 };

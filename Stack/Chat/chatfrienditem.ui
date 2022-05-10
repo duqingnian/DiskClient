@@ -77,10 +77,10 @@ font-size:14px;color:#000;
    <widget class="QLabel" name="last_time">
     <property name="geometry">
      <rect>
-      <x>219</x>
+      <x>172</x>
       <y>12</y>
-      <width>54</width>
-      <height>12</height>
+      <width>101</width>
+      <height>20</height>
      </rect>
     </property>
     <property name="text">

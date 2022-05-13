@@ -1,6 +1,4 @@
-﻿#define BUF_SIZE 1024*1024
-
-#include "filemanager.h"
+﻿#include "filemanager.h"
 #include <QDataStream>
 #include <QMutex>
 #include <QSettings>
@@ -48,9 +46,29 @@ bool FileManager::upload(QString md5, UP_FILE* file)
                 socketStream.setVersion(QDataStream::Qt_5_12);
 
                 int len = 0;
-                int file_size = m_file.size();
+                unsigned long long file_size = m_file.size();
                 int send_size = 0;
                 int i = 1;
+
+                int buf_size = 1024*64;
+
+                //小于200M
+                if(file_size < 200 * 1024 * 1024)
+                {
+                    buf_size = 1024*1024*2;
+                }
+                else if(file_size < 500 * 1024 * 1024) //小于500M
+                {
+                    buf_size = 1024*1024*4;
+                }
+                else if(file_size < 1024 * 1024 * 1024) //小于1GB
+                {
+                    buf_size = 1024*1024*8;
+                }
+                else
+                {
+                    buf_size = 1024*1024*16;
+                }
 
                 do{
                     i++;
@@ -58,15 +76,15 @@ bool FileManager::upload(QString md5, UP_FILE* file)
                             .arg(file->md5)
                             .arg(file->type)
                             .arg(QString::number(file_size-send_size))
-                            .arg(QString::number(BUF_SIZE))
+                            .arg(QString::number(buf_size))
                             .arg(QString::number(i));
-qDebug() << "post=" << meta;
+
                     QByteArray header;
                     header.prepend(meta.toUtf8());
                     header.resize(128);
 
                     QByteArray buf_str;
-                    buf_str = m_file.read(BUF_SIZE);
+                    buf_str = m_file.read(buf_size);
 
                     len = buf_str.length();
                     header.append(buf_str);

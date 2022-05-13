@@ -107,6 +107,8 @@ void FileExplorer::fm_callback()
     socketStream.startTransaction();
     socketStream >> buffer;
 
+    //qDebug() << "GET header=" << buffer.mid(0,buffer.indexOf(";"));
+
     if(!socketStream.commitTransaction())
     {
         return;
@@ -118,7 +120,7 @@ void FileExplorer::fm_callback()
     if("DQN|" == header.mid(0,4))
     {
         header = buffer.mid(4,buffer.indexOf(";")-4);
-qDebug() << "GET header=" << header;
+        //qDebug() << header;
         QString MD5 ="";
         QString META ="";
         QString STATE = "";
@@ -134,7 +136,7 @@ qDebug() << "GET header=" << header;
             }
             if("META" == his[0])
             {
-                META = his[1].toLower();
+                META = his[1].toUpper();
             }
             if("LEFT_SIZE" == his[0])
             {
@@ -142,12 +144,12 @@ qDebug() << "GET header=" << header;
             }
             if("STATE" == his[0])
             {
-                STATE = his[1].toInt();
+                STATE = his[1];
             }
         }
         //更新上传进度条
-        if("sync_upload_state" == META)
-        {
+        if("SYNC_UP_STATE" == META)
+        {qDebug() << "更新上传进度条=" << LEFT_SIZE;
             upload_pannel->sync_upload_state(MD5,LEFT_SIZE);
         }
     }
@@ -503,6 +505,7 @@ void FileExplorer::PrepareIntentType(QString IntentType)
                                        };
                 if(typesRes.count(type) == 0)
                 {
+                    qDebug() << "type=" << type;
                     type = "null";
                 }
             }
@@ -518,7 +521,7 @@ void FileExplorer::PrepareIntentType(QString IntentType)
         }
         upload_pannel->show();
         upload_pannel->raise();
-        upload_pannel->start_upload();
+        //upload_pannel->start_upload();
     }
     else if("folder" == IntentType)
     {

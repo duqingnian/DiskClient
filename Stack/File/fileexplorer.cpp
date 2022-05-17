@@ -93,12 +93,6 @@ FileExplorer::FileExplorer(QWidget *parent) : BaseController(parent)
 
 FileExplorer::~FileExplorer()
 {
-    upload_socket->abort();
-    if(upload_socket->isOpen())
-    {
-        upload_socket->close();
-    }
-    upload_socket->deleteLater();
 }
 
 void FileExplorer::set_meta(UrlMeta *_meta)
@@ -453,7 +447,7 @@ void FileExplorer::PrepareIntentType(QString IntentType)
                                         "php","cpp"
                                         "aep","bat","email","emf","eps","cdr","exe","iso","raw","swf","tif","ttf","txt","wmf","ico","chm","dll","sql","log"
                                        };
-                if(typesRes.count(upload_file->suffix) == 0)
+                if(typesRes.count(upload_file->suffix) != 0)
                 {
                     upload_file->ico = "null";
                 }

@@ -1,4 +1,4 @@
-﻿#pragma execution_character_set("utf-8")
+#pragma execution_character_set("utf-8")
 #include "filemanager.h"
 #include <QDataStream>
 #include <QDebug>
@@ -74,7 +74,7 @@ void FileManager::run()
                 send_size += len;
                 bool send_ret = socket->waitForBytesWritten(50000);
                 qDebug() << meta << ",           send_ret=" << send_ret;
-            }while((file_size-send_size) > 0);            
+            }while((file_size-send_size) > 0);
         }
         else
         {

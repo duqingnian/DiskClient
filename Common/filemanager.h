@@ -3,24 +3,24 @@
 
 #include <QObject>
 #include <QTcpSocket>
-
+#include <QThread>
 #include <Data/UploadFileUnit.h>
 
-class FileManager : public QObject
+class FileManager : public QThread
 {
     Q_OBJECT
 public:
-    static FileManager* Instance();
-    QString getErr();
+    explicit FileManager(QObject *parent = 0);
     bool isOpen();
-    bool upload(QString md5,UP_FILE* file);
-    QTcpSocket* handle();
-    void disconnect();
+    void set_file(UP_FILE*);
+    void set_socket_descriptor(qintptr);
+    void start_upload();
     void wait( int ms );
+    void run() override;
 private:
-    QString err = "";
+    UP_FILE* file;
     QTcpSocket* socket;
-    explicit FileManager(QObject *parent = nullptr);
+    qintptr _descriptor;
 signals:
 
 

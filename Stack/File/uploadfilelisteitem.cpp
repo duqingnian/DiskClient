@@ -24,7 +24,7 @@ void UploadFileListeItem::set_upload_file(UP_FILE* up_file)
     ui->file_size->setText(ConverSize(upload_file->size));
     ui->file_state->setText("准备上传");
 
-    ui->file_icon->setPixmap(QPixmap::fromImage(QImage(":/Resources/types/"+upload_file->type+".png")));
+    ui->file_icon->setPixmap(QPixmap::fromImage(QImage(":/Resources/types/"+upload_file->ico+".png")));
     ui->file_icon->resize(26,26);
     ui->file_icon->setScaledContents(true);
 }

@@ -13,6 +13,14 @@
 #include <QFile>
 #include "socket.h"
 #include "db.h"
+#include <QCryptographicHash>
+#include <QDateTime>
+#include <QDir>
+#include <QElapsedTimer>
+#include <QJsonObject>
+#include <QJsonParseError>
+#include <QMessageBox>
+#include <QNetworkProxy>
 
 extern USER     *user;
 extern TABMETA  *tab_meta;
@@ -65,6 +73,8 @@ public:
     //获取用户头像
     QPixmap GetAvatar();
     QPixmap GetAvatar(QString);
+
+    void wait( int ms );
 
 signals:
 

@@ -27,7 +27,10 @@ Auth::Auth(QWidget *parent) : BaseWindow(parent),ui(new Ui::Auth)
     this->m_TitleBar->display_setting(true);
 
     dlg_setting = new AuthSetting(this);
-    if("" == get_reg("api_url") || "" == get_reg("socket_server") || "" == get_reg("socket_port"))
+
+    if(     "" == get_reg("api_url")  //web请求接口
+            || "" == get_reg("socket_server") || "" == get_reg("socket_port") //聊天服务器
+            || "" == get_reg("file_server") || "" == get_reg("file_port"))   //文件服务器
     {
         dlg_setting->show();
     }

@@ -25,6 +25,7 @@ class FileExplorer : public BaseController
 public:
 
     explicit FileExplorer(QWidget *parent = nullptr);
+     ~FileExplorer();
 
     QVector<FD*> fds;
     FD* selected_fd = NULL;
@@ -80,9 +81,6 @@ public:
     //处理上传
     void PrepareIntentType(QString);
 
-    //文件服务器回调
-    void fm_callback();
-
     //没有任何文件的提示
     QLabel* EmptyTip;
 
@@ -94,19 +92,13 @@ public:
     QFile *handle;
 
     UploadPannel* upload_pannel;
-
-    QTcpSocket* fm;
+    QTcpSocket* upload_socket;
 
 public slots:
     void OpenCreateDropDown();  //打开创建下拉
     void OpenUploadDropDown();  //打开上传下拉
     void menu_clicked(QString);
     void fd_menu_clicked(QString);
-
-    //上传文件
-    void replyFinished(QNetworkReply*);
-    void loadError(QNetworkReply::NetworkError);
-    void loadProgress(qint64 ,qint64);
 signals:
     void append_urlbar(FD*);
 

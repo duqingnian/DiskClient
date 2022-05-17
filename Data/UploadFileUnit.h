@@ -11,7 +11,8 @@ enum UP_STATE{
 
 struct UP_FILE{
     QString md5 = "";
-    QString type = "";
+    QString suffix = "";
+    QString ico = "";
     QString name = "";
     QString path = "";
     unsigned long long size = 0;

@@ -6,15 +6,13 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonParseError>
+#include <QThread>
 #include <QTimer>
 #include <Lib/HttpClient.h>
 #include "Component/Msg.h"
 
 FileExplorer::FileExplorer(QWidget *parent) : BaseController(parent)
 {
-    AccessManage = new QNetworkAccessManager(this);
-    connect(AccessManage,SIGNAL(finished(QNetworkReply*)),this,SLOT(replyFinished(QNetworkReply*)));
-
     canvas = new QWidget(this);
     canvas->setObjectName("canvas");
     canvas->setStyleSheet("#canvas{background:#ffffff;}");
@@ -91,66 +89,16 @@ FileExplorer::FileExplorer(QWidget *parent) : BaseController(parent)
     upload_pannel->resize(495,375);
     upload_pannel->move(this->width() - upload_pannel->width() - 15,this->height() - upload_pannel->height() - 15);
     upload_pannel->show();
-
-    fm = FileManager::Instance()->handle();
-    connect(fm, &QTcpSocket::readyRead, this, &FileExplorer::fm_callback);
 }
 
-//文件服务器回调
-void FileExplorer::fm_callback()
+FileExplorer::~FileExplorer()
 {
-    QByteArray buffer;
-
-    QDataStream socketStream(fm);
-    socketStream.setVersion(QDataStream::Qt_5_12);
-
-    socketStream.startTransaction();
-    socketStream >> buffer;
-
-    if(!socketStream.commitTransaction())
+    upload_socket->abort();
+    if(upload_socket->isOpen())
     {
-        return;
+        upload_socket->close();
     }
-
-    QString header  = buffer.mid(0,128);
-    QString content = buffer.mid(128);
-
-    if("DQN|" == header.mid(0,4))
-    {
-        header = buffer.mid(4,buffer.indexOf(";")-4);
-qDebug() << "GET header=" << header;
-        QString MD5 ="";
-        QString META ="";
-        QString STATE = "";
-        qint64 LEFT_SIZE = 0;
-
-        QStringList headers = header.split(",");
-        for(QString hi : headers)
-        {
-            QStringList his = hi.split(":");
-            if("MD5" == his[0])
-            {
-                MD5 = his[1];
-            }
-            if("META" == his[0])
-            {
-                META = his[1].toLower();
-            }
-            if("LEFT_SIZE" == his[0])
-            {
-                LEFT_SIZE = his[1].toInt();
-            }
-            if("STATE" == his[0])
-            {
-                STATE = his[1].toInt();
-            }
-        }
-        //更新上传进度条
-        if("sync_upload_state" == META)
-        {
-            upload_pannel->sync_upload_state(MD5,LEFT_SIZE);
-        }
-    }
+    upload_socket->deleteLater();
 }
 
 void FileExplorer::set_meta(UrlMeta *_meta)
@@ -483,13 +431,17 @@ void FileExplorer::PrepareIntentType(QString IntentType)
         for (int i = 0; i < str_path_list.size(); i++){
             QString abs_path = str_path_list[i]; //包含文件名称的绝对路径
             QFileInfo file = QFileInfo(abs_path);
-            QString file_name = file.fileName(); qDebug() << "file_name=" << file_name;
+            QString file_name = file.fileName();
             unsigned long long fize_size = file.size();
 
-            QString type = "null";
+            UP_FILE* upload_file = new UP_FILE();
+            upload_file->suffix = "";
+            upload_file->ico = "";
+
             if(file_name.contains("."))
             {
-                type = file_name.mid(file_name.lastIndexOf(".")+1).toLower();
+                upload_file->suffix = file_name.mid(file_name.lastIndexOf(".")+1).toLower();
+                upload_file->ico = upload_file->suffix;
 
                 QStringList typesRes = {"null",
                                         "js","css","html","xml","ini"
@@ -501,24 +453,22 @@ void FileExplorer::PrepareIntentType(QString IntentType)
                                         "php","cpp"
                                         "aep","bat","email","emf","eps","cdr","exe","iso","raw","swf","tif","ttf","txt","wmf","ico","chm","dll","sql","log"
                                        };
-                if(typesRes.count(type) == 0)
+                if(typesRes.count(upload_file->suffix) == 0)
                 {
-                    type = "null";
+                    upload_file->ico = "null";
                 }
             }
-            UP_FILE* upload_file = new UP_FILE();
-            upload_file->type = type;
             upload_file->md5 = md5(abs_path);
             upload_file->name = file_name;
             upload_file->path = abs_path;
             upload_file->size = fize_size;
             upload_file->state = UP_STATE::WAIT_UP;
-
-            upload_pannel->add_upload(upload_file);
+            wait(5);
+            upload_pannel->add_queue(upload_file);
         }
         upload_pannel->show();
         upload_pannel->raise();
-        upload_pannel->start_upload();
+        upload_pannel->touch_upload();
     }
     else if("folder" == IntentType)
     {
@@ -587,62 +537,4 @@ void FileExplorer::fd_menu_clicked(QString key)
     }
 
 }
-
-void FileExplorer::replyFinished(QNetworkReply * _reply)
-{
-    if(reply->error() == QNetworkReply::NoError)
-    {
-        qDebug() << "read all:" << _reply->readAll();
-        reply->deleteLater();
-        handle->flush();
-        handle->close();
-
-        qDebug() << "上传结束了";
-    }
-    else
-    {
-        //出错了
-    }
-}
-
-void FileExplorer::loadError(QNetworkReply::NetworkError)
-{
-    qDebug()<<"Error: "<<reply->error();
-}
-
-void FileExplorer::loadProgress(qint64 bytesSent, qint64 bytesTotal)
-{
-    qDebug() << "loaded" << bytesSent << "of" << bytesTotal;
-    //progressBar->setMaximum(bytesTotal); //最大值
-    //progressBar->setValue(bytesSent);  //当前值
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

@@ -1,145 +1,86 @@
-﻿#define BUF_SIZE 1024*1024
-
+﻿#pragma execution_character_set("utf-8")
 #include "filemanager.h"
 #include <QDataStream>
-#include <QMutex>
-#include <QSettings>
 #include <QDebug>
 #include <QFile>
-#include <QElapsedTimer>
-#include <QCoreApplication>
+#include <QThread>
 
-FileManager *FileManager::Instance()
+//构造函数
+FileManager::FileManager(QObject *parent) : QThread(parent)
 {
-    static QMutex mutex;
-    static QScopedPointer<FileManager> inst;
-    if (Q_UNLIKELY(!inst)) {
-        mutex.lock();
-        if (!inst) {
-            inst.reset(new FileManager);
-        }
-        mutex.unlock();
-    }
-    return inst.data();
+    socket = nullptr;
 }
 
-QString FileManager::getErr()
+//设置文件
+void FileManager::set_file(UP_FILE* _file)
 {
-    return err;
+    this->file = _file;
 }
 
-bool FileManager::isOpen()
+//设置socket的描述符
+void FileManager::set_socket_descriptor(qintptr descriptor)
 {
-    return socket->isOpen();
+    _descriptor = descriptor;
 }
 
-bool FileManager::upload(QString md5, UP_FILE* file)
+void FileManager::run()
 {
-    if(socket)
+    if(socket == nullptr)
     {
-        if(socket->isOpen())
+        socket = new QTcpSocket();
+        socket->setSocketDescriptor(_descriptor);
+    }
+    if(socket->isOpen())
+    {
+        QString filePath = file->path;qDebug() << "filePath=" << filePath;
+
+        QFile m_file(filePath);
+        if(m_file.open(QIODevice::ReadOnly))
         {
-            QString filePath = file->path;
+            socket->setSocketOption(QAbstractSocket::SendBufferSizeSocketOption,1024*32);
+            QDataStream socketStream(socket);
+            socketStream.setVersion(QDataStream::Qt_5_12);
 
-            QFile m_file(filePath);
-            if(m_file.open(QIODevice::ReadOnly))
-            {
-                QDataStream socketStream(socket);
-                socketStream.setVersion(QDataStream::Qt_5_12);
+            int len = 0;
+            unsigned long long file_size = m_file.size();
+            int send_size = 0;
+            int i = 0;
 
-                int len = 0;
-                int file_size = m_file.size();
-                int send_size = 0;
-                int i = 1;
+            int buf_size = 1024*1024*2;
 
-                do{
-                    i++;
-                    QString meta = QString("ADOFILEMD5:%1,SUFFIX:%2,LEFT_SIZE:%3,BUF_SIZE:%4,I:%5;")
-                            .arg(file->md5)
-                            .arg(file->type)
-                            .arg(QString::number(file_size-send_size))
-                            .arg(QString::number(BUF_SIZE))
-                            .arg(QString::number(i));
-qDebug() << "post=" << meta;
-                    QByteArray header;
-                    header.prepend(meta.toUtf8());
-                    header.resize(128);
+            do{
+                i++;
 
-                    QByteArray buf_str;
-                    buf_str = m_file.read(BUF_SIZE);
+                QString meta = QString("ADOFILEMD5:%1,SUFFIX:%2,LEFT_SIZE:%3,BUF_SIZE:%4,I:%5;")
+                        .arg(file->md5)
+                        .arg(file->suffix)
+                        .arg(QString::number(file_size-send_size))
+                        .arg(QString::number(buf_size))
+                        .arg(QString::number(i));
 
-                    len = buf_str.length();
-                    header.append(buf_str);
+                QByteArray header;
+                header.prepend(meta.toUtf8());
+                header.resize(128);
 
-                    socketStream.setVersion(QDataStream::Qt_5_12);
-                    socketStream << header;
+                QByteArray buf_str;
+                buf_str = m_file.read(buf_size);
 
-                    send_size += len;
+                len = buf_str.length();
+                header.append(buf_str);
 
-                    socket->waitForBytesWritten();
-                }
-                while((file_size-send_size) > 0);
+                socketStream << header;
+                socket->flush();
 
-                return true;
-            }
-            else
-            {
-                qDebug() << "file opend failed!";
-            }
+                send_size += len;
+                bool send_ret = socket->waitForBytesWritten(50000);
+                qDebug() << meta << ",           send_ret=" << send_ret;
+            }while((file_size-send_size) > 0);            
         }
         else
         {
-            qDebug() << "QTCPsocket Socket doesn't seem to be opened";
+            qDebug() << "file opend failed!";
         }
     }
-    else
-    {
-        qDebug() << "QTCPsocket Not connected";
-    }
-    return false;
+
 }
 
-void FileManager::wait( int ms )
-{
-    QElapsedTimer timer;
-    timer.start();
-
-    while ( timer.elapsed() < ms )
-        QCoreApplication::processEvents();
-}
-
-QTcpSocket* FileManager::handle()
-{
-    return socket;
-}
-
-void FileManager::disconnect()
-{
-    if(socket && socket->isOpen())
-    {
-        socket->disconnect();
-    }
-    socket->deleteLater();
-}
-
-FileManager::FileManager(QObject *parent) : QObject(parent)
-{
-    QSettings* regedit  = new QSettings("HKEY_CURRENT_USER\\SOFTWARE\\AdoDisk", QSettings::NativeFormat);
-    QString file_server   = regedit->value("file_server").toString();
-    QString file_port = regedit->value("file_port").toString();
-
-    if("" != file_server && "" != file_port)
-    {
-        socket = new QTcpSocket(this);
-        socket->abort();
-        if(!socket->isOpen())
-        {
-            socket->connectToHost(file_server,file_port.toInt());
-            if(!socket->waitForConnected())
-            {
-                err = QString("文件服务器连接失败, err:%1.").arg(socket->errorString());
-                qDebug() << err;
-            }
-        }
-    }
-}

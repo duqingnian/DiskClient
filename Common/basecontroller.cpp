@@ -1,12 +1,5 @@
 ﻿#include "basecontroller.h"
 #include <QCoreApplication>
-#include <QCryptographicHash>
-#include <QDateTime>
-#include <QDir>
-#include <QJsonObject>
-#include <QJsonParseError>
-#include <QMessageBox>
-#include <QNetworkProxy>
 
 USER*    user      = new USER();
 TABMETA* tab_meta  = new TABMETA();
@@ -196,4 +189,13 @@ QPixmap BaseController::GetAvatar(QString job_number)
         return QPixmap::fromImage(QImage(ava));
     }
     return QPixmap::fromImage(QImage(":/Resources/User/noavatar_small.gif"));
+}
+
+void BaseController::wait( int ms )
+{
+    QElapsedTimer timer;
+    timer.start();
+
+    while ( timer.elapsed() < ms )
+        QCoreApplication::processEvents();
 }

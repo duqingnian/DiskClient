@@ -456,7 +456,7 @@ void FileExplorer::PrepareIntentType(QString IntentType)
             upload_file->name = file_name;
             upload_file->path = abs_path;
             upload_file->size = fize_size;
-            upload_file->state = UP_STATE::WAIT_UP;
+            upload_file->state = UP_STATE::WAIT_UP; qDebug() << "剩余size=" << upload_file->size % (1024*1024*2);
             wait(5);
             upload_pannel->add_queue(upload_file);
         }

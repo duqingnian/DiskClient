@@ -21,6 +21,7 @@ private:
     UP_FILE* file;
     QTcpSocket* socket;
     qintptr _descriptor;
+
 signals:
 
 

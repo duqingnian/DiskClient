@@ -37,16 +37,16 @@ void FileManager::run()
         QFile m_file(filePath);
         if(m_file.open(QIODevice::ReadOnly))
         {
-            socket->setSocketOption(QAbstractSocket::SendBufferSizeSocketOption,1024*32);
+            //socket->setSocketOption(QAbstractSocket::SendBufferSizeSocketOption,1024*64);
             QDataStream socketStream(socket);
             socketStream.setVersion(QDataStream::Qt_5_12);
 
             int len = 0;
-            unsigned long long file_size = m_file.size();
-            int send_size = 0;
+            unsigned long long left_size = m_file.size();
             int i = 0;
 
-            int buf_size = 1024*1024*2;
+            int buf_size = 1024*64 - 128;
+            bool running = true;
 
             do{
                 i++;
@@ -54,27 +54,47 @@ void FileManager::run()
                 QString meta = QString("ADOFILEMD5:%1,SUFFIX:%2,LEFT_SIZE:%3,BUF_SIZE:%4,I:%5;")
                         .arg(file->md5)
                         .arg(file->suffix)
-                        .arg(QString::number(file_size-send_size))
+                        .arg(QString::number(left_size))
                         .arg(QString::number(buf_size))
                         .arg(QString::number(i));
 
-                QByteArray header;
-                header.prepend(meta.toUtf8());
-                header.resize(128);
+                QByteArray data;
+                data.prepend(meta.toUtf8());
+                data.resize(128);
 
                 QByteArray buf_str;
                 buf_str = m_file.read(buf_size);
 
+                if(left_size < buf_size)
+                {
+                    running = false;
+                    len = buf_str.length();
+                    buf_str.resize(buf_size);
+                }
+                else
+                {
+                    len = buf_str.length();
+                }
                 len = buf_str.length();
-                header.append(buf_str);
+                data.append(buf_str);
 
-                socketStream << header;
+                socketStream << data;
                 socket->flush();
 
-                send_size += len;
-                bool send_ret = socket->waitForBytesWritten(50000);
-                qDebug() << meta << ",           send_ret=" << send_ret;
-            }while((file_size-send_size) > 0);
+                left_size -= len;
+                socket->waitForBytesWritten();
+                qDebug() << meta << ",header.len=" << data.length();
+
+                if(!running)
+                {
+                    socketStream << "ENDL";
+                    socket->flush();
+                    socket->waitForBytesWritten();
+                    data.clear();
+                    qDebug()  << "ENDLLLLLLLLLLL";
+                }
+
+            }while(running);
         }
         else
         {

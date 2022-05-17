@@ -91,13 +91,12 @@ void UploadPannel::touch_upload()
     {
         //uploading = true;
 
+        QString md5 = upload_queue[upload_file_list->count()-1];
+
         FileManager* fm = new FileManager();
         fm->set_socket_descriptor(s->socketDescriptor());
-        fm->set_file(uploads[upload_queue.first()]);
+        fm->set_file(uploads[md5]);
         fm->start();
-
-        uploads.remove(uploads.firstKey());
-
     }
 }
 

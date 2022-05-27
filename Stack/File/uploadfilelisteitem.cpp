@@ -27,6 +27,8 @@ void UploadFileListeItem::set_upload_file(UP_FILE* up_file)
     ui->file_icon->setPixmap(QPixmap::fromImage(QImage(":/Resources/types/"+upload_file->ico+".png")));
     ui->file_icon->resize(26,26);
     ui->file_icon->setScaledContents(true);
+
+    ui->progressBar->setMaximum(100);
 }
 
 QString UploadFileListeItem::ConverSize(unsigned long long bytes)
@@ -48,11 +50,18 @@ void UploadFileListeItem::set_progress(float val)
     if(val >= 100)
     {
         val = 100;
-        ui->file_state->setText("上传完成");
+        ui->file_state->setText("同步中");
     }
     else
     {
         ui->file_state->setText(QString::number(val,'f',2)+"%");
     }
     ui->progressBar->setValue(val);
+}
+
+void UploadFileListeItem::completed()
+{
+    ui->file_state->setPixmap(QPixmap::fromImage(QImage(":/Resources/Common/complete.png")));
+    ui->file_state->resize(26,26);
+    ui->file_state->setScaledContents(true);
 }

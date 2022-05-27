@@ -19,7 +19,6 @@ BaseController::BaseController(QWidget *parent) : QDialog(parent)
 
 BaseController::~BaseController()
 {
-    Socket::Instance()->disconnect();
 }
 
 //md5加密

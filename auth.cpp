@@ -27,42 +27,95 @@ Auth::Auth(QWidget *parent) : BaseWindow(parent),ui(new Ui::Auth)
     this->m_TitleBar->display_setting(true);
 
     dlg_setting = new AuthSetting(this);
+    connect(this->m_TitleBar->m_pButtonSetting,&QPushButton::clicked,this,[this]{open_setting_dialog();});
 
-    if(     "" == get_reg("api_url")  //web请求接口
-            || "" == get_reg("socket_server") || "" == get_reg("socket_port") //聊天服务器
-            || "" == get_reg("file_server") || "" == get_reg("file_port"))   //文件服务器
+    init();
+    init_stack_widgets();
+    loading();
+    _register = new QSettings("HKEY_CURRENT_USER\\SOFTWARE\\AdoDisk", QSettings::NativeFormat);
+
+    //下面是必要的检查
+    bool app_env = true;
+
+    QString socket_server   = get_reg("socket_server");
+    QString socket_port = get_reg("socket_port");
+    QString file_server = get_reg("file_server");
+    QString file_port   = get_reg("file_port");
+
+    // 1.配置是不是正确
+    if("" == get_reg("api_url")|| "" == socket_server || "" == socket_port || "" == file_server || "" == file_port)
     {
-        dlg_setting->show();
+        app_env = false;
+        loading_label->hide();
+        error_label->setText("ERROR: 配置信息丢失，请先配置");
     }
-    else
+
+    // 2.消息socket
+    //QTcpSocket* msg_test = new QTcpSocket(this);
+    //msg_test->connectToHost(socket_server,socket_port.toInt());
+    /*
+    if(msg_test->waitForConnected())
     {
-        if(!Db::Instance()->isOpen())
+        if(msg_test->isOpen())
         {
-            box("无法打开数据库");
-        }
-        else
-        {
-            //先尝试连接socket
-            if(try_connect_server())
+            if(!sendmsg("SYS","PING"))
             {
-                QTcpSocket* socket = Socket::Instance()->handle();
-                if(socket->socketDescriptor() != -1)
-                {
-                    init();
-                    init_register();
-                }
-                else
-                {
-                    box("socketDescriptor == -1");
-                }
+                app_env = false;
+                loading_label->hide();
+                error_label->setText("ERROR: 消息服务器未开启，错误码：60063");
             }
             else
             {
-                box("无法连接到socket服务器");
+                 //qDebug() << "ping msg server OK";
             }
         }
+        else
+        {
+            app_env = false;
+            loading_label->hide();
+            error_label->setText("ERROR: 消息服务器未开启，错误码：60070");
+        }
     }
-    connect(this->m_TitleBar->m_pButtonSetting,&QPushButton::clicked,this,[this]{open_setting_dialog();});
+    else
+    {
+        app_env = false;
+        loading_label->hide();
+        error_label->setText("ERROR: 无法链接到消息服务器，错误码：60076");
+    }
+    msg_test->abort();
+    msg_test->deleteLater();
+    */
+    // 3.文件socket
+    // 4.连接mysql数据库
+    if(!Db::Instance()->isOpen())
+    {
+        app_env = false;
+        loading_label->hide();
+        error_label->setText("ERROR: 无法连接到数据库");
+    }
+    // 5.是不是需要自动登录
+    QString uid = get_reg("uid");
+
+    if(app_env)
+    {
+        if(uid.length() > 10)
+        {
+            //自动登录
+            if(uid.mid(0,6) == "ADOSTR" && uid.right(3) == "=E=")
+            {
+                QString api_url = get_reg("api_url");
+                HttpClient(api_url+"client/auth/ding/fetch.html").success([this](const QString &response) {
+                    autologin(response.toUtf8());
+                }).param("uid", uid).header("uid", uid).header("token", md5(uid)).header("content-type", "application/x-www-form-urlencoded").post();
+            }
+            else
+            {
+                //uid格式不正确，删除各项数据
+                _register->setValue("uid","");
+            }
+        }
+        loading_widget->hide();
+    }
 }
 
 void Auth::init()
@@ -130,58 +183,35 @@ void Auth::init()
     qa_tip->setStyleSheet("#qa_tip{color:#153160;font-size:12px;}");
 }
 
-void Auth::init_register()
+void Auth::loading()
 {
-    _register = new QSettings("HKEY_CURRENT_USER\\SOFTWARE\\AdoDisk", QSettings::NativeFormat);
-    api_url = _register->value("api_url").toString();
-    uid = _register->value("uid").toString();
-    if(uid.length() > 20)
-    {
-        if(uid.mid(0,6) == "ADOSTR" && uid.right(3) == "=E=")
-        {
-            //uid格式正确，开始网络请求
-            HttpClient(api_url+"client/auth/ding/fetch.html").success([this](const QString &response) {
-                autologin(response.toUtf8());
-            }).param("uid", uid).header("uid", uid).header("token", md5(uid)).header("content-type", "application/x-www-form-urlencoded").post();
-        }
-        else
-        {
-            //uid格式不正确，删除各项数据
-            _register->setValue("uid","");
-            init_stack_widgets();
-        }
-    }
-    else
-    {
-        init_stack_widgets();
-    }
-}
-
-bool Auth::try_connect_server()
-{
-    //淡蓝色背景图
-    QWidget* bg = new QWidget(this);
-    bg->setObjectName("bg");
-    bg->resize(this->width()-border*2,this->height()-(this->m_TitleBar->pos().y() + this->m_TitleBar->height()+border));
-    bg->move(border,this->m_TitleBar->pos().y() + this->m_TitleBar->height());
-    bg->setStyleSheet("#bg{background-color:#F0F3F5;}");
+    loading_widget = new QWidget(this);
+    loading_widget->setObjectName("loading_widget");
+    loading_widget->resize(this->width()-border*2,this->height()-(this->m_TitleBar->pos().y() + this->m_TitleBar->height()+border));
+    loading_widget->move(border,this->m_TitleBar->pos().y() + this->m_TitleBar->height());
+    loading_widget->setStyleSheet("#loading_widget{background-color:#F4F5F7;}");
 
     //logo
-    QLabel* logo = new QLabel(this);
+    QLabel* logo = new QLabel(loading_widget);
     QImage logo_src(":/Resources/Auth/logo.png");
     logo->setPixmap(QPixmap::fromImage(logo_src));
     logo->move(150,75);
 
-    QLabel* loading_label = new QLabel(this);
-    loading_label->resize(160,50);
+    loading_label = new QLabel(loading_widget);
+    loading_label->resize(60,60);
     loading_label->setScaledContents(true);
-    loading_label->move(167,270);
+    loading_label->move( (this->width() - 60)/2 ,(this->height() - 60)/2);
 
-    QMovie* movie = new QMovie(":/Resources/loading.gif");
+    error_label = new QLabel(loading_widget);
+    error_label->setObjectName("error_label");
+    error_label->resize(470,60);
+    error_label->move( 0 ,(this->height() - 60)/2);
+    error_label->setStyleSheet("#error_label{color:red;font-size:18px;font-family: \"Microsoft Yahei\";}");
+    error_label->setAlignment(Qt::AlignHCenter);
+
+    QMovie* movie = new QMovie(":/Resources/load.gif");
     loading_label->setMovie(movie);
     movie->start();
-
-    return Socket::Instance()->isOpen();
 }
 
 
@@ -201,7 +231,7 @@ void Auth::init_stack_widgets()
     auth_canvas->addWidget(auth_widget_sms);
 
     //保存配置后重新生成二维码
-    connect(dlg_setting,SIGNAL(save_setting()),auth_widget_qrcode,SLOT(refresh_qrcode()));
+    //connect(dlg_setting,SIGNAL(save_setting()),auth_widget_qrcode,SLOT(refresh_qrcode()));
     connect(this,&Auth::login_success,auth_widget_qrcode,&AuthQrcode::pause);
 
     connect(auth_widget_qrcode,&AuthQrcode::open_welcome,this,&Auth::welcome);
@@ -280,38 +310,28 @@ void Auth::welcome(QString res)
                 user->job_number = userObj.value("job_number").toString().toLower();
 
                 _register->setValue("uid",user->uid);
-                sendJsonObject("SYS",userObj,"SYNC_INFO");
-                //尝试头像
-                //qDebug() << "QSslSocket::sslLibraryBuildVersionString()" << QSslSocket::sslLibraryBuildVersionString();
-                //qDebug() << "QSslSocket::sslLibraryVersionString()" << QSslSocket::sslLibraryVersionString();
-                //qDebug() << "Supports SSL: " << QSslSocket::supportsSsl();
 
-                QString avatar_jpg = basepath+"/avatar/"+user->job_number.toUpper()+".jpg";
-                QFile avatar_file(avatar_jpg);
-                if(!avatar_file.exists())
-                {
-                    if("" != user->avatar && user->avatar.mid(0,4)=="http")
-                    {
-                        //下载头像
-                        //DownLoadThread* t_down = new DownLoadThread(user->avatar,avatar_jpg);
-                        //t_down->start();
-                        HttpClient(user->avatar).success([=](const QString &response) {
-                            emit login_success();
-                            accept();
-                        }).download(avatar_jpg);
-                    }
-                }
-                emit login_success();
-                accept();
+                //请求网络
+                QString api_url   = get_reg("api_url");
+                //qDebug() << "##" << api_url+"client/auth/ding/check.html";
+                HttpClient(api_url+"client/auth/ding/check.html").success([this](const QString &response) {
+                    //qDebug() << "##" << response;
+                    emit login_success();
+                    accept();
+                }).param("uid", user->uid).param("res", res).header("uid", user->uid).header("token", md5(user->uid)).header("content-type", "application/x-www-form-urlencoded").post();
             }
             else
             {
-                init_stack_widgets();
+                box("ERROR: 登录系统失败！CODE="+_code.toString());
             }
+        }
+        else
+        {
+            box("登录返回值不包含code!"+res);
         }
     }
     else{
-        init_stack_widgets();
+        box("QJsonParseError::NoError");
     }
 }
 

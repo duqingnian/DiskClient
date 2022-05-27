@@ -61,8 +61,6 @@ void AuthSms::init()
     auto_txt->setCursor(Qt::PointingHandCursor);
     auto_txt->setStyleSheet("#auto_txt{font-size:12px;color:#B0B1B3;font-family: \"Microsoft Yahei\";}");
     connect(auto_txt,&Label::clicked,this,&AuthSms::set_remember);
-
-
 }
 
 

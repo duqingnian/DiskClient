@@ -1533,33 +1533,6 @@
         <file>Resources/16x16/word.png</file>
         <file>Resources/16x16/wordx.png</file>
         <file>Resources/16x16/xlsx.png</file>
-        <file>Resources/fd/ai.png</file>
-        <file>Resources/fd/bmp.png</file>
-        <file>Resources/fd/css.png</file>
-        <file>Resources/fd/doc.png</file>
-        <file>Resources/fd/docx.png</file>
-        <file>Resources/fd/file.png</file>
-        <file>Resources/fd/fl.png</file>
-        <file>Resources/fd/folder.png</file>
-        <file>Resources/fd/gif.png</file>
-        <file>Resources/fd/ico.png</file>
-        <file>Resources/fd/iso.png</file>
-        <file>Resources/fd/jpg.png</file>
-        <file>Resources/fd/js.png</file>
-        <file>Resources/fd/mp3.png</file>
-        <file>Resources/fd/mp4.png</file>
-        <file>Resources/fd/pdf.png</file>
-        <file>Resources/fd/png.png</file>
-        <file>Resources/fd/ppt.png</file>
-        <file>Resources/fd/pptx.png</file>
-        <file>Resources/fd/ps.png</file>
-        <file>Resources/fd/rar.png</file>
-        <file>Resources/fd/raw.png</file>
-        <file>Resources/fd/tif.png</file>
-        <file>Resources/fd/txt.png</file>
-        <file>Resources/fd/xls.png</file>
-        <file>Resources/fd/xlsx.png</file>
-        <file>Resources/fd/zip.png</file>
         <file>Resources/Common/upload.png</file>
         <file>Resources/empty_folder.png</file>
         <file>Resources/Chat/Gdi/chat_0.png</file>
@@ -1583,23 +1556,18 @@
         <file>Resources/Chat/info.png</file>
         <file>Resources/Chat/write.png</file>
         <file>Resources/Chat/send.png</file>
-        <file>Resources/loading.gif</file>
         <file>Resources/Chat/loading4.gif</file>
         <file>Resources/Common/close_w.png</file>
         <file>Resources/types/7z.png</file>
         <file>Resources/types/aep.png</file>
         <file>Resources/types/ai.png</file>
         <file>Resources/types/avi.png</file>
-        <file>Resources/types/avi_2.png</file>
         <file>Resources/types/bat.png</file>
         <file>Resources/types/bmp.png</file>
         <file>Resources/types/cdr.png</file>
         <file>Resources/types/css.png</file>
         <file>Resources/types/csv.png</file>
         <file>Resources/types/doc.png</file>
-        <file>Resources/types/doc_2.png</file>
-        <file>Resources/types/doc_3.png</file>
-        <file>Resources/types/doc_4.png</file>
         <file>Resources/types/email.png</file>
         <file>Resources/types/emf.png</file>
         <file>Resources/types/eps.png</file>
@@ -1607,26 +1575,19 @@
         <file>Resources/types/fl.png</file>
         <file>Resources/types/font.png</file>
         <file>Resources/types/gif.png</file>
-        <file>Resources/types/gif_2.png</file>
-        <file>Resources/types/gif_3.png</file>
         <file>Resources/types/guess.png</file>
         <file>Resources/types/html.png</file>
-        <file>Resources/types/html_2.png</file>
         <file>Resources/types/iso.png</file>
-        <file>Resources/types/iso_2.png</file>
         <file>Resources/types/jpeg.png</file>
         <file>Resources/types/jpg.png</file>
         <file>Resources/types/js.png</file>
         <file>Resources/types/mov.png</file>
-        <file>Resources/types/mov_2.png</file>
         <file>Resources/types/mp3.png</file>
         <file>Resources/types/mp4.png</file>
         <file>Resources/types/null.png</file>
         <file>Resources/types/pdf.png</file>
         <file>Resources/types/png.png</file>
-        <file>Resources/types/png_2.png</file>
         <file>Resources/types/ppt.png</file>
-        <file>Resources/types/ppt_2.png</file>
         <file>Resources/types/psd.png</file>
         <file>Resources/types/rar.png</file>
         <file>Resources/types/raw.png</file>
@@ -1638,8 +1599,6 @@
         <file>Resources/types/wmf.png</file>
         <file>Resources/types/wmv.png</file>
         <file>Resources/types/xls.png</file>
-        <file>Resources/types/xls_2.png</file>
-        <file>Resources/types/xls_3.png</file>
         <file>Resources/types/zip.png</file>
         <file>Resources/types/chm.png</file>
         <file>Resources/types/ico.png</file>
@@ -1649,11 +1608,59 @@
         <file>Resources/types/dll.png</file>
         <file>Resources/types/3gp.png</file>
         <file>Resources/types/sql.png</file>
-        <file>Resources/types/ppt_3.png</file>
         <file>Resources/types/php.png</file>
         <file>Resources/types/cpp.png</file>
         <file>Resources/types/xml.png</file>
         <file>Resources/types/ini.png</file>
         <file>Resources/types/log.png</file>
+        <file>Resources/types/wav.png</file>
+        <file>Resources/types/flac.png</file>
+        <file>Resources/Common/complete.png</file>
+        <file>Resources/Common/clear.png</file>
+        <file>Resources/types/as.png</file>
+        <file>Resources/types/epub.png</file>
+        <file>Resources/types/fla.png</file>
+        <file>Resources/types/flv.png</file>
+        <file>Resources/types/genarch.png</file>
+        <file>Resources/types/genimg.png</file>
+        <file>Resources/types/genson.png</file>
+        <file>Resources/types/genvid.png</file>
+        <file>Resources/types/indd.png</file>
+        <file>Resources/types/midi.png</file>
+        <file>Resources/types/mkv.png</file>
+        <file>Resources/types/mpg.png</file>
+        <file>Resources/types/ogg.png</file>
+        <file>Resources/types/otf.png</file>
+        <file>Resources/types/rtf.png</file>
+        <file>Resources/types/svg.png</file>
+        <file>Resources/types/swc.png</file>
+        <file>Resources/types/wma.png</file>
+        <file>Resources/Common/max.png</file>
+        <file>Resources/Common/min.png</file>
+        <file>Resources/types/folder.png</file>
+        <file>Resources/types/3ds.png</file>
+        <file>Resources/types/app.png</file>
+        <file>Resources/types/cs.png</file>
+        <file>Resources/types/dat.png</file>
+        <file>Resources/types/dwg.png</file>
+        <file>Resources/types/eml.png</file>
+        <file>Resources/types/ics.png</file>
+        <file>Resources/types/jar.png</file>
+        <file>Resources/types/mdb.png</file>
+        <file>Resources/types/obj.png</file>
+        <file>Resources/types/pub.png</file>
+        <file>Resources/types/srt.png</file>
+        <file>Resources/types/apk.png</file>
+        <file>Resources/types/mpeg.png</file>
+        <file>Resources/types/ogm.png</file>
+        <file>Resources/types/reg.png</file>
+        <file>Resources/types/torrent.png</file>
+        <file>Resources/types/vob.png</file>
+        <file>Resources/types/xvid.png</file>
+        <file>Resources/types/ncm.png</file>
+        <file>Resources/types/msi.png</file>
+        <file>Resources/types/py.png</file>
+        <file>Resources/load.gif</file>
+        <file>Resources/Common/folder.png</file>
     </qresource>
 </RCC>

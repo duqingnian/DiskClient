@@ -40,6 +40,8 @@ void StackFileMain::InitNavigate()
     ico_left->setScaledContents(true);
     ico_left->move(10,10);
 
+    quick_left->setEnabled(false);
+
     //右箭头
     quick_right = new Label(navigate);
     quick_right->setStyleSheet("background:transparent;");
@@ -53,6 +55,8 @@ void StackFileMain::InitNavigate()
     ico_right->resize(16,16);
     ico_right->setScaledContents(true);
     ico_right->move(10,10);
+
+    quick_right->setEnabled(false);
 
     //上箭头
     quick_top = new Label(navigate);
@@ -68,19 +72,24 @@ void StackFileMain::InitNavigate()
     ico_up->setScaledContents(true);
     ico_up->move(10,10);
 
+    quick_top->setEnabled(false);
+
     //刷新
     quick_refresh = new Label(navigate);
     quick_refresh->setStyleSheet("background:transparent;");
     quick_refresh->resize(35,35);
     quick_refresh->move(quick_top->x() + quick_top->width() +5,7);
 
-    Label* ico_refresh = new Label(quick_refresh);
+    ico_refresh = new Label(quick_refresh);
     ico_refresh->setStyleSheet("background:transparent;");
     QImage Irefresh(":/Resources/Navigate/refresh-0.png");
     ico_refresh->setPixmap(QPixmap::fromImage(Irefresh));
     ico_refresh->resize(16,16);
     ico_refresh->setScaledContents(true);
     ico_refresh->move(10,10);
+
+    //quick_refresh->setEnabled(false);
+    connect(ico_refresh,&Label::clicked,stack_file_explorer,&FileExplorer::Refresh);
 
     //设置
     quick_setting = new Label(navigate);
@@ -265,6 +274,10 @@ void StackFileMain::InitContent()
 
         btn_create->setEnabled(true);
         btn_upload->setEnabled(true);
+
+        quick_refresh->setEnabled(true);
+        ico_refresh->setPixmap(QPixmap::fromImage(QImage(":/Resources/Navigate/refresh-1.png")));
+        ico_refresh->setCursor(Qt::PointingHandCursor);
     });
 }
 

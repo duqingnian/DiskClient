@@ -24,7 +24,7 @@
   </property>
   <property name="font">
    <font>
-    <family>微软雅黑</family>
+    <family>Microsoft Yahei</family>
    </font>
   </property>
   <property name="windowTitle">
@@ -34,6 +34,7 @@
    <string notr="true">#Auth{
 border-width: 16px;
 border-image: url(:/Resources/shadow_wnd_bg.png) 16 16 16 16;
+font-family: &quot;Microsoft Yahei&quot;;
 }
 </string>
   </property>

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>515</width>
-    <height>531</height>
+    <height>535</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,7 +22,7 @@
      <x>10</x>
      <y>10</y>
      <width>491</width>
-     <height>441</height>
+     <height>461</height>
     </rect>
    </property>
    <property name="styleSheet">
@@ -73,126 +73,128 @@
        <x>10</x>
        <y>70</y>
        <width>451</width>
-       <height>321</height>
+       <height>211</height>
       </rect>
      </property>
      <property name="title">
       <string>API地址</string>
      </property>
-     <widget class="QLineEdit" name="edit_socket_port">
-      <property name="geometry">
-       <rect>
-        <x>120</x>
-        <y>110</y>
-        <width>310</width>
-        <height>23</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_3">
-      <property name="geometry">
-       <rect>
-        <x>20</x>
-        <y>110</y>
-        <width>92</width>
-        <height>17</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Socket端口：</string>
-      </property>
-     </widget>
-     <widget class="QLineEdit" name="edit_socket_server">
-      <property name="geometry">
-       <rect>
-        <x>120</x>
-        <y>72</y>
-        <width>310</width>
-        <height>23</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_2">
-      <property name="geometry">
-       <rect>
-        <x>20</x>
-        <y>72</y>
-        <width>92</width>
-        <height>17</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Socket地址：</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label">
+     <widget class="QWidget" name="layoutWidget">
       <property name="geometry">
        <rect>
         <x>20</x>
         <y>31</y>
-        <width>79</width>
-        <height>17</height>
+        <width>411</width>
+        <height>151</height>
        </rect>
       </property>
-      <property name="text">
-       <string>API接口地址：</string>
-      </property>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>API接口地址：</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="edit_api_url"/>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Socket地址：</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="edit_socket_server"/>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>Socket端口：</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="edit_socket_port"/>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>文件服务器地址：</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLineEdit" name="edit_file_server"/>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>文件服务器端口：</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QLineEdit" name="edit_file_port"/>
+       </item>
+      </layout>
      </widget>
-     <widget class="QLineEdit" name="edit_api_url">
+    </widget>
+    <widget class="QGroupBox" name="groupBox_3">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>289</y>
+       <width>451</width>
+       <height>131</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>SslSuport</string>
+     </property>
+     <widget class="QWidget" name="layoutWidget">
       <property name="geometry">
        <rect>
-        <x>120</x>
-        <y>31</y>
-        <width>310</width>
-        <height>23</height>
+        <x>25</x>
+        <y>32</y>
+        <width>401</width>
+        <height>83</height>
        </rect>
       </property>
-     </widget>
-     <widget class="QLineEdit" name="edit_file_port">
-      <property name="geometry">
-       <rect>
-        <x>120</x>
-        <y>190</y>
-        <width>310</width>
-        <height>23</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="QLineEdit" name="edit_file_server">
-      <property name="geometry">
-       <rect>
-        <x>120</x>
-        <y>152</y>
-        <width>310</width>
-        <height>23</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_4">
-      <property name="geometry">
-       <rect>
-        <x>20</x>
-        <y>152</y>
-        <width>92</width>
-        <height>17</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>文件服务器地址：</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_5">
-      <property name="geometry">
-       <rect>
-        <x>20</x>
-        <y>190</y>
-        <width>92</width>
-        <height>17</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>文件服务器端口：</string>
-      </property>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_11">
+         <property name="text">
+          <string>sslLibraryBuildVersion</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="edit_sslLibraryBuildVersion"/>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_12">
+         <property name="text">
+          <string>sslLibraryVersion</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="edit_sslLibraryVersion"/>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_13">
+         <property name="text">
+          <string>supportsSsl</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="edit_supportsSsl"/>
+       </item>
+      </layout>
      </widget>
     </widget>
    </widget>
@@ -200,17 +202,26 @@
   <widget class="QPushButton" name="btn_submit">
    <property name="geometry">
     <rect>
-     <x>250</x>
-     <y>470</y>
-     <width>111</width>
-     <height>41</height>
+     <x>310</x>
+     <y>480</y>
+     <width>85</width>
+     <height>32</height>
     </rect>
    </property>
    <property name="cursor">
     <cursorShape>PointingHandCursor</cursorShape>
    </property>
    <property name="styleSheet">
-    <string notr="true">#btn_submit{background-color:#7B93FF;color:#fff;border:0px;border-radius:10px;font-size:16px;font-family: &quot;Microsoft Yahei&quot;;text-align:center;}</string>
+    <string notr="true">#btn_submit
+{
+background-color:#005fb8;
+color:#fff;
+border:0px;
+border-radius:0px;
+font-size:16px;
+font-family: &quot;Microsoft Yahei&quot;;
+text-align:center;
+}</string>
    </property>
    <property name="text">
     <string>设置</string>
@@ -222,17 +233,26 @@
   <widget class="QPushButton" name="btn_cancel">
    <property name="geometry">
     <rect>
-     <x>380</x>
-     <y>470</y>
-     <width>111</width>
-     <height>41</height>
+     <x>410</x>
+     <y>480</y>
+     <width>85</width>
+     <height>32</height>
     </rect>
    </property>
    <property name="cursor">
     <cursorShape>PointingHandCursor</cursorShape>
    </property>
    <property name="styleSheet">
-    <string notr="true">#btn_cancel{background-color:#f1f2f3;color:#000;border:0px;border-radius:10px;font-size:16px;font-family: &quot;Microsoft Yahei&quot;;text-align:center;}
+    <string notr="true">#btn_cancel
+{
+background-color:#f1f2f3;
+color:#000;
+border:1px solid #ccc;
+border-radius:0px;
+font-size:16px;
+font-family: &quot;Microsoft Yahei&quot;;
+text-align:center;
+}
 </string>
    </property>
    <property name="text">

@@ -9,6 +9,7 @@ struct FD
     int id = 0;
     QString show_name = "";
     QString type = "";
+    QString icon = "";
     int size = 0;
     int created_at = 0;
     QString created_time = "";

@@ -97,25 +97,36 @@ void DialogCreate::init()
             }
         }
         if(can_ajax){
-            HttpClient(path("client/file/create")).success([=](const QString &response) {
-                SIMPLE _simple = SimpleParse(response);
-                if("0" == _simple.id){
-                    Toast::succ(_simple.title);
-                    emit create_succ();
-                }else{
-                    MSGBOX::error(this,_simple.title);
-                }
-            }).fail([=](const QString &response,int httpcode) {
-                MSGBOX::error(this,"请求失败了,httpcode" + QString::number(httpcode));
-            })
-                    .header("content-type", "application/x-www-form-urlencoded")
-                    .param("uid", uid)
-                    .param("type", type.toUpper())
-                    .param("value", edit->text())
-                    .param("meta", meta->key)
-                    .param("meta_id", meta->id)
-                    .param("fd_id", fd->id)
-                    .post();
+            QString _T = "socket";
+            if("socket" == _T)
+            {
+                emit intent("CREATE",type.toUpper(),edit->text());
+            }
+            else if("web" == _T)
+            {
+//                qDebug() << "create api = " << path("client/file/create");
+//                HttpClient(path("client/file/create")).success([=](const QString &response) {
+//                    qDebug() << "response=" << response;
+//                    SIMPLE _simple = SimpleParse(response);
+//                    if("0" == _simple.id){
+//                        Toast::succ(_simple.title);
+//                        emit create_succ();
+//                    }else{
+//                        MSGBOX::error(this,_simple.title);
+//                    }
+//                }).fail([=](const QString &response,int httpcode) {
+//                    MSGBOX::error(this,"请求失败了,httpcode" + QString::number(httpcode));
+//                })
+//                        .header("content-type", "application/x-www-form-urlencoded")
+//                        .param("uid", uid)
+//                        .param("type", type.toUpper())
+//                        .param("value", edit->text())
+//                        .param("meta", meta->key)
+//                        .param("meta_id", meta->id)
+//                        .param("fd_id", fd->id)
+//                        .post();
+            }
+            else{}
         }
     });
 

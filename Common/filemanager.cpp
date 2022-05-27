@@ -5,6 +5,8 @@
 #include <QFile>
 #include <QThread>
 
+#define DATA_META_LEN 256
+
 //构造函数
 FileManager::FileManager(QObject *parent) : QThread(parent)
 {
@@ -32,7 +34,7 @@ void FileManager::run()
     }
     if(socket->isOpen())
     {
-        QString filePath = file->path;qDebug() << "filePath=" << filePath;
+        QString filePath = file->path;
 
         QFile m_file(filePath);
         if(m_file.open(QIODevice::ReadOnly))
@@ -43,24 +45,33 @@ void FileManager::run()
 
             int len = 0;
             unsigned long long left_size = m_file.size();
-            int i = 0;
 
-            int buf_size = 1024*64 - 128;
+            int buf_size = 1024*64 - DATA_META_LEN;
             bool running = true;
 
             do{
-                i++;
+                float PCT = 0.0f;
+                if(0 == left_size)
+                {
+                    PCT = 100.00f;
+                }
+                else
+                {
+                    PCT = static_cast<float>(file->size - left_size) / static_cast<float>(file->size);
+                    PCT = PCT * 100;
+                }
 
-                QString meta = QString("ADOFILEMD5:%1,SUFFIX:%2,LEFT_SIZE:%3,BUF_SIZE:%4,I:%5;")
+                QString meta = QString("ADOFILEMD5:%1,SUFFIX:%2,LEFT_SIZE:%3,BUF_SIZE:%4,FS:%5,PCT:%6;")
                         .arg(file->md5)
                         .arg(file->suffix)
                         .arg(QString::number(left_size))
                         .arg(QString::number(buf_size))
-                        .arg(QString::number(i));
+                        .arg(QString::number(m_file.size()))
+                        .arg(QString::number(PCT));
 
                 QByteArray data;
                 data.prepend(meta.toUtf8());
-                data.resize(128);
+                data.resize(DATA_META_LEN);
 
                 QByteArray buf_str;
                 buf_str = m_file.read(buf_size);
@@ -83,7 +94,6 @@ void FileManager::run()
 
                 left_size -= len;
                 socket->waitForBytesWritten();
-                qDebug() << meta << ",header.len=" << data.length();
 
                 if(!running)
                 {
@@ -91,7 +101,6 @@ void FileManager::run()
                     socket->flush();
                     socket->waitForBytesWritten();
                     data.clear();
-                    qDebug()  << "ENDLLLLLLLLLLL";
                 }
 
             }while(running);
@@ -103,4 +112,5 @@ void FileManager::run()
     }
 
 }
+
 

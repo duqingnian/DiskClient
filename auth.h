@@ -24,13 +24,16 @@ public:
     void closeEvent(QCloseEvent *event);
 
     void init();
-    void init_register();
 
     QString auth_type="qrcode";
     Label* auth_type_qrcode;
     Label* auth_type_account;
     Label* auth_type_sms;
     AuthSetting* dlg_setting;
+
+    QWidget* loading_widget;
+    QLabel* loading_label;
+    QLabel* error_label;
 
     QSettings* _register;
     //注册表配置参数
@@ -39,8 +42,7 @@ public:
     QString socket_server = "";
     QString machineUniqueId = ""; //电脑唯一ID
 
-    //尝试连接socket
-    bool try_connect_server();
+    void loading();
 
     //stack组件
     QStackedWidget* auth_canvas;
@@ -58,7 +60,6 @@ public:
     //自动登录
     void autologin(QString);
 
-    //自动登录失败
     void init_stack_widgets();
 
 private slots:

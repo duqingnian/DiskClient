@@ -34,7 +34,8 @@ public:
     void setMeta(UrlMeta*);
     void init();
 signals:
-    void create_succ();
+    //void create_succ();
+    void intent(QString intent_name,QString intent_category, QString val); //CREATE,FOLDER,名称
 private:
     Ui::DialogCreate *ui;
 };

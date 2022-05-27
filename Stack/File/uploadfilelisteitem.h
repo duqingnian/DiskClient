@@ -17,11 +17,18 @@ public:
     ~UploadFileListeItem();
 
     UP_FILE* upload_file;
+
+    //设置文件对象
     void set_upload_file(UP_FILE*);
 
+    //字节转KB，MB，GB
     QString ConverSize(unsigned long long);
 
+    //设置进度条
     void set_progress(float);
+
+    //设置为完成
+    void completed();
 
 private:
     Ui::UploadFileListeItem *ui;

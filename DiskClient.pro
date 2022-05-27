@@ -36,7 +36,9 @@ SOURCES += \
     Stack/Chat/qnchatmessage.cpp \
     Stack/Chat/stackempty.cpp \
     Stack/Chat/stackpannel.cpp \
+    Stack/File/dirprocess.cpp \
     Stack/File/fileexplorer.cpp \
+    Stack/File/filerow.cpp \
     Stack/File/filewelcome.cpp \
     Stack/File/uploadfilelisteitem.cpp \
     Stack/File/uploadpannel.cpp \
@@ -44,7 +46,9 @@ SOURCES += \
     Stack/stackfileMain.cpp \
     Stack/stackhelp.cpp \
     Thread/downloadthread.cpp \
+    Thread/processdirthread.cpp \
     Thread/syncmsgthread.cpp \
+    Thread/uploaddirthread.cpp \
     auth.cpp \
     main.cpp \
     welcome.cpp
@@ -88,7 +92,9 @@ HEADERS += \
     Stack/Chat/qnchatmessage.h \
     Stack/Chat/stackempty.h \
     Stack/Chat/stackpannel.h \
+    Stack/File/dirprocess.h \
     Stack/File/fileexplorer.h \
+    Stack/File/filerow.h \
     Stack/File/filewelcome.h \
     Stack/File/uploadfilelisteitem.h \
     Stack/File/uploadpannel.h \
@@ -96,7 +102,9 @@ HEADERS += \
     Stack/stackfileMain.h \
     Stack/stackhelp.h \
     Thread/downloadthread.h \
+    Thread/processdirthread.h \
     Thread/syncmsgthread.h \
+    Thread/uploaddirthread.h \
     auth.h \
     welcome.h
 
@@ -114,6 +122,8 @@ FORMS += \
     Menu/filewelcomemenu.ui \
     Menu/menufileexplorercanvas.ui \
     Stack/Chat/chatfrienditem.ui \
+    Stack/File/dirprocess.ui \
+    Stack/File/filerow.ui \
     Stack/File/uploadfilelisteitem.ui \
     Stack/File/uploadpannel.ui \
     Stack/stackhelp.ui \

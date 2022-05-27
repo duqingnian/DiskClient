@@ -141,13 +141,13 @@ void AuthQrcode::refresh_page()
     QString auth_api = "";
     if(qrcode_type == "dd")
     {
-        auth_api = _register->value("api_url").toString()+"client/auth.ding";
+        auth_api = "http://disk.czmylike.com/client/auth.ding";
     }
     else if(qrcode_type == "wechat")
     {
-        auth_api = _register->value("api_url").toString()+"client/auth.wechat";
+        auth_api = "http://disk.czmylike.com/client/auth.wechat";
     }
-    if(auth_api.length() < 10 || !auth_api.contains("http"))
+    if(auth_api.length() < 30 || !auth_api.contains("http"))
     {
         updateQrCode(qrcode_image,"暂无配置信息，无法生成二维码，请先配置必须参数！",115,120, 10, 0);
         tip_qrcode_invalid("无法生成二维码");
@@ -179,7 +179,7 @@ void AuthQrcode::loop_result()
     {
         return ;
     }
-    QString api_url =  _register->value("api_url").toString();
+    QString api_url =  "http://disk.czmylike.com/";
     HttpClient(api_url+"client/auth/ding/sync.html").success([this](const QString &response) {
         QJsonParseError err_rpt;
         QJsonDocument  jsonDoc = QJsonDocument::fromJson(response.toUtf8(), &err_rpt);

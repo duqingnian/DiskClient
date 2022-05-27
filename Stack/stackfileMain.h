@@ -42,7 +42,10 @@ private:
     Label* quick_left;
     Label* quick_right;
     Label* quick_top;
+
     Label* quick_refresh;
+    Label* ico_refresh;
+
     Label* quick_setting;
     QLineEdit* edit_search;
     QWidget* urlbar;

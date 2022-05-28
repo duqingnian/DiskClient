@@ -32,7 +32,7 @@ public:
     explicit UploadPannel(QWidget *parent = nullptr);
     ~UploadPannel();
     void add_queue(UP_FILE*);
-    void touch_upload();
+    void touch_upload(QString,int,int);
     void set_descriptor(qintptr);
 private:
     Ui::UploadPannel *ui;
@@ -64,6 +64,9 @@ public slots:
 
     void onMin();
     void onMax();
+
+    //更新上传文件的进度
+    void sync_file_progrrss(QString BUNDLE,QString BUNDLE_ID,QString FD_ID,QString md5,QString state,float pct);
 signals:
     void do_some_action(QString);
 

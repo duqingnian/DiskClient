@@ -181,6 +181,7 @@ void AuthQrcode::loop_result()
     }
     QString api_url =  "http://disk.czmylike.com/";
     HttpClient(api_url+"client/auth/ding/sync.html").success([this](const QString &response) {
+        //qDebug() << "response=" << response;
         QJsonParseError err_rpt;
         QJsonDocument  jsonDoc = QJsonDocument::fromJson(response.toUtf8(), &err_rpt);
         if(err_rpt.error != QJsonParseError::NoError)
@@ -209,7 +210,7 @@ void AuthQrcode::loop_result()
                 else
                 {
                     QJsonValue _msg = rootObj.value("msg");
-                    QString msg = _msg.toString();
+                    QString msg = _msg.toString();//qDebug() << "msg=" << msg;
                     if("SYNC_NEXT" == msg)
                     {
                         loop_count++;

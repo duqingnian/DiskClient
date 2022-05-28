@@ -435,7 +435,7 @@ void StackFileMain::append_urlbar(FD* selected_fd)
 {
     UrlMeta* meta = new UrlMeta();
     meta->key = "folder"+QString::number(selected_fd->id);
-    meta->text = selected_fd->show_name;
+    meta->text = selected_fd->name;
     meta->category = "folder";
     meta->id = selected_fd->id;
     UrlMetas.append(meta);

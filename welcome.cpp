@@ -8,11 +8,10 @@ Welcome::Welcome(QWidget *parent) : BaseWindow(parent) , ui(new Ui::Welcome)
 {
     ui->setupUi(this);
     InitLayout();
-    //初始化Sqlite数据库
 }
 
 void Welcome::set_auth(Auth* _auth)
-{
+{qDebug() << "Welcome::set_auth";
     auth = _auth;
 }
 

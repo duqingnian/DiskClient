@@ -1,3 +1,4 @@
+﻿#pragma execution_character_set("utf-8")
 #include "filerow.h"
 #include "ui_filerow.h"
 #include <QDebug>
@@ -18,9 +19,17 @@ void FileRow::set_file(FD* _file)
 {
     file = _file;
 
-    ui->label_name->setText(file->show_name);
-    ui->label_type->setText(file->type.toLower());
-    if("FOLDER" == file->type)
+    ui->label_name->setText(file->name);
+
+    if("folder" == file->suffix.toLower())
+    {
+        ui->label_type->setText("文件夹");
+    }
+    else
+    {
+        ui->label_type->setText(file->suffix.toLower());
+    }
+    if("FOLDER" == file->suffix)
     {
         ui->label_size->setText("");
     }

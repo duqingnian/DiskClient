@@ -40,6 +40,22 @@ void DialogCreate::setMeta(UrlMeta* _meta)
     meta = _meta;
 }
 
+void DialogCreate::clear()
+{
+    edit->setText("");
+    edit->setEnabled(true);
+    btn_submit->setText("创建");
+    btn_submit->setEnabled(true);
+}
+
+void DialogCreate::reset()
+{
+    edit->setEnabled(true);
+    btn_submit->setText("创建");
+    btn_submit->setEnabled(true);
+}
+
+
 void DialogCreate::init()
 {
     title = new QLabel(this);
@@ -100,6 +116,9 @@ void DialogCreate::init()
             QString _T = "socket";
             if("socket" == _T)
             {
+                edit->setEnabled(false);
+                btn_submit->setText("创建中...");
+                btn_submit->setEnabled(false);
                 emit intent("CREATE",type.toUpper(),edit->text());
             }
             else if("web" == _T)
@@ -131,6 +150,8 @@ void DialogCreate::init()
     });
 
 }
+
+
 
 
 

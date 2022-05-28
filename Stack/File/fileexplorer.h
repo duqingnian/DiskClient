@@ -34,14 +34,15 @@ public:
     QString DisplayMod = "LIST"; //FLOW  LIST
 
     QStringList typesRes;
-    QMutex mutex;
 
     QVector<FD*> fds;
-    FD* selected_fd = NULL;
+    FD* selected_fd = NULL; //当前选中的FD
+    QStringList office;
+
+    int MAX_UPLOAD_FILES = 100; //一次最多可以上传的数量
 
     //设置当前页面的文件获取类型 我的文件? 部门文件? 群组文件?
     void set_meta(UrlMeta*);
-
     void change_folder(UrlMeta*);
 
     //ajax获取文件
@@ -118,6 +119,9 @@ public:
     //将绝对路径的文件添加到队列里
     void moveto_queue(QString abs_file);
 
+    //socket发消息
+    bool sendMsgPack(QString _header, QString msg="");
+
     //没有任何文件的提示
     QLabel* EmptyTip;
 
@@ -154,8 +158,12 @@ public slots:
     void Refresh(); //刷新的槽函数
 
     void append_file(QString T,QString abs_file);
+
+    void list_file(QString); //列出文件
 signals:
     void append_urlbar(FD*);
+    //更新上传文件的进度
+    void sync_file_progrrss(QString BUNDLE,QString BUNDLE_ID,QString FD_ID,QString md5,QString state,float pct);
 
 };
 

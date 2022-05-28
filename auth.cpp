@@ -103,6 +103,7 @@ Auth::Auth(QWidget *parent) : BaseWindow(parent),ui(new Ui::Auth)
             //自动登录
             if(uid.mid(0,6) == "ADOSTR" && uid.right(3) == "=E=")
             {
+                loading();
                 QString api_url = get_reg("api_url");
                 HttpClient(api_url+"client/auth/ding/fetch.html").success([this](const QString &response) {
                     autologin(response.toUtf8());
@@ -189,7 +190,7 @@ void Auth::loading()
     loading_widget->setObjectName("loading_widget");
     loading_widget->resize(this->width()-border*2,this->height()-(this->m_TitleBar->pos().y() + this->m_TitleBar->height()+border));
     loading_widget->move(border,this->m_TitleBar->pos().y() + this->m_TitleBar->height());
-    loading_widget->setStyleSheet("#loading_widget{background-color:#F4F5F7;}");
+    loading_widget->setStyleSheet("#loading_widget{background-color:#F0F3F5;}");
 
     //logo
     QLabel* logo = new QLabel(loading_widget);
@@ -307,26 +308,26 @@ void Auth::welcome(QString res)
                 user->groupid = userObj.value("groupid").toString();
                 user->groupname = userObj.value("groupname").toString();
                 user->title = userObj.value("title").toString();
-                user->job_number = userObj.value("job_number").toString().toLower();
+                user->job_number = userObj.value("job_number").toString().toUpper();
 
                 _register->setValue("uid",user->uid);
 
                 //请求网络
                 QString api_url   = get_reg("api_url");
-                //qDebug() << "##" << api_url+"client/auth/ding/check.html";
                 HttpClient(api_url+"client/auth/ding/check.html").success([this](const QString &response) {
-                    //qDebug() << "##" << response;
                     emit login_success();
                     accept();
                 }).param("uid", user->uid).param("res", res).header("uid", user->uid).header("token", md5(user->uid)).header("content-type", "application/x-www-form-urlencoded").post();
             }
             else
             {
+                loading_widget->hide();
                 box("ERROR: 登录系统失败！CODE="+_code.toString());
             }
         }
         else
         {
+            loading_widget->hide();
             box("登录返回值不包含code!"+res);
         }
     }

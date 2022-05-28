@@ -7,8 +7,8 @@
 struct FD
 {
     int id = 0;
-    QString show_name = "";
-    QString type = "";
+    QString name = "";
+    QString suffix = "";
     QString icon = "";
     int size = 0;
     int created_at = 0;

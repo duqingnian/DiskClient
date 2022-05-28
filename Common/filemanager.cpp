@@ -11,11 +11,18 @@
 FileManager::FileManager(QObject *parent) : QThread(parent)
 {
     socket = nullptr;
+
+    META_KEY = "";
+    META_ID = 0;
+    FD_ID = 0;
 }
 
 //设置文件
-void FileManager::set_file(UP_FILE* _file)
+void FileManager::set_file(QString meta_key,int meta_id,int fd_id,UP_FILE* _file)
 {
+    META_KEY = meta_key;
+    META_ID = meta_id;
+    FD_ID = fd_id;
     this->file = _file;
 }
 
@@ -39,9 +46,8 @@ void FileManager::run()
         QFile m_file(filePath);
         if(m_file.open(QIODevice::ReadOnly))
         {
-            //socket->setSocketOption(QAbstractSocket::SendBufferSizeSocketOption,1024*64);
             QDataStream socketStream(socket);
-            socketStream.setVersion(QDataStream::Qt_5_12);
+            socketStream.setVersion(QDataStream::Qt_5_15);
 
             int len = 0;
             unsigned long long left_size = m_file.size();
@@ -60,14 +66,14 @@ void FileManager::run()
                     PCT = static_cast<float>(file->size - left_size) / static_cast<float>(file->size);
                     PCT = PCT * 100;
                 }
-
-                QString meta = QString("ADOFILEMD5:%1,SUFFIX:%2,LEFT_SIZE:%3,BUF_SIZE:%4,FS:%5,PCT:%6;")
+                QString meta = QString("ADOFILE:?MD5:%1,SUFFIX:%2,LEFT_SIZE:%3,BUF_SIZE:%4,FS:%5,PCT:%6,BUNDLE:%7,BUNDLE_id:%8,FD_ID:%9;")
                         .arg(file->md5)
                         .arg(file->suffix)
                         .arg(QString::number(left_size))
                         .arg(QString::number(buf_size))
                         .arg(QString::number(m_file.size()))
-                        .arg(QString::number(PCT));
+                        .arg(QString::number(PCT))
+                        .arg(META_KEY).arg(QString::number(META_ID)).arg(QString::number(FD_ID));
 
                 QByteArray data;
                 data.prepend(meta.toUtf8());
@@ -110,7 +116,10 @@ void FileManager::run()
             qDebug() << "file opend failed!";
         }
     }
-
+    else
+    {
+        qDebug() << "FileManager file socket is not open!";
+    }
 }
 
 

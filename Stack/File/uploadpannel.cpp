@@ -112,6 +112,33 @@ void UploadPannel::onMax()
     min->show();
 }
 
+void UploadPannel::sync_file_progrrss(QString BUNDLE,QString BUNDLE_ID,QString FD_ID,QString md5, QString state, float pct)
+{
+    //qDebug() << "state=" << state;
+    if("SYNC_UP_STATE" == state)
+    {
+        UploadFileListeItem* upload_file_item = findChild<UploadFileListeItem*>("up"+md5);
+        upload_file_item->set_progress(pct);
+        if(pct >= 100)
+        {
+            upload_queue.removeOne(md5);  //从上传队列中移除
+
+            int complete_count = upload_file_list->count() - upload_queue.count();
+            title->setText(QString("上传 (%1/%2)").arg(QString::number(complete_count)).arg(upload_file_list->count()));
+
+            complete_queue.append(md5);
+            UploadFileListeItem* upload_file_item = findChild<UploadFileListeItem*>("up"+md5);
+            upload_file_item->completed();
+
+            wait(10);
+            uploading = false;
+            this->touch_upload(BUNDLE,BUNDLE_ID.toInt(),FD_ID.toInt());  //尝试下次上传
+        }
+    }
+    else
+    {}
+}
+
 
 UploadPannel::~UploadPannel()
 {
@@ -145,7 +172,7 @@ void UploadPannel::add_queue(UP_FILE* upload_file)
 }
 
 //开始上传
-void UploadPannel::touch_upload()
+void UploadPannel::touch_upload(QString meta_key,int meta_id,int fd_id)
 {
     if(!uploading && upload_queue.count() > 0)
     {
@@ -156,7 +183,7 @@ void UploadPannel::touch_upload()
 
         FileManager* fm = new FileManager();
         fm->set_socket_descriptor(this->file_socket_descriptor);
-        fm->set_file(uploads[md5]);
+        fm->set_file(meta_key,meta_id,fd_id,uploads[md5]);
         fm->start();
     }
 }
@@ -164,6 +191,43 @@ void UploadPannel::touch_upload()
 void UploadPannel::set_descriptor(qintptr descriptor)
 {
     this->file_socket_descriptor = descriptor;
+}
+
+void UploadPannel::_clear_upoload_queue()
+{
+    QList<QListWidgetItem*> items = upload_file_list->findItems(QString("*"), Qt::MatchWrap | Qt::MatchWildcard);
+    foreach(QListWidgetItem * item, items)
+    {
+        QString complete_md5 = item->data(Qt::UserRole).toString();
+        if(-1 != complete_queue.indexOf(complete_md5))
+        {
+            wait(10);
+            delete upload_file_list->takeItem(upload_file_list->row(item));
+        }
+    }
+
+    wait(10);
+    int complete_count = upload_file_list->count() - upload_queue.count();
+    title->setText(QString("上传 (%1/%2)").arg(QString::number(complete_count)).arg(upload_file_list->count()));
+}
+
+//清空已经上传的列表
+void UploadPannel::clear_upoload_queue()
+{
+    int ret = MSGBOX::alert(this,"请确认","确定清空上传列表吗?",MESSAGE_QUESTION,BUTTON_OK_AND_CANCEL);
+    if(BUTTON_OK == ret)
+    {
+        _clear_upoload_queue();
+    }
+}
+
+//关闭上传面板
+void UploadPannel::close_upload_pannel()
+{
+    show_flag = "CLOSE";
+    _clear_upoload_queue();
+    wait(10);
+    emit do_some_action("CLOSE");
 }
 
 void UploadPannel::sync_file(QString md5)
@@ -275,43 +339,3 @@ void UploadPannel::sync_file(QString md5)
 //}
 
 //void UploadPannel::disconnected(){}
-
-void UploadPannel::_clear_upoload_queue()
-{
-    QList<QListWidgetItem*> items = upload_file_list->findItems(QString("*"), Qt::MatchWrap | Qt::MatchWildcard);
-    foreach(QListWidgetItem * item, items)
-    {
-        QString complete_md5 = item->data(Qt::UserRole).toString();
-        if(-1 != complete_queue.indexOf(complete_md5))
-        {
-            wait(10);
-            delete upload_file_list->takeItem(upload_file_list->row(item));
-        }
-    }
-
-    wait(10);
-    int complete_count = upload_file_list->count() - upload_queue.count();
-    title->setText(QString("上传 (%1/%2)").arg(QString::number(complete_count)).arg(upload_file_list->count()));
-}
-
-//清空已经上传的列表
-void UploadPannel::clear_upoload_queue()
-{
-    int ret = MSGBOX::alert(this,"请确认","确定清空上传列表吗?",MESSAGE_QUESTION,BUTTON_OK_AND_CANCEL);
-    if(BUTTON_OK == ret)
-    {
-        _clear_upoload_queue();
-    }
-}
-
-//关闭上传面板
-void UploadPannel::close_upload_pannel()
-{
-    show_flag = "CLOSE";
-    _clear_upoload_queue();
-    wait(10);
-    emit do_some_action("CLOSE");
-}
-
-
-

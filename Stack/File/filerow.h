@@ -1,4 +1,4 @@
-#ifndef FILEROW_H
+﻿#ifndef FILEROW_H
 #define FILEROW_H
 
 #include <QDialog>

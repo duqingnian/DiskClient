@@ -29,7 +29,6 @@ FileWelcome::FileWelcome(QWidget *parent) : QWidget(parent)
     //connect(menu,SIGNAL(select_menu(QString)),this,SLOT(select_menu(QString)));
 }
 
-
 //我的文件
 void FileWelcome::draw_myfile()
 {
@@ -167,7 +166,6 @@ void FileWelcome::draw_depfile()
     }
 }
 
-
 void FileWelcome::render_deps()
 {
     int total = deps.count();
@@ -185,7 +183,7 @@ void FileWelcome::render_deps()
         dep->setStyleSheet("#dep_"+QString::number(i)+"{width:100px;height:88px;background:#FDFDFD;border:1px solid #EAEAEA;border-radius: 5px;border-bottom:1px solid #D1D1D1;}#dep_"+QString::number(i)+":hover{background:#E5F3FF}");
         dep->installEventFilter(this);
         connect(dep,&Label::dbclicked,this,[=](){
-            emit explorer("SYS","DEP_"+QString::number(i),"部门文件"+QString::number(i),i);
+            emit explorer("SYS","DEP","部门文件"+QString::number(i),i);
         });
 
         Label* ico = new Label(dep);
@@ -262,7 +260,6 @@ bool FileWelcome::eventFilter(QObject *target, QEvent *event)
     return QWidget::eventFilter(target,event);
 }
 
-
 void FileWelcome::render_groups()
 {
     int total = groups.count();
@@ -283,7 +280,7 @@ void FileWelcome::render_groups()
         _group->setStyleSheet("#group_"+QString::number(i)+"{width:100px;height:88px;background:#FDFDFD;border:1px solid #EAEAEA;border-radius: 5px;border-bottom:1px solid #D1D1D1;}#group_"+QString::number(i)+":hover{background:#E5F3FF}");
         _group->installEventFilter(this);
         connect(_group,&Label::dbclicked,this,[=](){
-            emit explorer("SYS","GROUP_"+QString::number(i),"群组文件"+QString::number(i),i);
+            emit explorer("SYS","GROUP","群组文件"+QString::number(i),i);
         });
 
         Label* ico = new Label(_group);
@@ -309,7 +306,6 @@ void FileWelcome::render_groups()
         group_layout->addWidget(_group);
     }
 }
-
 
 void FileWelcome::flush(int w,int h)
 {

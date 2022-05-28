@@ -33,6 +33,8 @@ public:
     void setType(QString);
     void setMeta(UrlMeta*);
     void init();
+    void clear();
+    void reset();
 signals:
     //void create_succ();
     void intent(QString intent_name,QString intent_category, QString val); //CREATE,FOLDER,名称

@@ -18,6 +18,7 @@
 #define FD_HEIGHT 171
 #define FIOW_LAYOUT_MARGIN 7
 #define LIST_SIDE_WIDTH 345
+#define DATA_META_LEN 256
 
 FileExplorer::FileExplorer(QWidget *parent) : BaseController(parent)
 {
@@ -32,6 +33,22 @@ FileExplorer::FileExplorer(QWidget *parent) : BaseController(parent)
     typesRes <<  "aep" << "bat" << "email" << "emf" << "eps" << "cdr" << "exe" << "iso" << "raw" << "swf" << "tif" << "ttf" << "epub";
     typesRes <<  "txt" << "wmf" << "ico" << "chm" << "dll" << "sql" << "log";
 
+    selected_fd = new FD();
+    selected_fd->id = 0;
+
+    QString watch_suffix = get_reg("WATCH_SUFFIX");
+    if("" == watch_suffix)
+    {
+        watch_suffix = "doc,docx,xls,xlsx,csv,ppt,pptx,psd";
+    }
+    office = watch_suffix.split(",");
+
+    MAX_UPLOAD_FILES = get_reg("MAX_UPLOAD_FILES").toInt();
+    if(MAX_UPLOAD_FILES < 99 || MAX_UPLOAD_FILES > 999)
+    {
+        MAX_UPLOAD_FILES = 99;
+    }
+
     //文件socket
     QString file_server_ip   = get_reg("file_server");
     QString file_server_port = get_reg("file_port");
@@ -41,6 +58,13 @@ FileExplorer::FileExplorer(QWidget *parent) : BaseController(parent)
 
     connect(file_socket, SIGNAL(readyRead()), this, SLOT(readyRead()), Qt::DirectConnection);
     connect(file_socket, SIGNAL(disconnected()), this, SLOT(disconnected()));
+    if(file_socket->waitForConnected())
+    {
+        if(file_socket->isOpen())
+        {
+            Toast::succ("文件服务器连接成功");
+        }
+    }
 
     //没有任何文件的提示
     EmptyTip = new Label(this);
@@ -71,13 +95,8 @@ FileExplorer::FileExplorer(QWidget *parent) : BaseController(parent)
     //新建下拉
     dlg_create = new DialogCreate(this);
     dlg_create->setVisible(false);
-//    connect(dlg_create,&DialogCreate::create_succ,this,[=](){
-//        dlg_create->setVisible(false);
-//        load_files();
-//    });
     connect(dlg_create,&DialogCreate::intent,this,[=](QString intent_name,QString intent_category, QString val){
-        qDebug() << intent_name << intent_category << val;
-        sendmsg("SYS","","")
+        sendMsgPack("INTENT:?BUNDLE="+this->meta->key+",BUNDLE_ID="+QString::number(this->meta->id)+",META="+intent_name+",CATE="+intent_category+",VAL="+val + ",FD=" + QString::number(fd->id));
     });
 
     dropdown_create = new DropDownCreate(canvas);
@@ -127,6 +146,8 @@ FileExplorer::FileExplorer(QWidget *parent) : BaseController(parent)
         }
         else{}
     });
+    //更新上传文件的进度
+    connect(this,&FileExplorer::sync_file_progrrss,upload_pannel,&UploadPannel::sync_file_progrrss);
 
     //空白右键
     MenuCanvas = new MenuFileExplorerCanvas(canvas);
@@ -203,25 +224,32 @@ FileExplorer::FileExplorer(QWidget *parent) : BaseController(parent)
 void FileExplorer::readyRead()
 {
     QByteArray buffer;
+
     QDataStream socketStream(file_socket);
     socketStream.setVersion(QDataStream::Qt_5_15);
     socketStream.startTransaction();
     socketStream >> buffer;
     file_socket->flush();
+
     if(!socketStream.commitTransaction())
     {
         return;
     }
-    buffer = buffer.mid(0,buffer.indexOf(";"));
 
-    if("DQN|" != buffer.mid(0,4))
+    QByteArray data = buffer.mid(DATA_META_LEN);
+    QByteArray header = buffer.mid(0,buffer.indexOf(";"));
+    qDebug() << "header=" << header;
+    if("DQN:?" != header.mid(0,5))
     {
         return;
     }
 
-    QString _header = buffer.mid(4);
+    QString _header = header.mid(5);
 
     QString META = "";
+    int     CODE = 0;
+    QString MSG  = "";
+    int     FD_ID  = 0;
 
     QStringList headers = _header.split(",");
     for(QString hi : headers)
@@ -231,22 +259,130 @@ void FileExplorer::readyRead()
         {
             META = his[1];
         }
+        else if("CODE" == his[0])
+        {
+            CODE = his[1].toInt();
+        }
+        else if("MSG" == his[0])
+        {
+            MSG = his[1];
+        }
+        else if("FD_ID" == his[0])
+        {
+            FD_ID = his[1].toInt();
+        }
         else{}
     }
 
-    if("WELCOME" == META)
+    if("WELCOME" == META) //登录后的绑定
     {
-        //欢迎消息
-        qDebug() << "文件服务器在线中...";
+        sendMsgPack("BIND_USER:?JOB_NUMBER="+user->job_number);
+    }
+    else if("INTENT_RESULT" == META) //创建结果
+    {
+        if(0 == CODE)
+        {
+            dlg_create->setVisible(false);
+            dlg_create->clear();
+
+            Toast::succ(MSG);
+            load_files();
+        }
+        else
+        {
+            dlg_create->reset();
+            Toast::err(MSG);
+        }
+    }
+    else if("LIST_FILE_RESULT" == META) //列出文件
+    {
+        this->list_file(data);
+    }
+    else if("SYNC_UP_STATE" == META || "UPLOAD_SUCCESS" == META)
+    {
+        QString MD5="";
+        unsigned long long LEFT_SIZE = 0.0f;
+        float PCT = 0.0f;
+        QString BUNDLE = "";
+        QString BUNDLE_ID = "0";
+        QString FD_ID = "0";
+
+        //同步上传文件进度
+        QStringList tokens = _header.split(",");
+        for(QString token : tokens)
+        {
+            QStringList T = token.split(":");
+            if("MD5" == T[0]) //标识符
+            {
+                MD5 = T[1];
+            }
+            else if("BUNDLE" == T[0]) //部门还是群
+            {
+                BUNDLE = T[1];
+            }
+            else if("BUNDLE_ID" == T[0]) //部门或者群ID
+            {
+                BUNDLE_ID = T[1];
+            }
+            else if("FD_ID" == T[0]) //哪个文件夹
+            {
+                FD_ID = T[1];
+            }
+            else if("LEFT_SIZE" == T[0])
+            {
+                LEFT_SIZE = T[1].toULongLong();
+            }
+            else if("PCT" == T[0])
+            {
+                PCT = T[1].toFloat();
+            }
+            else{}
+        }
+        emit sync_file_progrrss(BUNDLE,BUNDLE_ID,FD_ID,MD5,META,PCT);
     }
     else
     {}
+}
+
+bool FileExplorer::sendMsgPack(QString HEADER, QString MSG)
+{
+    if(!file_socket)
+    {
+        return false;
+    }
+    if(!file_socket->isOpen())
+    {
+        return false;
+    }
+
+    if(";" != HEADER[HEADER.length()-1])
+    {
+        HEADER += ";";
+    }
+
+    QDataStream socketStream(file_socket);
+    socketStream.setVersion(QDataStream::Qt_5_15);
+
+    QByteArray header;
+    header.prepend(QString(HEADER).toUtf8());
+    header.resize(DATA_META_LEN);
+
+    if(MSG.length() > 0)
+    {
+        header.append(QString(MSG).toUtf8());
+    }
+
+    socketStream << header;
+
+    return true;
 }
 
 void FileExplorer::disconnected()
 {
     file_socket->abort();
     file_socket->deleteLater();
+
+    box("与文件服务器断开了连接...");
 }
 
 void FileExplorer::render_list_header()
@@ -302,12 +438,9 @@ void FileExplorer::hide_loading()
     load->hide();
 }
 
-FileExplorer::~FileExplorer()
-{
-}
-
 void FileExplorer::set_meta(UrlMeta *_meta)
 {
+    selected_fd->id = 0;
     this->meta = _meta;
     dlg_create->setMeta(_meta);
     load_files();
@@ -319,15 +452,58 @@ void FileExplorer::change_folder(UrlMeta* _meta)
     load_files();
 }
 
-//根据meta来获取文件
+//1.发起文件请求
+void FileExplorer::load_files()
+{
+    this->clear();
+    show_loading();
+    sendMsgPack("LIST_FILES:?FD_ID="+QString::number(fd->id)+",META_KEY="+meta->key+",META_ID="+QString::number(meta->id));
+}
+
+/**
+ * 2.收到文件数据
+ */
+void FileExplorer::list_file(QString data)
+{
+    QJsonParseError err_rpt;
+    QJsonDocument  jsonDoc = QJsonDocument::fromJson(data.toUtf8(), &err_rpt);
+    QJsonArray arr =  jsonDoc.array();
+    for (int i=0; i<arr.count(); i++) {
+        QJsonObject fdo = arr[i].toObject();
+        FD* fd = new FD();
+        fd->id = fdo.value("id").toInt();
+        fd->name = fdo.value("name").toString();
+        fd->suffix = fdo.value("suffix").toString();
+        fd->size = fdo.value("size").toInt();
+        fd->created_at = fdo.value("created_at").toInt();
+        fd->created_time = fdo.value("created_time").toString();
+        fd->updated_at = fdo.value("updated_at").toInt();
+        fd->updated_time = fdo.value("updated_time").toString();
+        QString ico_res = ":/Resources/types/"+fd->suffix.toLower()+".png";
+        if(typesRes.indexOf(fd->suffix.toLower()) == -1)
+        {
+            qDebug() << "UnKnow File type:" << fd->suffix.toLower();
+            ico_res = ":/Resources/types/null.png";
+        }
+        fd->icon = ico_res;
+
+        fds.append(fd);
+    }
+    //渲染文件
+    render_files();
+
+}
+
+
+/*
+//HTTP接口的形式获取文件，废弃
+//采用socket的形式
 void FileExplorer::load_files()
 {
     this->clear();
     show_loading();
     mutex.lock();
-    qDebug() << "###" << path("client/file.fetch");
     HttpClient(path("client/file.fetch")).success([=](const QString &response) {
-        qDebug() << response.toUtf8();
         //绑定文件数据到内存变量
         QJsonParseError err_rpt;
         QJsonDocument  jsonDoc = QJsonDocument::fromJson(response.toLatin1(), &err_rpt);
@@ -346,17 +522,17 @@ void FileExplorer::load_files()
 
                         FD* fd = new FD();
                         fd->id = fdo.value("id").toInt();
-                        fd->show_name = fdo.value("show_name").toString();
-                        fd->type = fdo.value("type").toString();
+                        fd->name = fdo.value("name").toString();
+                        fd->suffix = fdo.value("suffix").toString();
                         fd->size = fdo.value("size").toInt();
                         fd->created_at = fdo.value("created_at").toInt();
                         fd->created_time = fdo.value("created_time").toString();
                         fd->updated_at = fdo.value("updated_at").toInt();
                         fd->updated_time = fdo.value("updated_time").toString();
-                        QString ico_res = ":/Resources/types/"+fd->type.toLower()+".png";
-                        if(typesRes.indexOf(fd->type.toLower()) == -1)
+                        QString ico_res = ":/Resources/types/"+fd->suffix.toLower()+".png";
+                        if(typesRes.indexOf(fd->suffix.toLower()) == -1)
                         {
-                            qDebug() << "UnKnow File type:" << fd->type.toLower();
+                            qDebug() << "UnKnow File type:" << fd->suffix.toLower();
                             ico_res = ":/Resources/types/null.png";
                         }
                         fd->icon = ico_res;
@@ -385,6 +561,7 @@ void FileExplorer::load_files()
             .param("fd_id", fd->id)
             .post();
 }
+*/
 
 //resize event
 void FileExplorer::flush(int width, int height)
@@ -450,7 +627,6 @@ void FileExplorer::row_db_clicked(QListWidgetItem *item)
 
 void FileExplorer::Refresh()
 {
-    qDebug() << "Refresh....";
     load_files();
 }
 
@@ -557,8 +733,8 @@ void FileExplorer::render_flow()
         for (int i=0; i<fds.count(); i++) {
 
             int id = fds[i]->id;
-            QString name = fds[i]->show_name;
-            QString type = fds[i]->type;
+            QString name = fds[i]->name;
+            QString type = fds[i]->suffix;
 
             Label* fd_item = new Label(canvas);
             fd_item->setMinimumSize(FD_WIDTH,FD_HEIGHT);
@@ -766,7 +942,7 @@ void FileExplorer::fd_open()
     if(NULL != selected_fd)
     {
         //判断是文件还是文件夹
-        if("FOLDER" == selected_fd->type)
+        if("FOLDER" == selected_fd->suffix)
         {
             fd = selected_fd;
             load_files();
@@ -817,9 +993,9 @@ void FileExplorer::PrepareIntentType(QString IntentType)
     {
         QStringList str_path_list = QFileDialog::getOpenFileNames(this,"选择上传文件","d:\\","所有文件 (*.*)");
 
-        if(str_path_list.size() > 99)
+        if(str_path_list.size() > MAX_UPLOAD_FILES)
         {
-            box("一次最多只能选择99个文件!你选择了:"+QString::number(str_path_list.size())+"个");
+            box("一次最多只能选择"+ QString::number(MAX_UPLOAD_FILES) +"个文件!你选择了:"+QString::number(str_path_list.size())+"个");
             return;
         }
 
@@ -829,11 +1005,10 @@ void FileExplorer::PrepareIntentType(QString IntentType)
         }
         upload_pannel->show();
         upload_pannel->raise();
-        upload_pannel->touch_upload();
+        upload_pannel->touch_upload(this->meta->key,this->meta->id,fd->id);
     }
     else if("folder" == IntentType)
     {
-        qDebug() << "上传文件夹";
         upload_dir = QFileDialog::getExistingDirectory(this, "请选择目录", "D:\\");
 
         if (upload_dir.isEmpty())
@@ -869,7 +1044,7 @@ void FileExplorer::PrepareIntentType(QString IntentType)
 
                 upload_pannel->show();
                 upload_pannel->raise();
-                upload_pannel->touch_upload();
+                upload_pannel->touch_upload(this->meta->key,this->meta->id,fd->id);
             });
         }
     }
@@ -883,6 +1058,7 @@ void FileExplorer::PrepareIntentType(QString IntentType)
     }
 }
 
+//将要上传的文件压入上传面板的队列中
 void FileExplorer::moveto_queue(QString abs_path)
 {
     QFileInfo file = QFileInfo(abs_path);
@@ -903,7 +1079,28 @@ void FileExplorer::moveto_queue(QString abs_path)
             upload_file->ico = "null";
         }
     }
-    upload_file->md5 = md5(abs_path);
+
+    QString _md5 = "";
+
+    //只要是office的文件 都直接用文件的md5值来计算
+    if(office.indexOf(upload_file->suffix) > 0)
+    {
+        _md5 = md5_file(abs_path);
+    }
+    else
+    {
+        //其他的 如果文件小于2M 也用文件的md5
+        if(fize_size < 1024 * 1024 * 2)
+        {
+            _md5 = md5_file(abs_path);
+        }
+        else
+        {
+            _md5 = md5(abs_path + user->job_number + QString::number(fd->id) + QString::number(get_time()) + QString::number(fize_size) + random(6));
+        }
+    }
+
+    upload_file->md5 = _md5;
     upload_file->name = file_name;
     upload_file->path = abs_path;
     upload_file->size = fize_size;
@@ -926,7 +1123,6 @@ void FileExplorer::append_file(QString T, QString abs_file)
     else
     {}
 }
-
 
 void FileExplorer::menu_clicked(QString key)
 {
@@ -982,4 +1178,6 @@ void FileExplorer::fd_menu_clicked(QString key)
 
 }
 
-
+FileExplorer::~FileExplorer()
+{
+}

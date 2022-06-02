@@ -14,6 +14,9 @@ public:
     void run() override;
 private:
     QString dir;
+
+    int dir_count = 0;
+    int file_count = 0;
 signals:
     void find_file(QString,QString);
     void sync_size(unsigned long long);

@@ -21,6 +21,12 @@
 #include <QNetworkAccessManager>
 #include "Common/filemanager.h"
 
+struct ATTRIBUTE {
+    QString key;
+    QString name;
+    QString value;
+};
+
 class FileExplorer : public BaseController
 {
     Q_OBJECT
@@ -29,11 +35,14 @@ public:
     explicit FileExplorer(QWidget *parent = nullptr);
      ~FileExplorer();
 
-    QTcpSocket* file_socket;
+    QTcpSocket* cmd_socket;
+    QTcpSocket* download_socket;
 
     QString DisplayMod = "LIST"; //FLOW  LIST
 
     QStringList typesRes;
+
+    QString USR_CACHE_DIR;
 
     QVector<FD*> fds;
     FD* selected_fd = NULL; //当前选中的FD
@@ -54,6 +63,7 @@ public:
     void render_flow();
     void render_list();
     void render_list_header();
+    void render_list_side();
 
     //整体画布
     QWidget* canvas;
@@ -63,8 +73,10 @@ public:
 
     //载入中
     QLabel* load;
-    void show_loading();
+    QLabel* loading_tip;
+    void show_loading(QString tip="载入中");
     void hide_loading();
+    void change_loading_tip(QString);
 
     //画布右键菜单
     MenuFileExplorerCanvas* MenuCanvas;
@@ -120,7 +132,10 @@ public:
     void moveto_queue(QString abs_file);
 
     //socket发消息
-    bool sendMsgPack(QString _header, QString msg="");
+    bool sendMsgPack(QString _header, QString msg,QTcpSocket* socket);
+
+    //渲染侧边栏文件信息
+    void render_active_file_info();
 
     //没有任何文件的提示
     QLabel* EmptyTip;
@@ -128,24 +143,39 @@ public:
     //上传文件夹
     QString upload_dir;
 
-    QNetworkAccessManager* AccessManage;
-    QNetworkReply *reply;
-
     UrlMeta* meta;
     QPoint pos;
     QFile *handle;
 
     UploadPannel* upload_pannel;
-    QTcpSocket* upload_socket;
 
+    //侧边栏
+    QLabel* active_icon;  //图标
+    QLabel* active_title; //标题
+    QWidget* file_min_action; //吸底迷你动作
+
+    QWidget* base_info; //基本信息
+    QWidget* version_list; //版本列表
+
+
+    QTabWidget* side_tab;
+
+    void render_base_info();
+    void render_version_list();
+
+    QString ConverSize(unsigned long long bytes);
+    void render_attribute();
 private:
     int _width;
     int _height;
     bool db_click = false;
-
+    FD* active_fd;
 public slots:
     void readyRead();
     void disconnected();
+
+    //下载服务器
+    void downloadReadyRead();
 
     void OpenCreateDropDown();  //打开创建下拉
     void OpenUploadDropDown();  //打开上传下拉
@@ -154,6 +184,7 @@ public slots:
 
     void row_clicked(QListWidgetItem *item);
     void row_db_clicked(QListWidgetItem *item);
+    void row_item_section_changed();
 
     void Refresh(); //刷新的槽函数
 

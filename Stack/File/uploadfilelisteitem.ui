@@ -64,16 +64,16 @@
   <widget class="QLabel" name="file_size">
    <property name="geometry">
     <rect>
-     <x>310</x>
+     <x>290</x>
      <y>12</y>
-     <width>101</width>
+     <width>81</width>
      <height>32</height>
     </rect>
    </property>
    <property name="font">
     <font>
      <family>微软雅黑</family>
-     <pointsize>10</pointsize>
+     <pointsize>11</pointsize>
     </font>
    </property>
    <property name="styleSheet">
@@ -86,9 +86,9 @@
   <widget class="QLabel" name="file_state">
    <property name="geometry">
     <rect>
-     <x>429</x>
+     <x>450</x>
      <y>12</y>
-     <width>61</width>
+     <width>40</width>
      <height>32</height>
     </rect>
    </property>
@@ -103,6 +103,34 @@
    </property>
    <property name="text">
     <string>state</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="file_speed">
+   <property name="geometry">
+    <rect>
+     <x>370</x>
+     <y>12</y>
+     <width>71</width>
+     <height>32</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>微软雅黑</family>
+     <pointsize>7</pointsize>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true"/>
+   </property>
+   <property name="text">
+    <string>speed</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
    </property>
   </widget>
  </widget>

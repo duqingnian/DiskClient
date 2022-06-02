@@ -9,17 +9,21 @@
 Db::Db(QObject *parent) : QObject(parent)
 {
     db = QSqlDatabase::addDatabase("QMYSQL");
-    db.setHostName("127.0.0.1");
+    db.setHostName("localhost");
     db.setUserName("root");
     db.setPassword("123456");
     db.setDatabaseName("disk");
 
     if (!db.open())
     {
-        QString err = "Error: Failed to connect database.";
+        QString err = "无法打开数据库";
         QMessageBox msgBox;
         msgBox.setText(err);
         msgBox.exec();
+    }
+    else
+    {
+        qDebug() << "数据库打开成功";
     }
 }
 

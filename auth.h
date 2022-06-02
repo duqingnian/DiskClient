@@ -62,6 +62,8 @@ public:
 
     void init_stack_widgets();
 
+    void checkLater();
+
 private slots:
     void set_auth_type(QString);
     void open_setting_dialog();

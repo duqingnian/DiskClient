@@ -27,6 +27,9 @@ public:
     //设置进度条
     void set_progress(float);
 
+    //设置速度
+    void set_speed(unsigned long long);
+
     //设置为完成
     void completed();
 

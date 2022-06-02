@@ -43,7 +43,7 @@ void StackFileMain::InitNavigate()
     quick_left->setEnabled(false);
 
     //右箭头
-    quick_right = new Label(navigate);
+    /*quick_right = new Label(navigate);
     quick_right->setStyleSheet("background:transparent;");
     quick_right->resize(35,35);
     quick_right->move(quick_left->x() + quick_left->width() +5,7);
@@ -56,10 +56,10 @@ void StackFileMain::InitNavigate()
     ico_right->setScaledContents(true);
     ico_right->move(10,10);
 
-    quick_right->setEnabled(false);
+    quick_right->setEnabled(false);*/
 
     //上箭头
-    quick_top = new Label(navigate);
+    /*quick_top = new Label(navigate);
     quick_top->setStyleSheet("background:transparent;");
     quick_top->resize(35,35);
     quick_top->move(quick_right->x() + quick_right->width() +5,7);
@@ -72,13 +72,14 @@ void StackFileMain::InitNavigate()
     ico_up->setScaledContents(true);
     ico_up->move(10,10);
 
-    quick_top->setEnabled(false);
+    quick_top->setEnabled(false);*/
 
     //刷新
     quick_refresh = new Label(navigate);
     quick_refresh->setStyleSheet("background:transparent;");
     quick_refresh->resize(35,35);
-    quick_refresh->move(quick_top->x() + quick_top->width() +5,7);
+    //quick_refresh->move(quick_top->x() + quick_top->width() +5,7);
+    quick_refresh->move(quick_left->x() + quick_left->width() +5,7);
 
     ico_refresh = new Label(quick_refresh);
     ico_refresh->setStyleSheet("background:transparent;");
@@ -286,7 +287,7 @@ void StackFileMain::resizeEvent(QResizeEvent *)
     navigate->resize(this->width(),50);
     quick_setting->move(navigate->width() - 40,7);
     edit_search->move(quick_setting->x() - 245,9);
-    urlbar->resize(this->width()-455,32);
+    urlbar->resize(this->width()-385,32);
 
     //动作栏
     ActionBar->resize(navigate->width(),50);
@@ -421,6 +422,7 @@ void StackFileMain::url_meta_clicked(UrlMeta* meta)
                     break;
                 }
             }
+            qDebug() << "StackFileMain change_folder meta=" << meta->id << ", key=" << meta->key;
             stack_file_explorer->change_folder(meta);
         }
 

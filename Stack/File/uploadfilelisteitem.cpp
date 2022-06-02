@@ -10,6 +10,7 @@ UploadFileListeItem::UploadFileListeItem(QWidget *parent) :QDialog(parent),ui(ne
     this->setStyleSheet("font-size:12px;");
     //ui->progressBar->setStyleSheet("QProgressBar{border:0px;background-color:#FFFFFF;}QProgressBar::chunk{background-color:#eaf9df;}");
     ui->progressBar->setStyleSheet("QProgressBar{border:0px;background-color:#FFFFFF;}");
+    //ui->file_speed->setStyleSheet("#file_speed{font-size:10px;}");
 }
 
 UploadFileListeItem::~UploadFileListeItem()
@@ -57,6 +58,14 @@ void UploadFileListeItem::set_progress(float val)
         ui->file_state->setText(QString::number(val,'f',2)+"%");
     }
     ui->progressBar->setValue(val);
+}
+
+void UploadFileListeItem::set_speed(unsigned long long speed)
+{
+    if(speed > 0)
+    {
+        ui->file_speed->setText(ConverSize(speed)+"/秒");
+    }
 }
 
 void UploadFileListeItem::completed()

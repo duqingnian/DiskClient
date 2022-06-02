@@ -47,6 +47,7 @@ SOURCES += \
     Stack/stackhelp.cpp \
     Thread/downloadthread.cpp \
     Thread/processdirthread.cpp \
+    Thread/syncfilethread.cpp \
     Thread/syncmsgthread.cpp \
     Thread/uploaddirthread.cpp \
     auth.cpp \
@@ -103,6 +104,7 @@ HEADERS += \
     Stack/stackhelp.h \
     Thread/downloadthread.h \
     Thread/processdirthread.h \
+    Thread/syncfilethread.h \
     Thread/syncmsgthread.h \
     Thread/uploaddirthread.h \
     auth.h \

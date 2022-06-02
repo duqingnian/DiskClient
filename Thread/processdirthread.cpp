@@ -17,27 +17,36 @@ void ProcessDirThread::loop_dir(QString path, bool _sub)
 {
     QDir dir(path);
     if(!dir.exists())
+    {
         return;
-    dir.setFilter(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot | QDir::Hidden);    //过滤后只留下文件夹、文件以及隐藏文件，不包括当前文件夹和上级文件夹
+    }
+    dir.setFilter(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot);
     dir.setSorting(QDir::DirsFirst);    //优先排列文件夹
 
     foreach(QFileInfo info,dir.entryInfoList())
     {
-        QThread::usleep(1);
-        if(info.isFile())
+        QThread::usleep(20);
+        if(info.isDir())
         {
-            emit find_file("FILE",info.absoluteFilePath());
-            emit sync_size(info.size());
+            QThread::usleep(10);
+            dir_count++;
+            qDebug() << "[" << dir_count << "]文件夹=" << info.filePath();
+            emit find_file("DIR",info.filePath());
+            loop_dir(info.filePath(),false);
         }
         else
         {
-            emit find_file("DIR",info.absolutePath());
-            loop_dir(info.filePath(),false);
+            file_count++;
+            QThread::usleep(2);
+            qDebug() << "A[" << file_count << "]" << info.absoluteFilePath() << ",size=" << info.size();
+            emit find_file("FILE",info.absoluteFilePath());
+//            emit sync_size(info.size());
         }
     }
     if(_sub)
     {
-        emit process_complete();
+        qDebug() << "文件夹扫描完成";
+        //emit process_complete();
     }
 }
 

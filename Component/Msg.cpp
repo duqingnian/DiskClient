@@ -102,6 +102,17 @@ int MSGBOX::alert(QWidget *parent, const QString &text)
     return myMessageBox->exec();
 }
 
+int MSGBOX::question(QWidget *parent, const QString &text)
+{
+    MSGBOX * myMessageBox = new MSGBOX(parent);
+    myMessageBox->setWindowTitle("Confirm");
+    myMessageBox->setContentText(text);
+    myMessageBox->setMessageType(MESSAGE_QUESTION);
+    myMessageBox->setButtonType(BUTTON_OK);
+
+    return myMessageBox->exec();
+}
+
 int MSGBOX::error(QWidget *parent, const QString text)
 {
     MSGBOX * myMessageBox = new MSGBOX(parent);

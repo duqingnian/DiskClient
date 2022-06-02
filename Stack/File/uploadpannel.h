@@ -57,6 +57,9 @@ private:
     Label* close;
 
     QString show_flag="";
+
+    QTcpSocket* send_socket;
+    //QTcpSocket* get_socket;
 public slots:
     void _clear_upoload_queue(); //清空上传列表
     void clear_upoload_queue();
@@ -65,8 +68,11 @@ public slots:
     void onMin();
     void onMax();
 
+    void readyRead();
+    void disconnected();
+
     //更新上传文件的进度
-    void sync_file_progrrss(QString BUNDLE,QString BUNDLE_ID,QString FD_ID,QString md5,QString state,float pct);
+    void sync_file_progrrss(QString BUNDLE,QString BUNDLE_ID,QString FD_ID,QString md5,QString state,float pct,unsigned long long SPEED);
 signals:
     void do_some_action(QString);
 

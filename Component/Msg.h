@@ -49,6 +49,7 @@ public:
     int exec();
     int static alert(QWidget* parent, const QString &title, const QString &contentText, MessageType messageType, MessageButtonType messageButtonType);
     int static alert(QWidget* parent, const QString &title);
+    int static question(QWidget* parent, const QString &title);
     int static error(QWidget* parent, const QString);
     void closeEvent(QCloseEvent *event);
 private:

@@ -1,6 +1,7 @@
-#pragma execution_character_set("utf-8")
+﻿#pragma execution_character_set("utf-8")
 #include "filemanager.h"
 #include <QDataStream>
+#include <QDateTime>
 #include <QDebug>
 #include <QFile>
 #include <QThread>
@@ -34,92 +35,178 @@ void FileManager::set_socket_descriptor(qintptr descriptor)
 
 void FileManager::run()
 {
-    if(socket == nullptr)
+    if(true)
     {
-        socket = new QTcpSocket();
-        socket->setSocketDescriptor(_descriptor);
-    }
-    if(socket->isOpen())
-    {
-        QString filePath = file->path;
-
-        QFile m_file(filePath);
-        if(m_file.open(QIODevice::ReadOnly))
+        if(socket == nullptr)
         {
-            QDataStream socketStream(socket);
-            socketStream.setVersion(QDataStream::Qt_5_15);
+            socket = new QTcpSocket();
+            socket->setSocketDescriptor(_descriptor);
 
-            int len = 0;
-            unsigned long long left_size = m_file.size();
+            connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()), Qt::DirectConnection);
+            connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()));
+        }
+        if(socket->isOpen())
+        {
+            QString file_location = file->path;
+            QFile m_file(file_location);
+            if(m_file.open(QIODevice::ReadOnly))
+            {
+                QDataStream socketStream(socket);
+                socketStream.setVersion(QDataStream::Qt_5_15);
 
-            int buf_size = 1024*64 - DATA_META_LEN;
-            bool running = true;
+                int len = 0;
+                unsigned long long left_size = m_file.size();
 
-            do{
-                float PCT = 0.0f;
-                if(0 == left_size)
-                {
-                    PCT = 100.00f;
-                }
-                else
-                {
-                    PCT = static_cast<float>(file->size - left_size) / static_cast<float>(file->size);
-                    PCT = PCT * 100;
-                }
-                QString meta = QString("ADOFILE:?MD5:%1,SUFFIX:%2,LEFT_SIZE:%3,BUF_SIZE:%4,FS:%5,PCT:%6,BUNDLE:%7,BUNDLE_id:%8,FD_ID:%9;")
-                        .arg(file->md5)
-                        .arg(file->suffix)
-                        .arg(QString::number(left_size))
-                        .arg(QString::number(buf_size))
-                        .arg(QString::number(m_file.size()))
-                        .arg(QString::number(PCT))
-                        .arg(META_KEY).arg(QString::number(META_ID)).arg(QString::number(FD_ID));
+                int buf_size = 1024*64 - DATA_META_LEN;
+                bool running = true;
 
-                QByteArray data;
-                data.prepend(meta.toUtf8());
-                data.resize(DATA_META_LEN);
+                start_time = QDateTime::currentDateTime().toTime_t();
 
-                QByteArray buf_str;
-                buf_str = m_file.read(buf_size);
+                do{
+                    float PCT = 0.0f;
+                    if(0 == left_size)
+                    {
+                        PCT = 100.00f;
+                    }
+                    else
+                    {
+                        PCT = static_cast<float>(file->size - left_size) / static_cast<float>(file->size);
+                        PCT = PCT * 100;
+                    }
 
-                if(left_size < buf_size)
-                {
-                    running = false;
+                    uint t = QDateTime::currentDateTime().toTime_t();
+                    if(t > start_time)
+                    {
+                        SPEED = static_cast<unsigned long long>(file->size - left_size) / static_cast<unsigned long long>(t - start_time);
+                    }
+
+                    QString meta = QString("ADOFILE:?MD5:%1,SUFFIX:%2,LEFT_SIZE:%3,BUF_SIZE:%4,FS:%5,PCT:%6,BUNDLE:%7,BUNDLE_id:%8,FD_ID:%9,NAME:%10;")
+                            .arg(file->md5) //MD5:%1
+                            .arg(file->suffix) //SUFFIX:%2
+                            .arg(QString::number(left_size)) //LEFT_SIZE:%3
+                            .arg(QString::number(buf_size)) //BUF_SIZE:%4
+                            .arg(QString::number(m_file.size())) //FS:%5
+                            .arg(QString::number(PCT)) //PCT:%6
+                            .arg(META_KEY) //BUNDLE:%7
+                            .arg(QString::number(META_ID)) //BUNDLE_id:%8
+                            .arg(QString::number(FD_ID)) //FD_ID:%9
+                            .arg(file->name); //NAME:%10
+
+                    QByteArray data;
+                    data.prepend(meta.toUtf8());
+                    data.resize(DATA_META_LEN);
+
+                    QByteArray buf_str;
+                    buf_str = m_file.read(buf_size);
+
+                    if(left_size < buf_size)
+                    {
+                        running = false;
+                        len = buf_str.length();
+                        buf_str.resize(buf_size);
+                    }
+                    else
+                    {
+                        len = buf_str.length();
+                    }
                     len = buf_str.length();
-                    buf_str.resize(buf_size);
-                }
-                else
-                {
-                    len = buf_str.length();
-                }
-                len = buf_str.length();
-                data.append(buf_str);
+                    data.append(buf_str);
 
-                socketStream << data;
-                socket->flush();
-
-                left_size -= len;
-                socket->waitForBytesWritten();
-
-                if(!running)
-                {
-                    socketStream << "ENDL";
+                    socketStream << data;
                     socket->flush();
-                    socket->waitForBytesWritten();
-                    data.clear();
-                }
 
-            }while(running);
+                    QThread::usleep(2);
+
+                    if(left_size >= len)
+                    {
+                        left_size -= len;
+                    }
+                    else
+                    {
+                        left_size = 0;
+                    }
+
+                    socket->waitForBytesWritten();
+
+                    if(!running)
+                    {
+                        PCT = 100.00f;
+                        socket->flush();
+                        socket->waitForBytesWritten();
+                        data.clear();
+
+                    }
+                    emit update_progress(META_KEY,QString::number(META_ID),QString::number(FD_ID),file->md5, "UPLOADING", PCT,SPEED);
+                }while(running);
+            }
+            else
+            {
+                qDebug() << "file opend failed!";
+            }
         }
         else
         {
-            qDebug() << "file opend failed!";
+            qDebug() << "FileManager file socket is not open!";
         }
+
+        exec();
     }
-    else
+}
+
+void FileManager::readyRead()
+{
+    QByteArray buffer;
+
+    QDataStream socketStream(socket);
+    socketStream.setVersion(QDataStream::Qt_5_15);
+    socketStream.startTransaction();
+    socketStream >> buffer;
+    socket->flush();
+
+    if(!socketStream.commitTransaction())
     {
-        qDebug() << "FileManager file socket is not open!";
+        return;
     }
+
+    QByteArray data = buffer.mid(DATA_META_LEN);
+    QByteArray header = buffer.mid(0,buffer.indexOf(";"));
+
+    if("DQN:?" != header.mid(0,5) || header.length() < 30)
+    {
+        return;
+    }
+
+    QString _header = header;
+    if("DQN:?META:UPLOAD_COMPLETE" == _header.mid(0,25))
+    {
+        QString MD5 ="";
+        QString LEFT_SIZE = "0";
+        QString PCT = "";
+        QString BUNDLE = "";
+        QString BUNDLE_ID = "0";
+        QString FD_ID = "0";
+
+        QStringList headers = _header.split(",");
+        for(int i=0;i<headers.length();i++)
+        {
+            QString hi = headers[i];
+            QStringList his = hi.split(":");
+            if("MD5" == his[0]){MD5 = his[1];}
+            else if("LEFT_SIZE" == his[0]){LEFT_SIZE = his[1];}
+            else if("PCT" == his[0]){PCT = his[1];}
+            else if("BUNDLE" == his[0]){BUNDLE = his[1];}
+            else if("BUNDLE_ID" == his[0]){BUNDLE_ID = his[1];}
+            else if("FD_ID" == his[0]){FD_ID = his[1];}
+            else{}
+        }
+
+        emit update_progress(BUNDLE,BUNDLE_ID,FD_ID,file->md5, "UPLOAD_COMPLETE", PCT.toFloat(),0);
+    }
+}
+
+void FileManager::disconnected()
+{
+
 }
 
 

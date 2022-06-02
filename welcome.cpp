@@ -11,7 +11,7 @@ Welcome::Welcome(QWidget *parent) : BaseWindow(parent) , ui(new Ui::Welcome)
 }
 
 void Welcome::set_auth(Auth* _auth)
-{qDebug() << "Welcome::set_auth";
+{
     auth = _auth;
 }
 

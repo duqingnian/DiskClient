@@ -17,6 +17,7 @@
 #include <Thread/downloadthread.h>
 #include <Common/db.h>
 
+bool DEBUG = true;
 int border = 8;
 
 Auth::Auth(QWidget *parent) : BaseWindow(parent),ui(new Ui::Auth)
@@ -32,6 +33,21 @@ Auth::Auth(QWidget *parent) : BaseWindow(parent),ui(new Ui::Auth)
     init();
     init_stack_widgets();
     loading();
+
+    if(DEBUG)
+    {
+        QTimer::singleShot(1000,this,[=](){
+            checkLater();
+        });
+    }
+    else
+    {
+        checkLater();
+    }
+}
+
+void Auth::checkLater()
+{
     _register = new QSettings("HKEY_CURRENT_USER\\SOFTWARE\\AdoDisk", QSettings::NativeFormat);
 
     //下面是必要的检查
@@ -96,26 +112,47 @@ Auth::Auth(QWidget *parent) : BaseWindow(parent),ui(new Ui::Auth)
     // 5.是不是需要自动登录
     QString uid = get_reg("uid");
 
-    if(app_env)
+
+    if(DEBUG)
     {
-        if(uid.length() > 10)
+        user->uid = "ADOSTR27ddgmBnR924aJLUC3QRlqqGCJF-ipb1x_433ZipmlmGNfXqPdfvmduwOZRyKJVz4FI7=E=";
+        user->name = "阿杜调试";
+        user->avatar = "";
+        user->depid = "1001";
+        user->depname = "软件测试部";
+        user->groupid = "1002";
+        user->groupname = "测试调试组";
+        user->title = "技术总监";
+        user->job_number = "CZML669";
+
+        //emit login_success();
+        wait(1000);
+        QThread::sleep(1);
+        accept();
+    }
+    else
+    {
+        if(app_env)
         {
-            //自动登录
-            if(uid.mid(0,6) == "ADOSTR" && uid.right(3) == "=E=")
+            if(uid.length() > 10)
             {
-                loading();
-                QString api_url = get_reg("api_url");
-                HttpClient(api_url+"client/auth/ding/fetch.html").success([this](const QString &response) {
-                    autologin(response.toUtf8());
-                }).param("uid", uid).header("uid", uid).header("token", md5(uid)).header("content-type", "application/x-www-form-urlencoded").post();
+                //自动登录
+                if(uid.mid(0,6) == "ADOSTR" && uid.right(3) == "=E=")
+                {
+                    loading();
+                    QString api_url = get_reg("api_url");
+                    HttpClient(api_url+"client/auth/ding/fetch.html").success([this](const QString &response) {
+                        autologin(response.toUtf8());
+                    }).param("uid", uid).header("uid", uid).header("token", md5(uid)).header("content-type", "application/x-www-form-urlencoded").post();
+                }
+                else
+                {
+                    //uid格式不正确，删除各项数据
+                    _register->setValue("uid","");
+                }
             }
-            else
-            {
-                //uid格式不正确，删除各项数据
-                _register->setValue("uid","");
-            }
+            loading_widget->hide();
         }
-        loading_widget->hide();
     }
 }
 

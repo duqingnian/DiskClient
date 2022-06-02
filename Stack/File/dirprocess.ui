@@ -112,9 +112,9 @@ border-radius:5px;
    <widget class="QLabel" name="btn_time_tip">
     <property name="geometry">
      <rect>
-      <x>300</x>
+      <x>280</x>
       <y>150</y>
-      <width>131</width>
+      <width>141</width>
       <height>32</height>
      </rect>
     </property>

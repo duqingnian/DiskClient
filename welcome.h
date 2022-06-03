@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QMap>
+#include <QSystemTrayIcon>
 #include "auth.h"
 #include <QVector>
 #include <QStackedWidget>
@@ -24,6 +25,19 @@ public:
     QScreen *screen;
     int _width = 1024;
     int _height = 768;
+
+    //托盘
+    QAction *maxAction;
+    QAction *showAction;
+    QAction *quitAction;
+
+    QSystemTrayIcon *trayIcon;
+    QMenu *trayIconMenu;
+
+    void createActions();
+    void createTrayIcon();
+    void iconActivated(QSystemTrayIcon::ActivationReason reason);
+    /////////////////////////////////////////////
 
     QMap<QString,TABMETA*> left_tab_metas;
     QMap<QString,TABMETA*> right_tab_metas;

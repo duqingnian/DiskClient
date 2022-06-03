@@ -38,7 +38,7 @@ void FdMenu::render_data()
 
     MenuItem* ding = new MenuItem();
     ding->text = "发送给钉钉同事";
-    ding->key = "ding";
+    ding->key = "sendto_ding_employee";
     ding->ico = "16x16/ding.png";
 
     MenuItem* share = new MenuItem();
@@ -59,14 +59,14 @@ void FdMenu::render_data()
 
     MenuItem* del = new MenuItem();
     del->text = "删除";
-    del->key = "del";
+    del->key = "delete";
     del->ico = "16x16/del.png";
     del->color = "#ff0000";
     del->border = "border-bottom:1px solid #EFF0F1;";
 
     MenuItem* attr = new MenuItem();
     attr->text = "属性";
-    attr->key = "attr";
+    attr->key = "attribute";
     attr->ico = "16x16/attr.png";
 
     menus.append(open);
@@ -113,3 +113,4 @@ void FdMenu::render_ui()
         });
     }
 }
+

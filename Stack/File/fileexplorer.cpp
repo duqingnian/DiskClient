@@ -10,6 +10,7 @@
 #include <QJsonObject>
 #include <QJsonParseError>
 #include <QMovie>
+#include <QProcess>
 #include <QThread>
 #include <QTimer>
 #include <QTimer>
@@ -284,7 +285,7 @@ FileExplorer::FileExplorer(QWidget *parent) : BaseController(parent)
     mask->setObjectName("mask");
     mask->resize(1000,500);
     mask->move(0,0);
-    mask->setStyleSheet("#mask{background:transparent;}");
+    mask->setStyleSheet("#mask{background-color: transparent;}");
     mask->raise();
 
     load = new QLabel(mask);
@@ -294,6 +295,7 @@ FileExplorer::FileExplorer(QWidget *parent) : BaseController(parent)
     loading_tip->setObjectName("loading_tip");
     loading_tip->setStyleSheet("#loading_tip{font-size:14px;color:#000;}");
     loading_tip->resize(200,25);
+    loading_tip->setAlignment(Qt::AlignCenter);
 
     dir_process = new DirProcess(mask);
     dir_process->setObjectName("dir_process");
@@ -365,7 +367,7 @@ void FileExplorer::flush(int width, int height)
         file_min_action->resize(LIST_SIDE_WIDTH-20,50);
 
         load->move((listWapper->width()-60)/2,(listWapper->height()-60)/2);
-        loading_tip->move(load->x(),load->y() + 90);
+        loading_tip->move(load->x() - loading_tip->width()/2 + 30,load->y() + 90);
     }
     dlg_create->move((width - dlg_create->width())/2,(height - dlg_create->height())/2 -80);
     EmptyTip->move((canvas->width() - EmptyTip->width()) / 2,(canvas->height() - EmptyTip->height()) / 2 - 120);
@@ -400,7 +402,7 @@ void FileExplorer::render_list_side()
     side_tab->move(10,190);
     side_tab->resize(LIST_SIDE_WIDTH1-20,400);
     side_tab->setObjectName("side_tab");
-    side_tab->setStyleSheet("#side_tab{background:#fff;}QTabBar::tab{font-size:14px;background:#fff;height: 44px;width:100px;text-align:center;}QTabBar::tab:selected{font-weight:bold;border-top:2px solid rgb(0, 120, 212);border-left:1px solid #D9D9D9;border-right:1px solid #D9D9D9;}");
+    side_tab->setStyleSheet("#side_tab{background:#fff;}QTabBar::tab{font-size:14px;background:#fff;height: 44px;width:100px;text-align:center;}QTabBar::tab:selected{font-weight:700;border-top:2px solid rgb(0, 120, 212);border-left:1px solid #D9D9D9;border-right:1px solid #D9D9D9;}");
 
     this->render_base_info();
     this->render_version_list();
@@ -460,7 +462,6 @@ void FileExplorer::downloadReadyRead()
     if("DOWNLOAD" == META)
     {
         //接收文件 DOWNLOAD:?FILE_ID:%1,MD5:%2,LEFT_SIZE:%3,BUF_SIZE:%4,FS:%5,PCT:%6;
-        show_loading("下载中 (0%)");
         /////////////////////////////////////////////////////////////////////
         QString FILE_ID ="";
         QString MD5 = "";
@@ -540,6 +541,7 @@ void FileExplorer::downloadReadyRead()
         if(!file.exists())
         {
             if(file.open(QIODevice::WriteOnly)){
+                show_loading("准备下载中...");
                 if(FS.length() <=6 && FS.toUInt() <= BUF_SIZE.toULongLong())
                 {
                     file.write(buffer.mid(DATA_META_LEN,FS.toUInt()));
@@ -556,7 +558,7 @@ void FileExplorer::downloadReadyRead()
         }
         else
         {
-            hide_loading();
+            QThread::usleep(10);
             if(file.open(QIODevice::Append)){
                 if(LEFT_SIZE.length() <= BUF_SIZE.length() && LEFT_SIZE.toInt() < BUF_SIZE.toInt())
                 {
@@ -599,15 +601,22 @@ void FileExplorer::downloadReadyRead()
 
         if(LEFT_SIZE.length() <= BUF_SIZE.length() && LEFT_SIZE.toInt() < BUF_SIZE.toInt())
         {
-            QThread::sleep(1);
+            QThread::usleep(300);
             change_loading_tip("下载完成");
             hide_loading();
-            if(1 == OPEN)
+            if(1 == OPEN) //打开文件
             {
                 QDesktopServices::openUrl(QUrl::fromLocalFile(f));
             }
+            else if(2 == OPEN) //定位文件
+            {
+                this->localtion_file();
+            }
+            else
+            {}
             file.close();
             buffer.clear();
+
         }
         else
         {
@@ -695,7 +704,6 @@ void FileExplorer::readyRead()
     }
     else if("LIST_FILE_RESULT" == META) //列出文件
     {
-        //qDebug() << "_header="<< _header << ", data=" << data;
         this->list_file(data);
     }
     else if("SYNC_UP_STATE" == META || "UPLOAD_SUCCESS" == META)
@@ -790,6 +798,8 @@ void FileExplorer::readyRead()
             }
             else
             {
+                QThread::usleep(10);
+                hide_loading();
                 QDesktopServices::openUrl(QUrl::fromLocalFile(FILE_SRC+"\\"+selected_fd->name));
                 //qDebug() << "本地文件存在，直接打开"+MD5;
             }
@@ -831,6 +841,7 @@ void FileExplorer::readyRead()
 
         active_fd->id = FILE_ID.toInt();
         active_fd->name = NAME;
+        active_fd->md5 = MD5;
         active_fd->size = SIZE.toULongLong();
         active_fd->suffix = SUFFIX;
 
@@ -1117,7 +1128,7 @@ void FileExplorer::render_version_list()
     version_list->move(0,0);
     version_list->resize(side_tab->width(),side_tab->height());
     version_list->setObjectName("version_list");
-    version_list->setStyleSheet("#version_list{background:green}");
+    version_list->setStyleSheet("#version_list{background:#fff}");
 
     //添加TAB
     side_tab->addTab(version_list,"修改记录");
@@ -1237,21 +1248,33 @@ void FileExplorer::render_list_header()
 //显示loading
 void FileExplorer::show_loading(QString tip)
 {
-    QMovie *movie = new QMovie(":/Resources/load.gif");
-    load->setMovie(movie);
-    movie->start();
+    QTimer::singleShot(2, this, [=](){
+        if(!in_loading)
+        {
+            QMovie *movie = new QMovie(":/Resources/load.gif");
+            load->setMovie(movie);
+            movie->start();
 
-    loading_tip->setText(tip);
+            loading_tip->setText(tip);
 
-    mask->show();
-    load->show();
+            in_loading = true;
+            mask->show();
+            load->show();
+        }
+    });
 }
 
 //隐藏loading
 void FileExplorer::hide_loading()
 {
-    mask->hide();
-    load->hide();
+    QTimer::singleShot(10, this, [=](){
+        if(in_loading)
+        {
+            in_loading = false;
+            mask->hide();
+            load->hide();
+        }
+    });
 }
 
 void FileExplorer::change_loading_tip(QString tip)
@@ -1295,6 +1318,7 @@ void FileExplorer::list_file(QString data)
         QJsonObject fdo = arr[i].toObject();
         FD* fd = new FD();
         fd->id = fdo.value("id").toInt();
+        fd->md5 = fdo.value("md5").toString();
         fd->name = fdo.value("name").toString();
         fd->suffix = fdo.value("suffix").toString();
         fd->size = fdo.value("size").toString().toULongLong();
@@ -1443,7 +1467,8 @@ void FileExplorer::render_list()
                 fd_menu->show();
                 fd_menu->raise();
 
-                ////qDebug() << "list右键，selected_fd=" << selected_fd->name;
+                QThread::usleep(10);
+                sendMsgPack("FILE_INFO:?FILE_ID="+QString::number(selected_fd->id)+",META_KEY="+meta->key+",META_ID="+QString::number(meta->id)+"","",cmd_socket);
             });
         }
     }
@@ -1612,7 +1637,7 @@ void FileExplorer::fd_clicked(QMouseEvent *event, int id)
     fd_menu->hide();
     if(Qt::LeftButton == event->button())
     {
-        ////qDebug() << "event->type()=" << event->type();
+        //qDebug() << "event->type()=" << event->type();
         if(QEvent::MouseButtonPress == event->type())
         {
             //单击
@@ -1871,12 +1896,70 @@ void FileExplorer::menu_clicked(QString key)
 void FileExplorer::fd_menu_clicked(QString key)
 {
     fd_menu->hide();
-
-    if("open" == key)
+    if("open" == key) //打开文件
     {
         fd_open();
     }
+    else if("location" == key) //定位文件
+    {
+        this->localtion_file();
+    }
+    else if("sendto_ding_employee" == key) //发送给钉钉同事
+    {
+        //
+    }
+    else if("share" == key) //共享
+    {
+        //
+    }
+    else if("move" == key) //移动
+    {
+        //
+    }
+    else if("rename" == key) //重命名
+    {
+        //
+    }
+    else if("delete" == key) //删除
+    {
+        //
+    }
+    else if("attribute" == key) //属性
+    {
+        //
+    }
+    else
+    {
+        box("点击了未知的菜单:"+key);
+    }
+}
 
+//打开定位文件
+void FileExplorer::localtion_file()
+{
+    QProcess process;
+    QString filePath = get_reg("LOCAL_CACHE_DIR") + "\\" + user->job_number + "\\" + QString::number(selected_fd->id) + "\\" + selected_fd->md5 + "\\" + selected_fd->name;
+    if("FOLDER" != selected_fd->suffix)
+    {
+        QFile _file(filePath);
+        if(!_file.exists())
+        {
+            //文件不存在 提示要不要下载
+            if(BUTTON_OK == MSGBOX::question(parentWidget(),"文件不存在,是否下载?"))
+            {
+                show_loading();
+                sendMsgPack("DOWN_FILE:?FILE_ID="+QString::number(selected_fd->id)+",META_KEY="+meta->key+",META_ID="+QString::number(meta->id)+",OPEN=2","",download_socket);
+            }
+        }
+        else
+        {
+            //本地文件存在
+            QString cmd = QString("explorer.exe /select,\"%1\"").arg(filePath);
+            process.startDetached(cmd);
+            QThread::usleep(10);
+            hide_loading();
+        }
+    }
 }
 
 FileExplorer::~FileExplorer()

@@ -7,6 +7,7 @@
 struct FD
 {
     int id = 0;
+    QString md5 = "";
     QString name = "";
     QString suffix = "";
     QString icon = "";

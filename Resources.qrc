@@ -1662,5 +1662,6 @@
         <file>Resources/types/py.png</file>
         <file>Resources/load.gif</file>
         <file>Resources/Common/folder.png</file>
+        <file>Resources/trayIcon.png</file>
     </qresource>
 </RCC>

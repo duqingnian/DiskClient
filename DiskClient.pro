@@ -209,3 +209,5 @@ DISTFILES += \
     Resources/fd/xls.png \
     Resources/fd/xlsx.png \
     Resources/fd/zip.png
+
+#LIBS *= Shell32.lib

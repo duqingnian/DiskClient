@@ -17,7 +17,7 @@
 #include <Thread/downloadthread.h>
 #include <Common/db.h>
 
-bool DEBUG = true;
+bool DEBUG = false;
 int border = 8;
 
 Auth::Auth(QWidget *parent) : BaseWindow(parent),ui(new Ui::Auth)

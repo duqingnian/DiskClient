@@ -1,12 +1,20 @@
 ﻿#pragma execution_character_set("utf-8")
 #include "welcome.h"
 #include "ui_welcome.h"
+#include <QAction>
 #include <QDebug>
+#include <QMenu>
 #include <QScreen>
 
 Welcome::Welcome(QWidget *parent) : BaseWindow(parent) , ui(new Ui::Welcome)
 {
     ui->setupUi(this);
+
+    //初始化托盘
+    createActions();
+    createTrayIcon();
+    trayIcon->show();
+
     InitLayout();
 }
 
@@ -190,6 +198,45 @@ Welcome::~Welcome()
     Db::Instance()->disconnect();
 
     qDebug() << "已关闭.";
+}
+
+void Welcome::createActions()
+{
+    showAction = new QAction("显示", this);
+    connect(showAction, &QAction::triggered, this, &QWidget::show);
+
+    quitAction = new QAction("退出", this);
+    connect(quitAction, &QAction::triggered, qApp, &QCoreApplication::quit);
+}
+
+void Welcome::createTrayIcon()
+{
+    trayIconMenu = new QMenu(this);
+
+    trayIconMenu->addAction(showAction);
+    trayIconMenu->addSeparator();
+    trayIconMenu->addAction(quitAction);
+
+    trayIcon = new QSystemTrayIcon(this);
+    trayIcon->setIcon(QIcon(":/Resources/trayIcon.png"));
+    trayIcon->setContextMenu(trayIconMenu);
+    trayIcon->setVisible(true);
+
+    connect(trayIcon, &QSystemTrayIcon::activated, this, &Welcome::iconActivated);
+}
+
+void Welcome::iconActivated(QSystemTrayIcon::ActivationReason reason)
+{
+    switch (reason) {
+    case QSystemTrayIcon::Trigger:
+    case QSystemTrayIcon::DoubleClick:
+        this->show();
+        break;
+    case QSystemTrayIcon::MiddleClick:
+        break;
+    default:
+        ;
+    }
 }
 
 

@@ -108,7 +108,7 @@ int MSGBOX::question(QWidget *parent, const QString &text)
     myMessageBox->setWindowTitle("Confirm");
     myMessageBox->setContentText(text);
     myMessageBox->setMessageType(MESSAGE_QUESTION);
-    myMessageBox->setButtonType(BUTTON_OK);
+    myMessageBox->setButtonType(BUTTON_OK_AND_CANCEL);
 
     return myMessageBox->exec();
 }

@@ -35,6 +35,8 @@ public:
     explicit FileExplorer(QWidget *parent = nullptr);
      ~FileExplorer();
 
+    bool in_loading = false;
+
     QTcpSocket* cmd_socket;
     QTcpSocket* download_socket;
 
@@ -165,6 +167,9 @@ public:
 
     QString ConverSize(unsigned long long bytes);
     void render_attribute();
+
+    //定位文件
+    void localtion_file();
 private:
     int _width;
     int _height;

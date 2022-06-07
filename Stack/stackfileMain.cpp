@@ -14,6 +14,40 @@ StackFileMain::StackFileMain(QWidget *parent) : BaseController(parent)
     InitAction();
     InitContent();
     InitUrlBar();
+
+    //开启线程 监听文件检测
+    QString USR_DIR = get_reg("LOCAL_CACHE_DIR")+"\\"+user->job_number+"\\";
+    watcher_thread = new WatcherThread(USR_DIR);
+
+    connect(watcher_thread,&WatcherThread::changed,stack_file_explorer,&FileExplorer::FileChanged);
+    //connect(watcher_thread, SIGNAL(lostChanges()),this, SIGNAL(lostChanges()));
+    connect(watcher_thread, &WatcherThread::ready,this, []() { /*qDebug() << "watch thread ready!";*/ });
+
+    watcher_thread->start();
+    _timer.start();
+}
+
+StackFileMain::~StackFileMain()
+{
+    watcher_thread->stop();
+    watcher_thread->wait();
+    delete watcher_thread;
+}
+
+void StackFileMain::appendSubPaths(QDir dir, QStringList& subPaths)
+{
+    QStringList newSubPaths = dir.entryList(QDir::NoDotAndDotDot | QDir::Dirs | QDir::Files);
+    for (int i = 0; i < newSubPaths.size(); i++)
+    {
+        QString path = dir.path() + "/" + newSubPaths[i];
+        QFileInfo fileInfo(path);
+        subPaths.append(path);
+        if (fileInfo.isDir())
+        {
+            QDir dir(path);
+            appendSubPaths(dir, subPaths);
+        }
+    }
 }
 
 void StackFileMain::InitNavigate()
@@ -152,10 +186,10 @@ void StackFileMain::InitAction()
         btn_create->setCursor(QCursor(Qt::PointingHandCursor));
 
         //新建文件
-        Label* ico1 = new Label(btn_create);
-        ico1->setStyleSheet("background:transparent;");
-        ico1->setPixmap(QPixmap::fromImage(QImage(":/Resources/Common/add.png")));
-        ico1->move(10,18);
+        Label* _ico1 = new Label(btn_create);
+        _ico1->setStyleSheet("background:transparent;");
+        _ico1->setPixmap(QPixmap::fromImage(QImage(":/Resources/Common/add.png")));
+        _ico1->move(10,18);
 
         QLabel* txt1 = new QLabel(btn_create);
         txt1->setText("新建");
@@ -168,7 +202,7 @@ void StackFileMain::InitAction()
         ico_down->move(btn_create->width()-20,18);
 
         connect(btn_create,&QPushButton::clicked,stack_file_explorer,&FileExplorer::OpenCreateDropDown);
-        connect(ico1,&Label::clicked,stack_file_explorer,&FileExplorer::OpenCreateDropDown);
+        connect(_ico1,&Label::clicked,stack_file_explorer,&FileExplorer::OpenCreateDropDown);
         connect(ico_down,&Label::clicked,stack_file_explorer,&FileExplorer::OpenCreateDropDown);
     }
 
@@ -444,10 +478,4 @@ void StackFileMain::append_urlbar(FD* selected_fd)
 
     render_urlbar();
 }
-
-
-
-
-
-
 

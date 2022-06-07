@@ -80,17 +80,19 @@ void FileManager::run()
                         SPEED = static_cast<unsigned long long>(file->size - left_size) / static_cast<unsigned long long>(t - start_time);
                     }
 
-                    QString meta = QString("ADOFILE:?MD5:%1,SUFFIX:%2,LEFT_SIZE:%3,BUF_SIZE:%4,FS:%5,PCT:%6,BUNDLE:%7,BUNDLE_id:%8,FD_ID:%9,NAME:%10;")
-                            .arg(file->md5) //MD5:%1
-                            .arg(file->suffix) //SUFFIX:%2
-                            .arg(QString::number(left_size)) //LEFT_SIZE:%3
-                            .arg(QString::number(buf_size)) //BUF_SIZE:%4
-                            .arg(QString::number(m_file.size())) //FS:%5
-                            .arg(QString::number(PCT)) //PCT:%6
-                            .arg(META_KEY) //BUNDLE:%7
-                            .arg(QString::number(META_ID)) //BUNDLE_id:%8
-                            .arg(QString::number(FD_ID)) //FD_ID:%9
-                            .arg(file->name); //NAME:%10
+                    QString meta = "ADOFILE:?";
+                    meta += "FILE_ID:"+QString::number(file->id);
+                    meta += ",MD5:"+file->md5;
+                    meta += ",SUFFIX:"+file->suffix;
+                    meta += ",LEFT_SIZE:"+QString::number(left_size);
+                    meta += ",BUF_SIZE:"+QString::number(buf_size);
+                    meta += ",FS:"+QString::number(m_file.size());
+                    meta += ",PCT:"+QString::number(PCT);
+                    meta += ",BUNDLE:"+META_KEY;
+                    meta += ",BUNDLE_id:"+QString::number(META_ID);
+                    meta += ",FD_ID:"+QString::number(FD_ID);
+                    meta += ",NAME:"+file->name;
+                    meta += ";";
 
                     QByteArray data;
                     data.prepend(meta.toUtf8());

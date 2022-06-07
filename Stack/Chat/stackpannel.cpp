@@ -158,7 +158,7 @@ void StackPannel::loadMsg()
             for (int i=0; i < nRecordCount ; i++) {
                 query.next();
 
-                WORD* word = new WORD();
+                AWORD* word = new AWORD();
                 word->id = query.value("id").toString();
                 word->from = query.value("send_from").toString();
                 word->to = query.value("send_to").toString();

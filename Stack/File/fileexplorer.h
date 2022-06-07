@@ -139,6 +139,9 @@ public:
     //渲染侧边栏文件信息
     void render_active_file_info();
 
+    //文件后缀转图标
+    QString suffix2icon(QString suffix);
+
     //没有任何文件的提示
     QLabel* EmptyTip;
 
@@ -175,9 +178,18 @@ private:
     int _height;
     bool db_click = false;
     FD* active_fd;
+
+    //文件列表 表头
+    Label* row_header_name;
+    Label* row_header_user;
+    Label* row_header_version;
+    Label* row_header_size;
 public slots:
     void readyRead();
     void disconnected();
+
+    //文件有变动
+    void FileChanged(const QString &);
 
     //下载服务器
     void downloadReadyRead();

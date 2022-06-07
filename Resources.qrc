@@ -1663,5 +1663,8 @@
         <file>Resources/load.gif</file>
         <file>Resources/Common/folder.png</file>
         <file>Resources/trayIcon.png</file>
+        <file>Resources/types/accdb.png</file>
+        <file>Resources/types/gzip.png</file>
+        <file>Resources/types/aac.png</file>
     </qresource>
 </RCC>

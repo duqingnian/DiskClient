@@ -115,7 +115,7 @@ FileExplorer::FileExplorer(QWidget *parent) : BaseController(parent)
     {
         if(cmd_socket->isOpen())
         {
-            //Toast::succ("cmd服务器连接成功");
+            Toast::succ("cmd服务器连接成功");
             //上传面板
             upload_pannel = new UploadPannel(this);
             upload_pannel->setObjectName("upload_pannel");
@@ -372,10 +372,28 @@ void FileExplorer::flush(int width, int height)
     dlg_create->move((width - dlg_create->width())/2,(height - dlg_create->height())/2 -80);
     EmptyTip->move((canvas->width() - EmptyTip->width()) / 2,(canvas->height() - EmptyTip->height()) / 2 - 120);
     upload_pannel->move(this->width() - upload_pannel->width() - 15,this->height() - upload_pannel->height() - 15);
-
     active_icon->move((LIST_SIDE_WIDTH-120)/2,20);
-
     dir_process->move((listWapper->width()-dir_process->width())/2,(listWapper->height()-dir_process->height())/2);
+
+    //文件列表
+    if(width > 1400)
+    {
+        row_header_name->resize(985,35);
+    }
+    else
+    {
+        row_header_name->resize(595,35);
+    }
+    row_header_user->move(row_header_name->x() + row_header_name->width() + 10,0);
+    row_header_version->move(row_header_user->x() + row_header_user->width(),0);
+    row_header_size->move(row_header_version->x() + row_header_version->width(),0);
+
+    for (int i=0; i<fds.count(); i++)
+    {
+        QString id = QString::number(fds[i]->id);
+        FileRow* row = findChild<FileRow*>("file_row_"+id);
+        row->resize(width);
+    }
 }
 
 //渲染文件详情
@@ -534,9 +552,8 @@ void FileExplorer::downloadReadyRead()
             save_dir.mkpath(save_path);
         }
 
-        QString f = save_path+"\\"+NAME;
-
-        QFile file(f);
+        QString tmp_file = save_path+"\\"+NAME+".tmp";
+        QFile file(tmp_file);
 
         if(!file.exists())
         {
@@ -553,7 +570,7 @@ void FileExplorer::downloadReadyRead()
             }
             else
             {
-                box("文件创建失败:"+f);
+                box("文件创建失败:"+tmp_file);
             }
         }
         else
@@ -601,12 +618,15 @@ void FileExplorer::downloadReadyRead()
 
         if(LEFT_SIZE.length() <= BUF_SIZE.length() && LEFT_SIZE.toInt() < BUF_SIZE.toInt())
         {
-            QThread::usleep(300);
+            QThread::usleep(100);
             change_loading_tip("下载完成");
+            QString origine_name = file.fileName().replace(".tmp","");
+            file.rename(origine_name);
+            QThread::usleep(100);
             hide_loading();
             if(1 == OPEN) //打开文件
             {
-                QDesktopServices::openUrl(QUrl::fromLocalFile(f));
+                QDesktopServices::openUrl(QUrl::fromLocalFile(origine_name));
             }
             else if(2 == OPEN) //定位文件
             {
@@ -680,7 +700,7 @@ void FileExplorer::readyRead()
         }
         else{}
     }
-    ////qDebug() << "META=" << META;
+    //qDebug() << "META=" << META;
     if("WELCOME" == META) //登录后的绑定
     {
         sendMsgPack("BIND_USER:?JOB_NUMBER="+user->job_number,"",cmd_socket);
@@ -812,6 +832,9 @@ void FileExplorer::readyRead()
         QString NAME = "";
         QString SIZE = "";
         QString SUFFIX = "";
+        QString CREATED_AT = "0";
+        QString UPDATED_AT = "0";
+        QString VERSION = "0";
 
         for(QString hi : headers)
         {
@@ -836,6 +859,18 @@ void FileExplorer::readyRead()
             {
                 SUFFIX = his[1];
             }
+            else if("CREATED_AT" == his[0])
+            {
+                CREATED_AT = his[1];
+            }
+            else if("UPDATED_AT" == his[0])
+            {
+                UPDATED_AT = his[1];
+            }
+            else if("VERSION" == his[0])
+            {
+                VERSION = his[1];
+            }
             else{}
         }
 
@@ -844,6 +879,9 @@ void FileExplorer::readyRead()
         active_fd->md5 = MD5;
         active_fd->size = SIZE.toULongLong();
         active_fd->suffix = SUFFIX;
+        active_fd->created_at = CREATED_AT.toInt();
+        active_fd->updated_at = UPDATED_AT.toInt();
+        active_fd->version = VERSION;
 
         render_active_file_info();
     }
@@ -1014,15 +1052,20 @@ void FileExplorer::readyRead()
 
 void FileExplorer::render_active_file_info()
 {
-    QString ico = ":/Resources/types/"+active_fd->suffix.toLower()+".png";
-    if(typesRes.indexOf(active_fd->suffix.toLower()) == -1)
-    {
-        ico = ":/Resources/types/null.png";
-    }
+    QString ico = suffix2icon(active_fd->suffix);
     active_icon->setPixmap(QPixmap::fromImage(QImage(ico)));
     active_title->setText(active_fd->name);
 
     render_attribute();
+}
+
+QString FileExplorer::suffix2icon(QString suffix)
+{
+    if(typesRes.indexOf(suffix.toLower()) == -1)
+    {
+        return ":/Resources/types/null.png";
+    }
+    return ":/Resources/types/"+suffix.toLower()+".png";
 }
 
 void FileExplorer::render_base_info()
@@ -1052,32 +1095,42 @@ void FileExplorer::render_base_info()
     space_0->name = "";
     space_0->value = "";
 
+    ATTRIBUTE* version = new ATTRIBUTE();
+    version->key = "version";
+    version->name = "版本号:";
+
     ATTRIBUTE* extraction_cod = new ATTRIBUTE();
     extraction_cod->key = "extraction_cod";
-    extraction_cod->name = "提取码";
+    extraction_cod->name = "提取码:";
 
     ATTRIBUTE* file_size = new ATTRIBUTE();
     file_size->key = "file_size";
-    file_size->name = "文件大小";
+    file_size->name = "文件大小:";
 
     ATTRIBUTE* create_time = new ATTRIBUTE();
-    create_time->key = "create_time";
-    create_time->name = "创建时间";
+    create_time->key = "created_time";
+    create_time->name = "创建时间:";
 
     ATTRIBUTE* update_time = new ATTRIBUTE();
-    update_time->key = "update_time";
-    update_time->name = "更新时间";
+    update_time->key = "updated_time";
+    update_time->name = "更新时间:";
 
     ATTRIBUTE* creator = new ATTRIBUTE();
     creator->key = "creator";
-    creator->name = "上传";
+    creator->name = "上传:";
+
+    ATTRIBUTE* md5 = new ATTRIBUTE();
+    md5->key = "md5";
+    md5->name = "校验码:";
 
     attributes.append(space_0);
+    attributes.append(version);
     attributes.append(extraction_cod);
     attributes.append(file_size);
     attributes.append(create_time);
     attributes.append(update_time);
     attributes.append(creator);
+    attributes.append(md5);
 
     for(int i=0;i<attributes.count();i++)
     {
@@ -1102,10 +1155,44 @@ void FileExplorer::render_base_info()
 void FileExplorer::render_attribute()
 {
     QLabel* extraction_cod = findChild<QLabel*>("attr_extraction_cod");
-    extraction_cod->setText(QString::number(active_fd->id));
+    if(extraction_cod)
+    {
+        extraction_cod->setText(QString::number(active_fd->id));
+    }
 
     QLabel* file_size = findChild<QLabel*>("attr_file_size");
-    file_size->setText(ConverSize(active_fd->size));
+    if(file_size)
+    {
+        file_size->setText(ConverSize(active_fd->size));
+    }
+
+    QLabel* md5 = findChild<QLabel*>("attr_md5");
+    if(md5)
+    {
+        md5->setText(active_fd->md5.mid(0,8).toUpper());
+    }
+
+    QLabel* version = findChild<QLabel*>("attr_version");
+    if(version)
+    {
+        version->setText(active_fd->version);
+    }
+
+    QLabel* created_time = findChild<QLabel*>("attr_created_time");
+    if(created_time)
+    {
+        QDateTime dt1;
+        dt1.setTime_t((unsigned int)active_fd->created_at);
+        created_time->setText(dt1.toString("yyyy-MM-dd hh:mm:ss"));
+    }
+
+    QLabel* updated_time = findChild<QLabel*>("attr_updated_time");
+    if(updated_time)
+    {
+        QDateTime dt2;
+        dt2.setTime_t((unsigned int)active_fd->updated_at);
+        updated_time->setText(dt2.toString("yyyy-MM-dd hh:mm:ss"));
+    }
 }
 
 QString FileExplorer::ConverSize(unsigned long long bytes)
@@ -1119,6 +1206,49 @@ QString FileExplorer::ConverSize(unsigned long long bytes)
         size /= 1024;
     }
     return QString::number(size,'f',2) +" "+ suffix[i];
+}
+
+//文件有变动
+void FileExplorer::FileChanged(const QString& file_path)
+{
+    if(file_path.length() < 10)
+    {
+        return;
+    }
+    if(!file_path.contains(user->job_number))
+    {
+        return;
+    }
+    int pos = file_path.indexOf(user->job_number);
+    QString info = file_path.mid(pos+user->job_number.length()+1);
+    QStringList infos = info.split("\\");
+    if(infos.length() != 3)
+    {
+        return;
+    }
+
+    QFileInfo fi(file_path);
+
+    QString file_id = infos[0];
+    QString file_md5 = md5_file(file_path);
+    QString file_name = infos[2];
+
+    UP_FILE* upload_file = new UP_FILE();
+    upload_file->id = file_id.toInt();
+    upload_file->suffix = fi.suffix();
+    upload_file->ico = suffix2icon(fi.suffix());
+    upload_file->md5 = file_md5;
+    upload_file->name = file_name;
+    upload_file->path = file_path;
+    upload_file->size = fi.size();
+    upload_file->state = UP_STATE::UPDATE;
+
+    //要不要清除
+    upload_pannel->clear_queue();
+    wait(5);
+    upload_pannel->add_queue(upload_file);
+    wait(5);
+    upload_pannel->touch_upload(this->meta->key,this->meta->id,fd->id);
 }
 
 //初始化版本
@@ -1203,7 +1333,7 @@ void FileExplorer::disconnected()
     cmd_socket->abort();
     cmd_socket->deleteLater();
 
-    box("与文件服务器断开了连接...");
+    box("与文件服务器断开了连接..."); //需要考虑自动重新连接服务器
 }
 
 //渲染列表头
@@ -1219,30 +1349,35 @@ void FileExplorer::render_list_header()
     row_header_ico->resize(50,35);
     row_header_ico->move(0,0);
 
-    Label* row_header_name = new Label(file_row_header);
-    row_header_name->resize(520,35);
+    row_header_name = new Label(file_row_header);
+    row_header_name->setObjectName("row_header_name");
+    row_header_name->resize(595,35);
     row_header_name->move(55,0);
     row_header_name->setText("名称");
-    row_header_name->setStyleSheet("font-weight:bold;");
+    row_header_name->setStyleSheet("#row_header_name{font-weight:bold;}");
 
-    Label* row_header_user = new Label(file_row_header);
+    row_header_user = new Label(file_row_header);
+    row_header_user->setObjectName("row_header_user");
     row_header_user->resize(180,35);
-    row_header_user->move(585,0);
+    row_header_user->move(row_header_name->x() + row_header_name->width() + 10,0);
     row_header_user->setText("用户");
-    row_header_user->setStyleSheet("font-weight:bold;");
+    row_header_user->setStyleSheet("#row_header_user{font-weight:bold;}");
 
-    Label* row_header_type = new Label(file_row_header);
-    row_header_type->resize(130,35);
-    row_header_type->move(780,0);
-    row_header_type->setText("文件类型");
-    row_header_type->setStyleSheet("font-weight:bold;");
+    row_header_version = new Label(file_row_header);
+    row_header_version->setObjectName("row_header_version");
+    row_header_version->resize(80,35);
+    row_header_version->move(row_header_user->x() + row_header_user->width(),0);
+    row_header_version->setText("版本");
+    row_header_version->setAlignment(Qt::AlignCenter);
+    row_header_version->setStyleSheet("#row_header_version{font-weight:bold;}");
 
-    Label* row_header_size = new Label(file_row_header);
+    row_header_size = new Label(file_row_header);
+    row_header_size->setObjectName("row_header_size");
     row_header_size->resize(90,35);
-    row_header_size->move(910,0);
+    row_header_size->move(row_header_version->x() + row_header_version->width(),0);
     row_header_size->setText("文件尺寸");
     row_header_size->setAlignment(Qt::AlignVCenter | Qt::AlignRight);
-    row_header_size->setStyleSheet("font-weight:bold;");
+    row_header_size->setStyleSheet("#row_header_size{font-weight:bold;}");
 }
 
 //显示loading
@@ -1306,11 +1441,10 @@ void FileExplorer::load_files()
     sendMsgPack("LIST_FILES:?FD_ID="+QString::number(fd->id)+",META_KEY="+meta->key+",META_ID="+QString::number(meta->id)+",DEBUG=load_files","",cmd_socket);
 }
 
-/**
- * 2.收到文件数据
- */
+//2.收到文件数据
 void FileExplorer::list_file(QString data)
 {
+    //qDebug() << "FileExplorer::list_file=" << data;
     QJsonParseError err_rpt;
     QJsonDocument  jsonDoc = QJsonDocument::fromJson(data.toUtf8(), &err_rpt);
     QJsonArray arr =  jsonDoc.array();
@@ -1323,9 +1457,8 @@ void FileExplorer::list_file(QString data)
         fd->suffix = fdo.value("suffix").toString();
         fd->size = fdo.value("size").toString().toULongLong();
         fd->created_at = fdo.value("created_at").toInt();
-        fd->created_time = fdo.value("created_time").toString();
         fd->updated_at = fdo.value("updated_at").toInt();
-        fd->updated_time = fdo.value("updated_time").toString();
+        fd->version = fdo.value("version").toString();
         QString ico_res = ":/Resources/types/"+fd->suffix.toLower()+".png";
         if(typesRes.indexOf(fd->suffix.toLower()) == -1)
         {
@@ -1444,6 +1577,7 @@ void FileExplorer::render_list()
             FileRow* row = new FileRow();
             row->setObjectName("file_row_"+id);
             row->set_file(fds[i]);
+            row->resize(this->width());
 
             QListWidgetItem* item = new QListWidgetItem(listWapper);
             item->setData(Qt::UserRole,id);
@@ -1532,8 +1666,11 @@ void FileExplorer::render_flow()
             fd_name->setStyleSheet("color:#605e5c;background:transparent;font-size: 14px;font-family: \"Microsoft Yahei UI\";");
             fd_name->setMouseTracking(true);
 
+            QDateTime dt;
+            dt.setTime_t(fds[i]->created_at);
+
             Label* fd_date = new Label(fd_item);
-            fd_date->setText(fds[i]->updated_time);
+            fd_date->setText(dt.toString("yyyy-MM-dd hh:mm:ss"));
             fd_date->move(0,140);
             fd_date->resize(fd_item->width(),18);
             fd_date->setAlignment(Qt::AlignCenter);
@@ -1830,7 +1967,7 @@ void FileExplorer::moveto_queue(QString abs_path)
     upload_file->name = file_name;
     upload_file->path = abs_path;
     upload_file->size = fize_size;
-    upload_file->state = UP_STATE::WAIT_UP;
+    upload_file->state = UP_STATE::UPLOAD;
     wait(5);
     upload_pannel->add_queue(upload_file);
 }
@@ -1938,6 +2075,11 @@ void FileExplorer::fd_menu_clicked(QString key)
 void FileExplorer::localtion_file()
 {
     QProcess process;
+    if(selected_fd->md5.length() < 16)
+    {
+        MSGBOX::alert(this,"MD5值丢失，无法定位文件");
+        return;
+    }
     QString filePath = get_reg("LOCAL_CACHE_DIR") + "\\" + user->job_number + "\\" + QString::number(selected_fd->id) + "\\" + selected_fd->md5 + "\\" + selected_fd->name;
     if("FOLDER" != selected_fd->suffix)
     {
@@ -1945,6 +2087,7 @@ void FileExplorer::localtion_file()
         if(!_file.exists())
         {
             //文件不存在 提示要不要下载
+            qDebug() << "filePath=" << filePath;
             if(BUTTON_OK == MSGBOX::question(parentWidget(),"文件不存在,是否下载?"))
             {
                 show_loading();

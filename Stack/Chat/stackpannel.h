@@ -11,7 +11,7 @@
 #include "qnchatmessage.h"
 #include <QPaintEvent>
 
-struct WORD{
+struct AWORD{
     QString id;
     QString from;
     QString to;
@@ -54,7 +54,7 @@ private:
     bool isSending = true;
     bool key_control = false;
 
-    QList<WORD*> words;
+    QList<AWORD*> words;
 private slots:
     void resize_input();
     void send_msg();

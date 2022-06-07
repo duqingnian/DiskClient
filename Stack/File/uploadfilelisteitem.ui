@@ -127,7 +127,7 @@
     <string notr="true"/>
    </property>
    <property name="text">
-    <string>speed</string>
+    <string>-</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>

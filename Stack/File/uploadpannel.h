@@ -34,6 +34,7 @@ public:
     void add_queue(UP_FILE*);
     void touch_upload(QString,int,int);
     void set_descriptor(qintptr);
+    void clear_queue();//清除上传面板
 private:
     Ui::UploadPannel *ui;
     qintptr file_socket_descriptor;
@@ -48,8 +49,6 @@ private:
     QList<QString> complete_queue;    //已经上传完毕的集合
 
     bool uploading = false;
-
-    void sync_file(QString md5);
 
     Label* clear;
     Label* min;

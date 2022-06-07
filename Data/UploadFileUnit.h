@@ -4,12 +4,12 @@
 #include <QString>
 
 enum UP_STATE{
-    WAIT_UP, //准备上传
-    UP_ING,  //上传中
-    UP_FAILED //上传失败
+    UPLOAD, //上传
+    UPDATE //更新
 };
 
 struct UP_FILE{
+    int id = 0;
     QString md5 = "";
     QString suffix = "";
     QString ico = "";

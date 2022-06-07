@@ -50,6 +50,7 @@ SOURCES += \
     Thread/syncfilethread.cpp \
     Thread/syncmsgthread.cpp \
     Thread/uploaddirthread.cpp \
+    Thread/watcherthread.cpp \
     auth.cpp \
     main.cpp \
     welcome.cpp
@@ -107,6 +108,7 @@ HEADERS += \
     Thread/syncfilethread.h \
     Thread/syncmsgthread.h \
     Thread/uploaddirthread.h \
+    Thread/watcherthread.h \
     auth.h \
     welcome.h
 

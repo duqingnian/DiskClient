@@ -3,9 +3,11 @@
 
 #include <QDialog>
 #include <Component/Label.h>
+#include <Thread/watcherthread.h>
 #include "Common/basecontroller.h"
 #include <QLineEdit>
 #include <QPushButton>
+#include <QSet>
 #include <QStackedWidget>
 
 #include "File/filewelcome.h"
@@ -18,7 +20,7 @@ class StackFileMain : public BaseController
     Q_OBJECT
 public:
     explicit StackFileMain(QWidget *parent = nullptr);
-
+    ~StackFileMain();
     //初始化导航栏
     void InitNavigate();
 
@@ -30,6 +32,8 @@ public:
 
     //resize
     void resizeEvent(QResizeEvent *) override;
+
+    WatcherThread* watcher_thread;
 
     //渲染地址栏
     void InitUrlBar();
@@ -64,9 +68,15 @@ private:
     FileWelcome*   stack_file_welcome;
     FileExplorer*  stack_file_explorer;
 
+    QElapsedTimer _timer;
+    QString _lastPath;
+
 private slots:
     void url_meta_clicked(UrlMeta*);
     void append_urlbar(FD*);
+    void appendSubPaths(QDir dir, QStringList& subPaths);
+signals:
+    void FileChanged(const QString &);
 };
 
 #endif // STACKFILEMAIN_H

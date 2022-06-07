@@ -182,8 +182,11 @@ void UploadPannel::sync_file_progrrss(QString BUNDLE,QString BUNDLE_ID,QString F
     if("UPLOADING" == state)
     {
         UploadFileListeItem* upload_file_item = findChild<UploadFileListeItem*>("up"+md5);
-        upload_file_item->set_progress(pct);
-        upload_file_item->set_speed(SPEED);
+        if(upload_file_item)
+        {
+            upload_file_item->set_progress(pct);
+            upload_file_item->set_speed(SPEED);
+        }
     }
     else if("UPLOAD_COMPLETE" == state)
     {
@@ -196,12 +199,12 @@ void UploadPannel::sync_file_progrrss(QString BUNDLE,QString BUNDLE_ID,QString F
 
             complete_queue.append(md5);
             UploadFileListeItem* upload_file_item = findChild<UploadFileListeItem*>("up"+md5);
-            upload_file_item->completed();
-
+            if(upload_file_item)
+            {
+                upload_file_item->completed();
+            }
             wait(10);
-
             emit do_some_action("REFRESH");
-
             wait(10);
             uploading = false;
             this->touch_upload(BUNDLE,BUNDLE_ID.toInt(),FD_ID.toInt());  //尝试下次上传
@@ -227,19 +230,21 @@ void UploadPannel::add_queue(UP_FILE* upload_file)
     upload_queue.append(upload_file->md5);
     uploads[upload_file->md5] = upload_file;
 
-    UploadFileListeItem* upload_file_item = new UploadFileListeItem();
-    upload_file_item->setObjectName("up"+upload_file->md5);
-    upload_file_item->set_upload_file(upload_file);
+    if(UP_STATE::UPLOAD == upload_file->state)
+    {
+        UploadFileListeItem* upload_file_item = new UploadFileListeItem();
+        upload_file_item->setObjectName("up"+upload_file->md5);
+        upload_file_item->set_upload_file(upload_file);
 
-    QListWidgetItem* item = new QListWidgetItem(upload_file_list);
-    item->setData(Qt::UserRole,upload_file->md5);
-    item->setSizeHint(QSize(494,56));
+        QListWidgetItem* item = new QListWidgetItem(upload_file_list);
+        item->setData(Qt::UserRole,upload_file->md5);
+        item->setSizeHint(QSize(494,56));
 
-    upload_file_list->setItemWidget(item, upload_file_item);
+        upload_file_list->setItemWidget(item, upload_file_item);
 
-    title->setText(QString("上传 (%1/%2)").arg(QString::number(uploaded_count)).arg(upload_file_list->count()));
-    upload_file_list->setCurrentRow(upload_file_list->count()-1);
-
+        title->setText(QString("上传 (%1/%2)").arg(QString::number(uploaded_count)).arg(upload_file_list->count()));
+        upload_file_list->setCurrentRow(upload_file_list->count()-1);
+    }
     wait(5);
 }
 
@@ -265,6 +270,11 @@ void UploadPannel::touch_upload(QString meta_key,int meta_id,int fd_id)
 void UploadPannel::set_descriptor(qintptr descriptor)
 {
     //this->file_socket_descriptor = descriptor;
+}
+
+void UploadPannel::clear_queue()
+{
+    uploads.clear();
 }
 
 void UploadPannel::_clear_upoload_queue()

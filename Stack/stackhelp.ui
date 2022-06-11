@@ -13,19 +13,11 @@
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <widget class="QLabel" name="label">
-   <property name="geometry">
-    <rect>
-     <x>70</x>
-     <y>120</y>
-     <width>54</width>
-     <height>12</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>版本：v1</string>
-   </property>
-  </widget>
+  <property name="styleSheet">
+   <string notr="true">#StackHelp{
+background:#fff;
+}</string>
+  </property>
  </widget>
  <resources/>
  <connections/>

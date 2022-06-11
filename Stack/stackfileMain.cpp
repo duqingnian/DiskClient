@@ -9,7 +9,10 @@ StackFileMain::StackFileMain(QWidget *parent) : BaseController(parent)
     stack_file_explorer = new FileExplorer();
 
     connect(stack_file_explorer,SIGNAL(append_urlbar(FD*)),this,SLOT(append_urlbar(FD*)));
-
+    connect(stack_file_explorer,&FileExplorer::sync_views,stack_file_welcome,&FileWelcome::sync_views);
+    connect(stack_file_explorer,&FileExplorer::url_back_to,this,&StackFileMain::url_back_to); //重置URL
+    //清除员工数据后，载入部门或者群组数据
+    connect(stack_file_explorer,SIGNAL(reload_meta_data(UrlMeta*)),this,SLOT(reload_meta_data(UrlMeta*)));
     InitNavigate();
     InitAction();
     InitContent();
@@ -34,6 +37,13 @@ StackFileMain::~StackFileMain()
     delete watcher_thread;
 }
 
+void StackFileMain::reload_meta_data(UrlMeta* meta)
+{
+    this->url_back_to(meta);
+    wait(50);
+    this->url_meta_clicked(meta);
+}
+
 void StackFileMain::appendSubPaths(QDir dir, QStringList& subPaths)
 {
     QStringList newSubPaths = dir.entryList(QDir::NoDotAndDotDot | QDir::Dirs | QDir::Files);
@@ -48,6 +58,22 @@ void StackFileMain::appendSubPaths(QDir dir, QStringList& subPaths)
             appendSubPaths(dir, subPaths);
         }
     }
+}
+
+void StackFileMain::url_back_to(UrlMeta* meta)
+{
+    fd->id = 0;
+    UrlMetas.clear();
+
+    UrlMeta* home = new UrlMeta();
+    home->key = "HOME";
+    home->text = "首页";
+    home->category = "SYSTEM";
+    home->id = 0;
+    UrlMetas.append(home);
+    UrlMetas.append(meta);
+
+    render_urlbar();
 }
 
 void StackFileMain::InitNavigate()
@@ -304,6 +330,8 @@ void StackFileMain::InitContent()
         content->setCurrentWidget(stack_file_explorer);
         stack_file_explorer->set_meta(meta);
         stack_file_explorer->flush(content->width(),content->height());
+        wait(50);
+        stack_file_explorer->OnStart();
 
         render_urlbar();
 
@@ -456,7 +484,6 @@ void StackFileMain::url_meta_clicked(UrlMeta* meta)
                     break;
                 }
             }
-            qDebug() << "StackFileMain change_folder meta=" << meta->id << ", key=" << meta->key;
             stack_file_explorer->change_folder(meta);
         }
 

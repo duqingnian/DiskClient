@@ -99,7 +99,7 @@ void DialogCreate::init()
         illegal_chars.append("*");
         illegal_chars.append("(");
         illegal_chars.append(")");
-        illegal_chars.append("_");
+        //illegal_chars.append("_");
         illegal_chars.append("-");
         illegal_chars.append("=");
         illegal_chars.append("+");

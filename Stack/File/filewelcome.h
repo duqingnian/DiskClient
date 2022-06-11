@@ -51,6 +51,9 @@ public:
 
     bool eventFilter(QObject*,QEvent*) override;
     void flush(int,int);
+public slots:
+    //WEB_API获取部门和群组
+    void sync_views(QString);
 signals:
     void explorer(QString category,QString key,QString text,int id);
 };

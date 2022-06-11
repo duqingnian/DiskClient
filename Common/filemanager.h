@@ -12,7 +12,7 @@ class FileManager : public QThread
 public:
     explicit FileManager(QObject *parent = 0);
     bool isOpen();
-    void set_file(QString meta_key,int meta_id,int fd_id,UP_FILE*);
+    void set_file(QString meta_key,int meta_id,int fd_id,QString,UP_FILE*);
     void set_socket_descriptor(qintptr);
     void start_upload();
     void wait( int ms );
@@ -26,6 +26,7 @@ private:
     QString META_KEY;
     int META_ID;
     int FD_ID;
+    QString SJN="";
 
     uint start_time = 0;
     unsigned long long SPEED = 0;

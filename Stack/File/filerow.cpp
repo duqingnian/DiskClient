@@ -20,9 +20,8 @@ void FileRow::set_file(FD* _file)
     file = _file;
 
     ui->label_name->setText(file->name);
-
     ui->label_version->setText(file->version);
-
+    ui->label_user->setText(file->creator);
     if("FOLDER" == file->suffix)
     {
         ui->label_size->setText("");
@@ -54,11 +53,11 @@ void FileRow::resize(int width)
 {
     if(width > 1400)
     {
-        ui->label_name->resize(985,50);
+        ui->label_name->resize(865,50);
     }
     else
     {
-        ui->label_name->resize(595,50);
+        ui->label_name->resize(475,50);
     }
     ui->label_user->move(ui->label_name->x() + ui->label_name->width() + 10,0);
     ui->label_version->move(ui->label_user->x() + ui->label_user->width(),0);

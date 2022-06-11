@@ -207,7 +207,7 @@ void UploadPannel::sync_file_progrrss(QString BUNDLE,QString BUNDLE_ID,QString F
             emit do_some_action("REFRESH");
             wait(10);
             uploading = false;
-            this->touch_upload(BUNDLE,BUNDLE_ID.toInt(),FD_ID.toInt());  //尝试下次上传
+            this->touch_upload(BUNDLE,BUNDLE_ID.toInt(),FD_ID.toInt(),SJN);  //尝试下次上传
         }
     }
     else
@@ -249,10 +249,11 @@ void UploadPannel::add_queue(UP_FILE* upload_file)
 }
 
 //开始上传
-void UploadPannel::touch_upload(QString meta_key,int meta_id,int fd_id)
+void UploadPannel::touch_upload(QString meta_key,int meta_id,int fd_id,QString _sjn)
 {
     if(!uploading && upload_queue.count() > 0)
     {
+        SJN = _sjn;
         uploading = true;
         this->onMax();
 
@@ -260,7 +261,7 @@ void UploadPannel::touch_upload(QString meta_key,int meta_id,int fd_id)
 
         FileManager* fm = new FileManager();
         fm->set_socket_descriptor(this->file_socket_descriptor);
-        fm->set_file(meta_key,meta_id,fd_id,uploads[md5]);
+        fm->set_file(meta_key,meta_id,fd_id,SJN,uploads[md5]);
         fm->start();
 
         connect(fm,&FileManager::update_progress,this,&UploadPannel::sync_file_progrrss);

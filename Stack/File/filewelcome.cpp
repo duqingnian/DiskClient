@@ -1,6 +1,9 @@
 ﻿#pragma execution_character_set("utf-8")
 #include "filewelcome.h"
 #include <QDebug>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <math.h>
 #include <Component/Label.h>
 
@@ -158,17 +161,15 @@ void FileWelcome::draw_depfile()
     dep_layout->setMargin(7);
     depfile_wapper->setLayout(dep_layout);
 
-    for (int i=0; i<10; i++) {
-        SIMPLE* _dep = new SIMPLE();
-        _dep->title = "部门"+QString::number(i);
-        _dep->id = QString::number(i);
-        deps.append(_dep);
-    }
 }
 
 void FileWelcome::render_deps()
 {
     int total = deps.count();
+    if(total < 1)
+    {
+        return;
+    }
     int row_count = floor((width - 20) / 200);
     int row = ceil(total*1.0 / row_count*1.0);
     depfile_wapper->resize(depfile_wapper->width(),70*row+10);
@@ -183,7 +184,7 @@ void FileWelcome::render_deps()
         dep->setStyleSheet("#dep_"+QString::number(i)+"{width:100px;height:88px;background:#FDFDFD;border:1px solid #EAEAEA;border-radius: 5px;border-bottom:1px solid #D1D1D1;}#dep_"+QString::number(i)+":hover{background:#E5F3FF}");
         dep->installEventFilter(this);
         connect(dep,&Label::dbclicked,this,[=](){
-            emit explorer("SYS","DEP","部门文件"+QString::number(i),i);
+            emit explorer("SYS","DEP",deps[i]->title,deps[i]->id.toInt());
         });
 
         Label* ico = new Label(dep);
@@ -195,10 +196,10 @@ void FileWelcome::render_deps()
         ico->move(10,12);
 
         QLabel* title = new QLabel(dep);
-        title->setObjectName("title"+QString::number(i));
-        title->setText("部门文件"+QString::number(i));
+        title->setObjectName("DEP"+QString::number(deps[i]->id.toInt()));
+        title->setText(deps[i]->title);
         title->move(60,10);
-        title->setStyleSheet("#title"+QString::number(i)+"{font-size:14px;color:#000;}");
+        title->setStyleSheet("#DEP"+QString::number(deps[i]->id.toInt())+"{font-size:14px;color:#000;}");
 
         QLabel* dep_meta = new QLabel(dep);
         dep_meta->setObjectName("tip_number_out");
@@ -226,13 +227,6 @@ void FileWelcome::draw_groupfile()
     group_layout = new FlowLayout(this);
     group_layout->setMargin(7);
     groupfile_wapper->setLayout(group_layout);
-
-    for (int i=0; i<10; i++) {
-        SIMPLE* _group = new SIMPLE();
-        _group->title = "群组"+QString::number(i);
-        _group->id = QString::number(i);
-        groups.append(_group);
-    }
 }
 
 void FileWelcome::clear_fd(FlowLayout* layout)
@@ -253,9 +247,7 @@ bool FileWelcome::eventFilter(QObject *target, QEvent *event)
 {
     if(QEvent::ContextMenu == event->type())
     {
-
         //qDebug() << "target->objectName()=" <<target->objectName();
-
     }
     return QWidget::eventFilter(target,event);
 }
@@ -263,6 +255,10 @@ bool FileWelcome::eventFilter(QObject *target, QEvent *event)
 void FileWelcome::render_groups()
 {
     int total = groups.count();
+    if(total < 0)
+    {
+        return;
+    }
     int row_count = floor((width - 20) / 200);
     int row = ceil(total*1.0 / row_count*1.0);
     groupfile_wapper->resize(groupfile_wapper->width(),70*row+10);
@@ -280,7 +276,7 @@ void FileWelcome::render_groups()
         _group->setStyleSheet("#group_"+QString::number(i)+"{width:100px;height:88px;background:#FDFDFD;border:1px solid #EAEAEA;border-radius: 5px;border-bottom:1px solid #D1D1D1;}#group_"+QString::number(i)+":hover{background:#E5F3FF}");
         _group->installEventFilter(this);
         connect(_group,&Label::dbclicked,this,[=](){
-            emit explorer("SYS","GROUP","群组文件"+QString::number(i),i);
+            emit explorer("SYS","GROUP",groups[i]->title,groups[i]->id.toInt());
         });
 
         Label* ico = new Label(_group);
@@ -292,10 +288,10 @@ void FileWelcome::render_groups()
         ico->move(10,12);
 
         QLabel* title = new QLabel(_group);
-        title->setObjectName("title"+QString::number(i));
-        title->setText("群组文件"+QString::number(i));
+        title->setObjectName("GROUP"+QString::number(groups[i]->id.toInt()));
+        title->setText(groups[i]->title);
         title->move(60,10);
-        title->setStyleSheet("#title"+QString::number(i)+"{font-size:14px;color:#000;}");
+        title->setStyleSheet("#GROUP"+QString::number(groups[i]->id.toInt())+"{font-size:14px;color:#000;}");
 
         QLabel* dep_meta = new QLabel(_group);
         dep_meta->setObjectName("tip_number_out");
@@ -304,6 +300,51 @@ void FileWelcome::render_groups()
         dep_meta->setStyleSheet("#tip_number_out{font-size:12px;color:#999;}");
 
         group_layout->addWidget(_group);
+    }
+}
+
+//通过WEB_API来获取部门和群组
+void FileWelcome::sync_views(QString data)
+{
+    if("" != data)
+    {
+        //qDebug() << "data=" << data;
+        QJsonParseError err_rpt;
+        QJsonDocument  doc = QJsonDocument::fromJson(data.toUtf8(), &err_rpt);
+        if(err_rpt.error == QJsonParseError::NoError)
+        {
+            QJsonArray albums = doc.array();
+            for (int i=0; i<albums.count(); i++)
+            {
+                QJsonObject album = albums.at(i).toObject();
+
+                int id       = album.value("id").toInt();
+                QString name = album.value("name").toString();
+                QString type = album.value("type").toString();
+
+                if("DEP" == type)
+                {
+                    SIMPLE* _dep = new SIMPLE();
+                    _dep->title = name;
+                    _dep->id = QString::number(id);
+                    deps.append(_dep);
+                }
+                else if("GROUP" == type)
+                {
+                    SIMPLE* _group = new SIMPLE();
+                    _group->title = name;
+                    _group->id = QString::number(id);
+                    groups.append(_group);
+                }
+                else
+                {}
+            }
+            render_deps();
+            render_groups();
+        }else{
+            qDebug() << "QJsonParseError!!!";
+        }
+
     }
 }
 

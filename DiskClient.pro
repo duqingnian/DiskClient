@@ -21,6 +21,7 @@ SOURCES += \
     Component/Msg.cpp \
     Component/Toast.cpp \
     Component/adobutton.cpp \
+    Data/meta.cpp \
     Dialog/dialogcreate.cpp \
     DropDown/dropdowncreate.cpp \
     DropDown/dropdownupload.cpp \
@@ -37,6 +38,7 @@ SOURCES += \
     Stack/Chat/stackempty.cpp \
     Stack/Chat/stackpannel.cpp \
     Stack/File/dirprocess.cpp \
+    Stack/File/employeerow.cpp \
     Stack/File/fileexplorer.cpp \
     Stack/File/filerow.cpp \
     Stack/File/filewelcome.cpp \
@@ -78,6 +80,7 @@ HEADERS += \
     Data/TabMeta.h \
     Data/UploadFileUnit.h \
     Data/UrlMeta.h \
+    Data/meta.h \
     Dialog/dialogcreate.h \
     DropDown/dropdowncreate.h \
     DropDown/dropdownupload.h \
@@ -95,6 +98,7 @@ HEADERS += \
     Stack/Chat/stackempty.h \
     Stack/Chat/stackpannel.h \
     Stack/File/dirprocess.h \
+    Stack/File/employeerow.h \
     Stack/File/fileexplorer.h \
     Stack/File/filerow.h \
     Stack/File/filewelcome.h \
@@ -127,6 +131,7 @@ FORMS += \
     Menu/menufileexplorercanvas.ui \
     Stack/Chat/chatfrienditem.ui \
     Stack/File/dirprocess.ui \
+    Stack/File/employeerow.ui \
     Stack/File/filerow.ui \
     Stack/File/uploadfilelisteitem.ui \
     Stack/File/uploadpannel.ui \

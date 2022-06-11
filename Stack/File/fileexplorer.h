@@ -162,6 +162,10 @@ public:
     QWidget* base_info; //基本信息
     QWidget* version_list; //版本列表
 
+    int emp_width = 0;
+    QListWidget* emplyees;
+    Label* reload_album; //清除员工数据，重新载入部门数据
+    QString SJN = ""; //selected job_number
 
     QTabWidget* side_tab;
 
@@ -173,6 +177,12 @@ public:
 
     //定位文件
     void localtion_file();
+
+    //第一次运行的时候
+    void OnStart();
+
+    //渲染部门员工
+    void render_employees(QString);
 private:
     int _width;
     int _height;
@@ -199,6 +209,7 @@ public slots:
     void menu_clicked(QString);
     void fd_menu_clicked(QString);
 
+    void select_employee(QListWidgetItem *item);
     void row_clicked(QListWidgetItem *item);
     void row_db_clicked(QListWidgetItem *item);
     void row_item_section_changed();
@@ -210,9 +221,18 @@ public slots:
     void list_file(QString); //列出文件
 signals:
     void append_urlbar(FD*);
+
     //更新上传文件的进度
     void sync_file_progrrss(QString BUNDLE,QString BUNDLE_ID,QString FD_ID,QString md5,QString state,float pct);
 
+    //用户可见的部门和群组
+    void sync_views(QString);
+
+    //改变URL地址到部门
+    void url_back_to(UrlMeta*);
+
+    //重新载入部门文件数据
+    void reload_meta_data(UrlMeta*);
 };
 
 #endif // FILEEXPLORER_H

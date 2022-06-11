@@ -27,33 +27,32 @@ void MenuFileExplorerCanvas::render_data()
     cfolder->text = "新建目录";
     cfolder->key = "cfolder";
     cfolder->ico = "16x16/cfolder.png";
+    menus.append(cfolder);
 
-    MenuItem* ctxt = new MenuItem();
+    /*MenuItem* ctxt = new MenuItem();
     ctxt->text = "新建文本文件";
     ctxt->key = "ctxt";
     ctxt->ico = "16x16/txt.png";
     ctxt->border = "border-bottom:1px solid #EFF0F1;";
+    menus.append(ctxt);*/
 
     MenuItem* upload_file = new MenuItem();
     upload_file->text = "上传文件";
     upload_file->key = "upload_file";
     upload_file->ico = "icon/Action_New_32x32";
+    menus.append(upload_file);
 
     MenuItem* upload_folder = new MenuItem();
     upload_folder->text = "上传文件夹";
     upload_folder->key = "upload_folder";
     upload_folder->ico = "icon/PackageProduct_32x32";
     upload_folder->border = "border-bottom:1px solid #EFF0F1;";
+    menus.append(upload_folder);
 
     MenuItem* refresh = new MenuItem();
     refresh->text = "刷新";
     refresh->key = "refresh";
     refresh->ico = "16x16/refresh.png";
-
-    menus.append(cfolder);
-    menus.append(ctxt);
-    menus.append(upload_file);
-    menus.append(upload_folder);
     menus.append(refresh);
 }
 

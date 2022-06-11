@@ -75,6 +75,8 @@ private slots:
     void url_meta_clicked(UrlMeta*);
     void append_urlbar(FD*);
     void appendSubPaths(QDir dir, QStringList& subPaths);
+    void url_back_to(UrlMeta*);
+    void reload_meta_data(UrlMeta*);
 signals:
     void FileChanged(const QString &);
 };

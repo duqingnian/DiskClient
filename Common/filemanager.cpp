@@ -19,11 +19,12 @@ FileManager::FileManager(QObject *parent) : QThread(parent)
 }
 
 //设置文件
-void FileManager::set_file(QString meta_key,int meta_id,int fd_id,UP_FILE* _file)
+void FileManager::set_file(QString meta_key,int meta_id,int fd_id,QString _sjn,UP_FILE* _file)
 {
     META_KEY = meta_key;
     META_ID = meta_id;
     FD_ID = fd_id;
+    SJN = _sjn;
     this->file = _file;
 }
 
@@ -89,9 +90,10 @@ void FileManager::run()
                     meta += ",FS:"+QString::number(m_file.size());
                     meta += ",PCT:"+QString::number(PCT);
                     meta += ",BUNDLE:"+META_KEY;
-                    meta += ",BUNDLE_id:"+QString::number(META_ID);
+                    meta += ",BUNDLE_ID:"+QString::number(META_ID);
                     meta += ",FD_ID:"+QString::number(FD_ID);
                     meta += ",NAME:"+file->name;
+                    meta += ",SJN:"+SJN;
                     meta += ";";
 
                     QByteArray data;

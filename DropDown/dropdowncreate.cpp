@@ -29,11 +29,11 @@ void DropDownCreate::init()
     folder->css = "border-bottom:1px solid #EFF0F1;";
     filters.append(folder);
 
-    FILE_FILTER* txt = new FILE_FILTER();
+    /*FILE_FILTER* txt = new FILE_FILTER();
     txt->objname = "txt";
     txt->txt = "纯文本文档";
     txt->ico = "txt";
-    filters.append(txt);
+    filters.append(txt);*/
 
     this->resize(this->size().width(),36*filters.length()+10);
 

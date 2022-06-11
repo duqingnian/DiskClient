@@ -16,6 +16,9 @@ Welcome::Welcome(QWidget *parent) : BaseWindow(parent) , ui(new Ui::Welcome)
     trayIcon->show();
 
     InitLayout();
+//    qDebug() << "QSslSocket::sslLibraryBuildVersionString()" << QSslSocket::sslLibraryBuildVersionString();
+//    qDebug() << "QSslSocket::sslLibraryVersionString()" << QSslSocket::sslLibraryVersionString();
+//    qDebug() << "Supports SSL: " << QSslSocket::supportsSsl();
 }
 
 void Welcome::set_auth(Auth* _auth)
@@ -45,7 +48,7 @@ void Welcome::InitLayout()
     this->m_TitleBar->set_width(_width);
     this->m_TitleBar->set_bg_color(43,87,154);
     this->m_TitleBar->show_windows();
-    this->m_TitleBar->setCenterTitle("常州美莱共享文件管理系统-"+user->name+"-"+user->depname,"#FFFFFF");
+    this->m_TitleBar->setCenterTitle("常州美莱共享文件管理系统-"+user->name+"-"+user->depname+" - version 1.0.0","#FFFFFF");
     //TAB
     TAB = new QWidget(this);
     TAB->setObjectName("GLOBAL_TAB");
@@ -90,7 +93,7 @@ void Welcome::render_tab()
     TABMETA* tab_help = new TABMETA();
     tab_help->objname = "tab_help";
     tab_help->txt = "帮助信息";
-    tab_help->bgcolor = "#ffff00";
+    tab_help->bgcolor = "#fff";
     right_tab_metas[tab_help->objname] = tab_help;
 
     int x = 0;

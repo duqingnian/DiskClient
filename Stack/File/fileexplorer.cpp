@@ -1,4 +1,5 @@
 ﻿#pragma execution_character_set("utf-8")
+#include "employeerow.h"
 #include "fileexplorer.h"
 #include "filerow.h"
 #include <QDebug>
@@ -17,6 +18,7 @@
 #include <Lib/HttpClient.h>
 #include <Thread/processdirthread.h>
 #include <Component/Msg.h>
+#include <Data/meta.h>
 #include "Component/Msg.h"
 
 #define FD_WIDTH 176
@@ -89,6 +91,8 @@ FileExplorer::FileExplorer(QWidget *parent) : BaseController(parent)
     active_fd = new FD();
     active_fd->id = 0;
 
+    SJN = "";
+
     QString watch_suffix = get_reg("WATCH_SUFFIX");
     if("" == watch_suffix)
     {
@@ -115,7 +119,7 @@ FileExplorer::FileExplorer(QWidget *parent) : BaseController(parent)
     {
         if(cmd_socket->isOpen())
         {
-            Toast::succ("cmd服务器连接成功");
+            ////qDebug() << "cmd服务器连接成功";
             //上传面板
             upload_pannel = new UploadPannel(this);
             upload_pannel->setObjectName("upload_pannel");
@@ -150,11 +154,13 @@ FileExplorer::FileExplorer(QWidget *parent) : BaseController(parent)
         else
         {
             box("无法连接到cmd服务器");
+            //qDebug() << "无法连接到cmd服务器";
         }
     }
     else
     {
         box("cmd服务器连接失败!");
+        //qDebug() << "cmd服务器连接失败";
     }
 
     download_socket = new QTcpSocket();
@@ -204,11 +210,11 @@ FileExplorer::FileExplorer(QWidget *parent) : BaseController(parent)
     canvas->setContextMenuPolicy(Qt::CustomContextMenu);
     canvas->move(0,0);
 
-    //新建下拉
+    //对应的创建操作
     dlg_create = new DialogCreate(this);
     dlg_create->setVisible(false);
     connect(dlg_create,&DialogCreate::intent,this,[=](QString intent_name,QString intent_category, QString val){
-        sendMsgPack("INTENT:?BUNDLE="+this->meta->key+",BUNDLE_ID="+QString::number(this->meta->id)+",META="+intent_name+",CATE="+intent_category+",VAL="+val + ",FD=" + QString::number(fd->id),"",cmd_socket);
+        sendMsgPack("INTENT:?BUNDLE="+this->meta->key+",BUNDLE_ID="+QString::number(this->meta->id)+",META="+intent_name+",CATE="+intent_category+",VAL="+val + ",SJN="+SJN+",FD=" + QString::number(fd->id),"",cmd_socket);
     });
 
     dropdown_create = new DropDownCreate(canvas);
@@ -258,9 +264,31 @@ FileExplorer::FileExplorer(QWidget *parent) : BaseController(parent)
     }
     else if("LIST" == DisplayMod)
     {
+        reload_album = new Label(canvas);
+        reload_album->setObjectName("reload_album");
+        reload_album->setStyleSheet("#reload_album{background:#F8F9F9;font-size:14px;border-right:1px solid #E7E7E7;border-bottom:1px solid #E7E7E7;}");
+        reload_album->setAlignment(Qt::AlignCenter);
+        reload_album->move(0,0);
+        reload_album->setCursor(Qt::PointingHandCursor);
+
+        connect(reload_album,&Label::clicked,this,[=](){
+            SJN = "";
+            emplyees->clearSelection();
+            emit reload_meta_data(meta);
+        });
+
+        emplyees = new QListWidget(canvas);
+        emplyees->setObjectName("emplyees");
+        emplyees->setStyleSheet("#emplyees{background:#fff;border:0px;}");
+        emplyees->resize(0,400);
+        emplyees->move(0,35);
+        emplyees->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+        connect(emplyees,&QListWidget::itemClicked,this,&FileExplorer::select_employee);
+
         render_list_header();
 
-        QString css = "#listWapper{border:0px;background:#fff;}";
+        QString css = "#listWapper{border:0px;background:#fff;border-left:1px solid #E7E7E7;}";
         listWapper = new QListWidget(canvas);
         listWapper->setObjectName("listWapper");
         listWapper->setStyleSheet(css);
@@ -356,9 +384,23 @@ void FileExplorer::flush(int width, int height)
     }
     else if("LIST" == DisplayMod)
     {
-        listWapper->resize(_width - LIST_SIDE_WIDTH,height-35);
-        file_row_header->resize(_width - LIST_SIDE_WIDTH,35);
+        //是不是部门，是部门的话 就显示部门的成员列表
+        if("DEP" == this->meta->key)
+        {
+            emp_width = 120;
+        }
+        else
+        {
+            emp_width = 0;
+        }
+        reload_album->resize(emp_width,35);
+        emplyees->resize(emp_width,height-35);
 
+        listWapper->resize(_width - LIST_SIDE_WIDTH - emp_width,height-35);
+        file_row_header->resize(_width - LIST_SIDE_WIDTH - emp_width,35);
+        file_row_header->move(emp_width,0);
+
+        listWapper->move(emp_width,35);
         ListSide->move(_width - LIST_SIDE_WIDTH,0);
         ListSide->resize(LIST_SIDE_WIDTH,_height);
 
@@ -378,11 +420,11 @@ void FileExplorer::flush(int width, int height)
     //文件列表
     if(width > 1400)
     {
-        row_header_name->resize(985,35);
+        row_header_name->resize(865,35);
     }
     else
     {
-        row_header_name->resize(595,35);
+        row_header_name->resize(475,35);
     }
     row_header_user->move(row_header_name->x() + row_header_name->width() + 10,0);
     row_header_version->move(row_header_user->x() + row_header_user->width(),0);
@@ -666,12 +708,14 @@ void FileExplorer::readyRead()
 
     QByteArray data = buffer.mid(DATA_META_LEN);
     QByteArray header = buffer.mid(0,buffer.indexOf(";"));
+
     if("DQN:?" != header.mid(0,5))
     {
         return;
     }
 
     QString _header = header.mid(5);
+    ////qDebug() << "_header" << _header;
 
     QString META = "";
     int     CODE = 0;
@@ -700,10 +744,9 @@ void FileExplorer::readyRead()
         }
         else{}
     }
-    //qDebug() << "META=" << META;
     if("WELCOME" == META) //登录后的绑定
     {
-        sendMsgPack("BIND_USER:?JOB_NUMBER="+user->job_number,"",cmd_socket);
+        sendMsgPack("BIND_USER:?S=CMD,JOB_NUMBER="+user->job_number,"",cmd_socket);
         sendMsgPack("BIND_USER:?JOB_NUMBER="+user->job_number,"",download_socket);
     }
     else if("INTENT_RESULT" == META) //创建结果
@@ -723,7 +766,7 @@ void FileExplorer::readyRead()
         }
     }
     else if("LIST_FILE_RESULT" == META) //列出文件
-    {
+    {//qDebug() << "list data=" << data;
         this->list_file(data);
     }
     else if("SYNC_UP_STATE" == META || "UPLOAD_SUCCESS" == META)
@@ -809,11 +852,11 @@ void FileExplorer::readyRead()
             {
                 FILE_DIR.mkpath(FILE_SRC);
             }
-            //qDebug() << "LOCAL FILE=" << FILE_SRC+"\\"+selected_fd->name;
+            ////qDebug() << "LOCAL FILE=" << FILE_SRC+"\\"+selected_fd->name;
             QFile _file(FILE_SRC+"\\"+selected_fd->name);
             if(!_file.exists())
             {
-                //qDebug() << "需要下载"+MD5;
+                ////qDebug() << "需要下载"+MD5;
                 sendMsgPack("DOWN_FILE:?FILE_ID="+QString::number(selected_fd->id)+",META_KEY="+meta->key+",META_ID="+QString::number(meta->id)+",OPEN=1","",download_socket);
             }
             else
@@ -821,7 +864,7 @@ void FileExplorer::readyRead()
                 QThread::usleep(10);
                 hide_loading();
                 QDesktopServices::openUrl(QUrl::fromLocalFile(FILE_SRC+"\\"+selected_fd->name));
-                //qDebug() << "本地文件存在，直接打开"+MD5;
+                ////qDebug() << "本地文件存在，直接打开"+MD5;
             }
         }
     }
@@ -835,6 +878,7 @@ void FileExplorer::readyRead()
         QString CREATED_AT = "0";
         QString UPDATED_AT = "0";
         QString VERSION = "0";
+        QString CREATOR = "";
 
         for(QString hi : headers)
         {
@@ -871,6 +915,10 @@ void FileExplorer::readyRead()
             {
                 VERSION = his[1];
             }
+            else if("CREATOR" == his[0])
+            {
+                CREATOR = his[1];
+            }
             else{}
         }
 
@@ -882,6 +930,7 @@ void FileExplorer::readyRead()
         active_fd->created_at = CREATED_AT.toInt();
         active_fd->updated_at = UPDATED_AT.toInt();
         active_fd->version = VERSION;
+        active_fd->creator = CREATOR;
 
         render_active_file_info();
     }
@@ -939,7 +988,7 @@ void FileExplorer::readyRead()
         }
         if("0" == FILE_ID)
         {
-            //qDebug() << "FILE_ID不能为0";
+            ////qDebug() << "FILE_ID不能为0";
             return;
         }
         if(LEFT_SIZE.length() > 0 && LEFT_SIZE.toInt() > 0)
@@ -948,7 +997,7 @@ void FileExplorer::readyRead()
         }
         else
         {
-            //qDebug() << "LEFT_SIZE数值不正确 LEFT_SIZE=" << LEFT_SIZE;
+            ////qDebug() << "LEFT_SIZE数值不正确 LEFT_SIZE=" << LEFT_SIZE;
             return;
         }
         //查找文件  E:\DISK_CACHE\CZML669\86\cd1556ac610559c2ee333b8669557d3f
@@ -979,7 +1028,7 @@ void FileExplorer::readyRead()
             }
             else
             {
-                //qDebug() << "文件创建失败:" << f;
+                ////qDebug() << "文件创建失败:" << f;
             }
         }
         else
@@ -1018,7 +1067,7 @@ void FileExplorer::readyRead()
                             file.write(buffer.mid(DATA_META_LEN));
                         }
                     }else{
-                        //qDebug() << "失败×× LEFT_SIZE=" << LEFT_SIZE;
+                        ////qDebug() << "失败×× LEFT_SIZE=" << LEFT_SIZE;
                     }
                 }
             }
@@ -1029,12 +1078,12 @@ void FileExplorer::readyRead()
             QThread::sleep(1);
             if(1 == OPEN)
             {
-                //qDebug() << "接收完成,直接打开";
+                ////qDebug() << "接收完成,直接打开";
                 QDesktopServices::openUrl(QUrl::fromLocalFile(f));
             }
             else
             {
-                //qDebug() << "接收完成";
+                ////qDebug() << "接收完成";
             }
             file.close();
             buffer.clear();
@@ -1042,12 +1091,23 @@ void FileExplorer::readyRead()
         else
         {
             QThread::usleep(50);
-            ////qDebug() << "BUF_SIZE=" << BUF_SIZE << ",LEFT_SIZE=" << LEFT_SIZE<< ",PCT=" << PCT;
+            //////qDebug() << "BUF_SIZE=" << BUF_SIZE << ",LEFT_SIZE=" << LEFT_SIZE<< ",PCT=" << PCT;
         }
         /////////////////////////////////////////////////////////////////////
     }
+    else if("BINDED" == META)
+    {
+        ////qDebug() << "已绑定" << data;
+        emit sync_views(data);
+    }
+    else if("DEP_EMPLOYEES" == META)
+    {
+        this->render_employees(data);
+    }
     else
-    {}
+    {
+        //qDebug() << "### 未知的META ###" << META;
+    }
 }
 
 void FileExplorer::render_active_file_info()
@@ -1117,7 +1177,7 @@ void FileExplorer::render_base_info()
 
     ATTRIBUTE* creator = new ATTRIBUTE();
     creator->key = "creator";
-    creator->name = "上传:";
+    creator->name = "创建人:";
 
     ATTRIBUTE* md5 = new ATTRIBUTE();
     md5->key = "md5";
@@ -1193,6 +1253,12 @@ void FileExplorer::render_attribute()
         dt2.setTime_t((unsigned int)active_fd->updated_at);
         updated_time->setText(dt2.toString("yyyy-MM-dd hh:mm:ss"));
     }
+
+    QLabel* creator = findChild<QLabel*>("attr_creator");
+    if(creator)
+    {
+        creator->setText(active_fd->creator);
+    }
 }
 
 QString FileExplorer::ConverSize(unsigned long long bytes)
@@ -1226,7 +1292,7 @@ void FileExplorer::FileChanged(const QString& file_path)
     {
         return;
     }
-
+    qDebug() << "FileExplorer::FileChanged...." << file_path;
     QFileInfo fi(file_path);
 
     QString file_id = infos[0];
@@ -1248,7 +1314,7 @@ void FileExplorer::FileChanged(const QString& file_path)
     wait(5);
     upload_pannel->add_queue(upload_file);
     wait(5);
-    upload_pannel->touch_upload(this->meta->key,this->meta->id,fd->id);
+    upload_pannel->touch_upload(this->meta->key,this->meta->id,fd->id,SJN);
 }
 
 //初始化版本
@@ -1290,7 +1356,7 @@ void FileExplorer::fd_open()
 
 void FileExplorer::row_item_section_changed()
 {
-    //qDebug() << "row_item_section_changed...." << listWapper->selectedItems();
+    ////qDebug() << "row_item_section_changed...." << listWapper->selectedItems();
 }
 
 //发送socket消息包
@@ -1342,7 +1408,7 @@ void FileExplorer::render_list_header()
     file_row_header = new QWidget(canvas);
     file_row_header->setObjectName("file_row_header");
     file_row_header->setStyleSheet("#file_row_header{background:#F8F9F9;border-bottom:1px solid #E7E7E7;color:#000;}");
-    file_row_header->resize(this->width() - LIST_SIDE_WIDTH1,35);
+    file_row_header->resize(this->width() - LIST_SIDE_WIDTH1 - emp_width,35);
     file_row_header->move(0,0);
 
     Label* row_header_ico = new Label(file_row_header);
@@ -1351,7 +1417,7 @@ void FileExplorer::render_list_header()
 
     row_header_name = new Label(file_row_header);
     row_header_name->setObjectName("row_header_name");
-    row_header_name->resize(595,35);
+    row_header_name->resize(475,35);
     row_header_name->move(55,0);
     row_header_name->setText("名称");
     row_header_name->setStyleSheet("#row_header_name{font-weight:bold;}");
@@ -1360,7 +1426,7 @@ void FileExplorer::render_list_header()
     row_header_user->setObjectName("row_header_user");
     row_header_user->resize(180,35);
     row_header_user->move(row_header_name->x() + row_header_name->width() + 10,0);
-    row_header_user->setText("用户");
+    row_header_user->setText("创建人");
     row_header_user->setStyleSheet("#row_header_user{font-weight:bold;}");
 
     row_header_version = new Label(file_row_header);
@@ -1423,6 +1489,18 @@ void FileExplorer::set_meta(UrlMeta *_meta)
     selected_fd->id = 0;
     this->meta = _meta;
     dlg_create->setMeta(_meta);
+    SJN = "";
+    if("DEP"==meta->key)
+    {
+        reload_album->setText("部门数据" );
+    }
+    else if("GROUP"==meta->key)
+    {
+        reload_album->setText("群组数据" );
+    }
+    else
+    {}
+
     load_files();
 }
 
@@ -1438,13 +1516,12 @@ void FileExplorer::load_files()
 {
     this->clear();
     show_loading();
-    sendMsgPack("LIST_FILES:?FD_ID="+QString::number(fd->id)+",META_KEY="+meta->key+",META_ID="+QString::number(meta->id)+",DEBUG=load_files","",cmd_socket);
+    sendMsgPack("LIST_FILES:?FD_ID="+QString::number(fd->id)+",META_KEY="+meta->key+",META_ID="+QString::number(meta->id)+",JOB_NUMBER="+user->job_number+",SJN="+SJN,"",cmd_socket);
 }
 
 //2.收到文件数据
 void FileExplorer::list_file(QString data)
 {
-    //qDebug() << "FileExplorer::list_file=" << data;
     QJsonParseError err_rpt;
     QJsonDocument  jsonDoc = QJsonDocument::fromJson(data.toUtf8(), &err_rpt);
     QJsonArray arr =  jsonDoc.array();
@@ -1456,9 +1533,10 @@ void FileExplorer::list_file(QString data)
         fd->name = fdo.value("name").toString();
         fd->suffix = fdo.value("suffix").toString();
         fd->size = fdo.value("size").toString().toULongLong();
-        fd->created_at = fdo.value("created_at").toInt();
-        fd->updated_at = fdo.value("updated_at").toInt();
+        fd->created_at = fdo.value("created_at").toString().toInt();
+        fd->updated_at = fdo.value("updated_at").toString().toInt();
         fd->version = fdo.value("version").toString();
+        fd->creator = fdo.value("creator").toString();
         QString ico_res = ":/Resources/types/"+fd->suffix.toLower()+".png";
         if(typesRes.indexOf(fd->suffix.toLower()) == -1)
         {
@@ -1597,7 +1675,7 @@ void FileExplorer::render_list()
                 selected_fd = fds[i];
                 fds[i]->selected = true;
 
-                fd_menu->move(row->x()+pos.x(), row->y()+pos.y()+35);
+                fd_menu->move(row->x()+pos.x()+emplyees->width(), row->y()+pos.y()+35);
                 fd_menu->show();
                 fd_menu->raise();
 
@@ -1646,7 +1724,7 @@ void FileExplorer::render_flow()
             QString ico_res = ":/Resources/types/"+type.toLower()+".png";
             if(typesRes.indexOf(type.toLower()) == -1)
             {
-                //qDebug() << "UnKnow File type:" << type.toLower();
+                ////qDebug() << "UnKnow File type:" << type.toLower();
                 ico_res = ":/Resources/types/null.png";
             }
 
@@ -1700,7 +1778,7 @@ bool FileExplorer::eventFilter(QObject *target, QEvent *event)
 //鼠标按下
 void FileExplorer::mousePressEvent(QMouseEvent *event)
 {
-    //qDebug() << "mousePressEvent 鼠标按下......";
+    ////qDebug() << "mousePressEvent 鼠标按下......";
     //不论是点击左键还是右键都会触发的
     pos = event->pos();
 
@@ -1746,7 +1824,7 @@ void FileExplorer::mousePressEvent(QMouseEvent *event)
 //鼠标移动
 void FileExplorer::mouseMoveEvent(QMouseEvent *)
 {
-    ////qDebug() << "移动 x=" << event->pos().x() << ",y=" << event->pos().y();
+    //////qDebug() << "移动 x=" << event->pos().x() << ",y=" << event->pos().y();
 }
 
 void FileExplorer::clear_flow_layout()
@@ -1764,7 +1842,6 @@ void FileExplorer::clear_flow_layout()
 
 void FileExplorer::cleat_list_rows()
 {
-    //QListWidgetItem *child;
     listWapper->clear();
 }
 
@@ -1774,7 +1851,7 @@ void FileExplorer::fd_clicked(QMouseEvent *event, int id)
     fd_menu->hide();
     if(Qt::LeftButton == event->button())
     {
-        //qDebug() << "event->type()=" << event->type();
+        ////qDebug() << "event->type()=" << event->type();
         if(QEvent::MouseButtonPress == event->type())
         {
             //单击
@@ -1798,7 +1875,7 @@ void FileExplorer::fd_clicked(QMouseEvent *event, int id)
             fd_open();
         }
     }
-    //qDebug() << "单击或者双击，选中文件,selected_fd=" << selected_fd->name;
+    ////qDebug() << "单击或者双击，选中文件,selected_fd=" << selected_fd->name;
 }
 
 //取消全部文件的选中状态
@@ -1874,7 +1951,7 @@ void FileExplorer::PrepareIntentType(QString IntentType)
         }
         upload_pannel->show();
         upload_pannel->raise();
-        upload_pannel->touch_upload(this->meta->key,this->meta->id,fd->id);
+        upload_pannel->touch_upload(this->meta->key,this->meta->id,fd->id,SJN);
     }
     else if("folder" == IntentType) //上传文件夹
     {
@@ -1906,7 +1983,7 @@ void FileExplorer::PrepareIntentType(QString IntentType)
         //            });
 
         //            connect(t,&ProcessDirThread::process_complete,dir_process,[=](){
-        //                //qDebug() << "文件夹遍历结束了！process_complete";
+        //                ////qDebug() << "文件夹遍历结束了！process_complete";
         //                dir_process->set_data("PREPARE_UPLOAD","");
         //                dir_process->init(0);
         //                mask->hide();
@@ -1921,7 +1998,7 @@ void FileExplorer::PrepareIntentType(QString IntentType)
     }
     else if("drag" == IntentType)
     {
-        //qDebug() << "拖动上传";
+        ////qDebug() << "拖动上传";
     }
     else
     {
@@ -2087,7 +2164,6 @@ void FileExplorer::localtion_file()
         if(!_file.exists())
         {
             //文件不存在 提示要不要下载
-            qDebug() << "filePath=" << filePath;
             if(BUTTON_OK == MSGBOX::question(parentWidget(),"文件不存在,是否下载?"))
             {
                 show_loading();
@@ -2102,6 +2178,59 @@ void FileExplorer::localtion_file()
             QThread::usleep(10);
             hide_loading();
         }
+    }
+}
+
+//第一次运行
+void FileExplorer::OnStart()
+{
+    emplyees->clear();
+    SJN = "";
+    if("DEP" == this->meta->key)
+    {
+        sendMsgPack("GET_EMP:?META_KEY="+this->meta->key+",META_ID="+QString::number(this->meta->id)+"","",cmd_socket);
+    }
+}
+
+//选择了部门员工
+void FileExplorer::select_employee(QListWidgetItem *item)
+{
+    SJN = item->data(Qt::UserRole).toString();
+
+    emit url_back_to(meta); //切换了用户，URL地址栏要重置到部门
+
+    this->clear();
+    show_loading();
+    sendMsgPack("LIST_FILES:?FD_ID=-1,META_KEY="+meta->key+",META_ID="+QString::number(meta->id)+",SJN="+SJN+",JOB_NUMBER="+user->job_number,",",cmd_socket);
+}
+
+//渲染部门员工列表
+void FileExplorer::render_employees(QString data)
+{
+    QJsonParseError err_rpt;
+    QJsonDocument  jsonDoc = QJsonDocument::fromJson(data.toUtf8(), &err_rpt);
+    QJsonArray _employees =  jsonDoc.array();
+    for (int i=0; i< _employees.count(); i++) {
+        QJsonObject employee = _employees[i].toObject();
+
+        QString emp_name   = employee.value("name").toString();
+        QString emp_depid = employee.value("dep_id").toString();
+        QString emp_job_number = employee.value("job_number").toString();
+
+        EMP* emp = new EMP();
+        emp->dep_id = emp_depid;
+        emp->job_number = emp_job_number;
+        emp->name = emp_name;
+
+        EmployeeRow* emp_row = new EmployeeRow();
+        emp_row->setObjectName("DEP_"+emp_depid+"_EMP_"+emp_job_number);
+        emp_row->set_emp(emp);
+
+        QListWidgetItem* item = new QListWidgetItem(emplyees);
+        item->setData(Qt::UserRole,emp->job_number);
+        item->setSizeHint(QSize(120,36));
+
+        emplyees->setItemWidget(item, emp_row);
     }
 }
 

@@ -16,6 +16,7 @@ struct FD
     int updated_at = 0;
     QString version = "0";
     bool selected = false;
+    QString creator = "";
 };
 
 Q_DECLARE_METATYPE(FD);

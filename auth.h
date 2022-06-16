@@ -71,9 +71,9 @@ private slots:
 
 signals:
     void login_success();
-
 private:
     Ui::Auth *ui;
+    void SetProcessAutoRunSelf(const QString &appPath);
 };
 
 #endif // AUTH_H

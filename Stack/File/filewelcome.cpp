@@ -74,7 +74,7 @@ void FileWelcome::draw_myfile()
 
     QLabel* tip_myfile_size = new QLabel(myfile);
     tip_myfile_size->setObjectName("tip_myfile_size");
-    tip_myfile_size->setText("共931.51GB");
+    tip_myfile_size->setText("-");
     tip_myfile_size->move(60,35);
     tip_myfile_size->setStyleSheet("#tip_myfile_size{font-size:12px;color:#999;}");
 
@@ -106,7 +106,7 @@ void FileWelcome::draw_myfile()
 
     QLabel* tip_number_share_out = new QLabel(share_out);
     tip_number_share_out->setObjectName("tip_number_out");
-    tip_number_share_out->setText("共931.51GB");
+    tip_number_share_out->setText("-");
     tip_number_share_out->move(60,35);
     tip_number_share_out->setStyleSheet("#tip_number_out{font-size:12px;color:#999;}");
 
@@ -138,7 +138,7 @@ void FileWelcome::draw_myfile()
 
     QLabel* tip_number_share_in = new QLabel(share_in);
     tip_number_share_in->setObjectName("tip_number_in");
-    tip_number_share_in->setText("共931.51GB");
+    tip_number_share_in->setText("-");
     tip_number_share_in->move(60,35);
     tip_number_share_in->setStyleSheet("#tip_number_in{font-size:12px;color:#999;}");
 }
@@ -184,7 +184,7 @@ void FileWelcome::render_deps()
         dep->setStyleSheet("#dep_"+QString::number(i)+"{width:100px;height:88px;background:#FDFDFD;border:1px solid #EAEAEA;border-radius: 5px;border-bottom:1px solid #D1D1D1;}#dep_"+QString::number(i)+":hover{background:#E5F3FF}");
         dep->installEventFilter(this);
         connect(dep,&Label::dbclicked,this,[=](){
-            emit explorer("SYS","DEP",deps[i]->title,deps[i]->id.toInt());
+            emit explorer("SYS","DEP",deps[i]->name,deps[i]->id);
         });
 
         Label* ico = new Label(dep);
@@ -196,14 +196,14 @@ void FileWelcome::render_deps()
         ico->move(10,12);
 
         QLabel* title = new QLabel(dep);
-        title->setObjectName("DEP"+QString::number(deps[i]->id.toInt()));
-        title->setText(deps[i]->title);
+        title->setObjectName("DEP"+QString::number(deps[i]->id));
+        title->setText(deps[i]->name);
         title->move(60,10);
-        title->setStyleSheet("#DEP"+QString::number(deps[i]->id.toInt())+"{font-size:14px;color:#000;}");
+        title->setStyleSheet("#DEP"+QString::number(deps[i]->id)+"{font-size:14px;color:#000;}");
 
         QLabel* dep_meta = new QLabel(dep);
         dep_meta->setObjectName("tip_number_out");
-        dep_meta->setText("共931.51GB");
+        dep_meta->setText(deps[i]->attr+"人");
         dep_meta->move(60,35);
         dep_meta->setStyleSheet("#tip_number_out{font-size:12px;color:#999;}");
 
@@ -276,7 +276,7 @@ void FileWelcome::render_groups()
         _group->setStyleSheet("#group_"+QString::number(i)+"{width:100px;height:88px;background:#FDFDFD;border:1px solid #EAEAEA;border-radius: 5px;border-bottom:1px solid #D1D1D1;}#group_"+QString::number(i)+":hover{background:#E5F3FF}");
         _group->installEventFilter(this);
         connect(_group,&Label::dbclicked,this,[=](){
-            emit explorer("SYS","GROUP",groups[i]->title,groups[i]->id.toInt());
+            emit explorer("SYS","GROUP",groups[i]->name,groups[i]->id);
         });
 
         Label* ico = new Label(_group);
@@ -288,16 +288,26 @@ void FileWelcome::render_groups()
         ico->move(10,12);
 
         QLabel* title = new QLabel(_group);
-        title->setObjectName("GROUP"+QString::number(groups[i]->id.toInt()));
-        title->setText(groups[i]->title);
+        title->setObjectName("GROUP"+QString::number(groups[i]->id));
+        title->setText(groups[i]->name);
         title->move(60,10);
-        title->setStyleSheet("#GROUP"+QString::number(groups[i]->id.toInt())+"{font-size:14px;color:#000;}");
+        title->setStyleSheet("#GROUP"+QString::number(groups[i]->id)+"{font-size:14px;color:#000;}");
 
         QLabel* dep_meta = new QLabel(_group);
         dep_meta->setObjectName("tip_number_out");
-        dep_meta->setText("共931.51GB");
+        if("PUBLIC" == groups[i]->attr)
+        {
+            dep_meta->setText("公共群组");
+            dep_meta->setStyleSheet("#tip_number_out{font-size:11px;color:#fff;background:#2da44e;padding:2px;border-radius: 3px;}");
+        }
+        else if("PRIVATE" == groups[i]->attr)
+        {
+            dep_meta->setText("私有群组");
+            dep_meta->setStyleSheet("#tip_number_out{font-size:11px;color:#fff;background:#999;padding:2px;border-radius: 3px;}");
+        }
+        else
+        {}
         dep_meta->move(60,35);
-        dep_meta->setStyleSheet("#tip_number_out{font-size:12px;color:#999;}");
 
         group_layout->addWidget(_group);
     }
@@ -321,19 +331,24 @@ void FileWelcome::sync_views(QString data)
                 int id       = album.value("id").toInt();
                 QString name = album.value("name").toString();
                 QString type = album.value("type").toString();
+                QString attr = album.value("attr").toString();
 
                 if("DEP" == type)
                 {
-                    SIMPLE* _dep = new SIMPLE();
-                    _dep->title = name;
-                    _dep->id = QString::number(id);
+                    ALBUM* _dep = new ALBUM();
+                    _dep->name = name;
+                    _dep->id = id;
+                    _dep->type = "DEP";
+                    _dep->attr = attr;
                     deps.append(_dep);
                 }
                 else if("GROUP" == type)
                 {
-                    SIMPLE* _group = new SIMPLE();
-                    _group->title = name;
-                    _group->id = QString::number(id);
+                    ALBUM* _group = new ALBUM();
+                    _group->name = name;
+                    _group->id = id;
+                    _group->type = "GROUP";
+                    _group->attr = attr;
                     groups.append(_group);
                 }
                 else

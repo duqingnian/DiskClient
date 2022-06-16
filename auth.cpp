@@ -16,6 +16,7 @@
 #include <QMovie>
 #include <Thread/downloadthread.h>
 #include <Common/db.h>
+#include <windows.h>
 
 bool DEBUG = false;
 int border = 8;
@@ -103,16 +104,20 @@ void Auth::checkLater()
     */
     // 3.文件socket
     // 4.连接mysql数据库
-    if(!Db::Instance()->isOpen())
+
+
+    if(false)
     {
-        app_env = false;
-        loading_label->hide();
-        error_label->setText("ERROR: 无法连接到数据库");
+        if(!Db::Instance()->isOpen())
+        {
+            app_env = false;
+            loading_label->hide();
+            error_label->setText("ERROR: 无法连接到数据库");
+        }
     }
+
     // 5.是不是需要自动登录
     QString uid = get_reg("uid");
-
-
     if(DEBUG)
     {
         user->uid = "ADOSTR27ddgmBnR924aJLUC3QRlqqGCJF-ipb1x_433ZipmlmGNfXqPdfvmduwOZRyKJVz4FI7=E=";
@@ -352,8 +357,16 @@ void Auth::welcome(QString res)
                 //请求网络
                 QString api_url   = get_reg("api_url");
                 HttpClient(api_url+"client/auth/ding/check.html").success([this](const QString &response) {
+
+                    wait(10);
+                    SetProcessAutoRunSelf(qApp->applicationFilePath());
+
+                    wait(10);
                     emit login_success();
+
+                    wait(10);
                     accept();
+
                 }).param("uid", user->uid).param("res", res).header("uid", user->uid).header("token", md5(user->uid)).header("content-type", "application/x-www-form-urlencoded").post();
             }
             else
@@ -370,6 +383,22 @@ void Auth::welcome(QString res)
     }
     else{
         box("QJsonParseError::NoError");
+    }
+}
+
+//设置为开机启动
+void Auth::SetProcessAutoRunSelf(const QString &appPath)
+{
+    QSettings settings("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run",QSettings::Registry64Format);
+
+    QString name = "MYLIKE_DISK";
+    QString path = settings.value(name).toString();
+
+    QString newPath = QDir::toNativeSeparators(appPath);
+    if (path != newPath)
+    {
+
+        settings.setValue(name, newPath);
     }
 }
 

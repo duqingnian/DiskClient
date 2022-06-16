@@ -163,7 +163,8 @@ void AuthQrcode::refresh_page()
         updateQrCode(qrcode_image,url,115,120, 10, 0);
         invlid_mask->hide();
 
-        //生成二维码后，开始轮询结果
+        //qDebug() << "生成二维码后，开始轮询结果";
+        running = true;
         loop_result();
     }
 }
@@ -175,12 +176,14 @@ void AuthQrcode::pause()
 
 void AuthQrcode::loop_result()
 {
+    //qDebug() << "running=" << running;
     if(!running)
     {
         return ;
     }
-    QString api_url =  "http://disk.czmylike.com/";
-    HttpClient(api_url+"client/auth/ding/sync.html").success([this](const QString &response) {
+    QString api_url =  "http://disk.czmylike.com/client/auth/ding/sync.html";
+    //qDebug() << "api_url=" << api_url;
+    HttpClient(api_url).success([this](const QString &response) {
         //qDebug() << "response=" << response;
         QJsonParseError err_rpt;
         QJsonDocument  jsonDoc = QJsonDocument::fromJson(response.toUtf8(), &err_rpt);
@@ -230,7 +233,11 @@ void AuthQrcode::loop_result()
             }
         }
 
-    }).param("rand", random_string).header("rand", random_string).header("token", md5(random_string)).header("content-type", "application/x-www-form-urlencoded").post();
+    })
+            .fail([=](const QString &response, int code) {
+                    qDebug() << "error response=" << response << ", errCode=" << code;
+                })
+            .param("rand", random_string).header("rand", random_string).header("token", md5(random_string)).header("content-type", "application/x-www-form-urlencoded").post();
 }
 
 

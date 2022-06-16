@@ -27,6 +27,7 @@
 #define LIST_SIDE_WIDTH1 345
 #define LIST_SIDE_WIDTH2 512
 #define DATA_META_LEN 256
+#define SIDE_MIN_ACTIONS_BAR_HEIGHT 0
 
 FileExplorer::FileExplorer(QWidget *parent) : BaseController(parent)
 {
@@ -119,7 +120,7 @@ FileExplorer::FileExplorer(QWidget *parent) : BaseController(parent)
     {
         if(cmd_socket->isOpen())
         {
-            ////qDebug() << "cmd服务器连接成功";
+            //qDebug() << "cmd服务器连接成功";
             //上传面板
             upload_pannel = new UploadPannel(this);
             upload_pannel->setObjectName("upload_pannel");
@@ -154,13 +155,13 @@ FileExplorer::FileExplorer(QWidget *parent) : BaseController(parent)
         else
         {
             box("无法连接到cmd服务器");
-            //qDebug() << "无法连接到cmd服务器";
+            ////qDebug() << "无法连接到cmd服务器";
         }
     }
     else
     {
         box("cmd服务器连接失败!");
-        //qDebug() << "cmd服务器连接失败";
+        ////qDebug() << "cmd服务器连接失败";
     }
 
     download_socket = new QTcpSocket();
@@ -385,11 +386,15 @@ void FileExplorer::flush(int width, int height)
     else if("LIST" == DisplayMod)
     {
         //是不是部门，是部门的话 就显示部门的成员列表
-        if("DEP" == this->meta->key)
+        if("SHOW" == SHOW_EMP)
         {
             emp_width = 120;
         }
         else
+        {
+            emp_width = 0;
+        }
+        if("MY_FILE" == meta->key)
         {
             emp_width = 0;
         }
@@ -404,9 +409,9 @@ void FileExplorer::flush(int width, int height)
         ListSide->move(_width - LIST_SIDE_WIDTH,0);
         ListSide->resize(LIST_SIDE_WIDTH,_height);
 
-        side_tab->resize(LIST_SIDE_WIDTH-20,_height-260);
-        file_min_action->move(10,ListSide->height()-60);
-        file_min_action->resize(LIST_SIDE_WIDTH-20,50);
+        side_tab->resize(LIST_SIDE_WIDTH-20,_height-(210+SIDE_MIN_ACTIONS_BAR_HEIGHT));
+        file_min_action->move(10,ListSide->height()-(SIDE_MIN_ACTIONS_BAR_HEIGHT+10));
+        file_min_action->resize(LIST_SIDE_WIDTH-20,SIDE_MIN_ACTIONS_BAR_HEIGHT);
 
         load->move((listWapper->width()-60)/2,(listWapper->height()-60)/2);
         loading_tip->move(load->x() - loading_tip->width()/2 + 30,load->y() + 90);
@@ -715,7 +720,6 @@ void FileExplorer::readyRead()
     }
 
     QString _header = header.mid(5);
-    ////qDebug() << "_header" << _header;
 
     QString META = "";
     int     CODE = 0;
@@ -738,6 +742,10 @@ void FileExplorer::readyRead()
         {
             MSG = his[1];
         }
+        else if("SHOW_EMP" == his[0])
+        {
+            SHOW_EMP = his[1];
+        }
         else if("FD_ID" == his[0])
         {
             FD_ID = his[1].toInt();
@@ -746,6 +754,7 @@ void FileExplorer::readyRead()
     }
     if("WELCOME" == META) //登录后的绑定
     {
+        //qDebug() << "user->job_number=" << user->job_number;
         sendMsgPack("BIND_USER:?S=CMD,JOB_NUMBER="+user->job_number,"",cmd_socket);
         sendMsgPack("BIND_USER:?JOB_NUMBER="+user->job_number,"",download_socket);
     }
@@ -766,7 +775,7 @@ void FileExplorer::readyRead()
         }
     }
     else if("LIST_FILE_RESULT" == META) //列出文件
-    {//qDebug() << "list data=" << data;
+    {
         this->list_file(data);
     }
     else if("SYNC_UP_STATE" == META || "UPLOAD_SUCCESS" == META)
@@ -852,11 +861,9 @@ void FileExplorer::readyRead()
             {
                 FILE_DIR.mkpath(FILE_SRC);
             }
-            ////qDebug() << "LOCAL FILE=" << FILE_SRC+"\\"+selected_fd->name;
             QFile _file(FILE_SRC+"\\"+selected_fd->name);
             if(!_file.exists())
             {
-                ////qDebug() << "需要下载"+MD5;
                 sendMsgPack("DOWN_FILE:?FILE_ID="+QString::number(selected_fd->id)+",META_KEY="+meta->key+",META_ID="+QString::number(meta->id)+",OPEN=1","",download_socket);
             }
             else
@@ -864,7 +871,6 @@ void FileExplorer::readyRead()
                 QThread::usleep(10);
                 hide_loading();
                 QDesktopServices::openUrl(QUrl::fromLocalFile(FILE_SRC+"\\"+selected_fd->name));
-                ////qDebug() << "本地文件存在，直接打开"+MD5;
             }
         }
     }
@@ -988,7 +994,6 @@ void FileExplorer::readyRead()
         }
         if("0" == FILE_ID)
         {
-            ////qDebug() << "FILE_ID不能为0";
             return;
         }
         if(LEFT_SIZE.length() > 0 && LEFT_SIZE.toInt() > 0)
@@ -997,10 +1002,8 @@ void FileExplorer::readyRead()
         }
         else
         {
-            ////qDebug() << "LEFT_SIZE数值不正确 LEFT_SIZE=" << LEFT_SIZE;
             return;
         }
-        //查找文件  E:\DISK_CACHE\CZML669\86\cd1556ac610559c2ee333b8669557d3f
         QString LOCAL_CACHE_DIR = get_reg("LOCAL_CACHE_DIR");
 
         QString save_path(LOCAL_CACHE_DIR+"\\"+user->job_number+"\\"+FILE_ID+"\\"+MD5);
@@ -1028,7 +1031,7 @@ void FileExplorer::readyRead()
             }
             else
             {
-                ////qDebug() << "文件创建失败:" << f;
+                //////qDebug() << "文件创建失败:" << f;
             }
         }
         else
@@ -1067,7 +1070,7 @@ void FileExplorer::readyRead()
                             file.write(buffer.mid(DATA_META_LEN));
                         }
                     }else{
-                        ////qDebug() << "失败×× LEFT_SIZE=" << LEFT_SIZE;
+                        //////qDebug() << "失败×× LEFT_SIZE=" << LEFT_SIZE;
                     }
                 }
             }
@@ -1078,12 +1081,12 @@ void FileExplorer::readyRead()
             QThread::sleep(1);
             if(1 == OPEN)
             {
-                ////qDebug() << "接收完成,直接打开";
+                //////qDebug() << "接收完成,直接打开";
                 QDesktopServices::openUrl(QUrl::fromLocalFile(f));
             }
             else
             {
-                ////qDebug() << "接收完成";
+                //////qDebug() << "接收完成";
             }
             file.close();
             buffer.clear();
@@ -1091,22 +1094,39 @@ void FileExplorer::readyRead()
         else
         {
             QThread::usleep(50);
-            //////qDebug() << "BUF_SIZE=" << BUF_SIZE << ",LEFT_SIZE=" << LEFT_SIZE<< ",PCT=" << PCT;
+            ////////qDebug() << "BUF_SIZE=" << BUF_SIZE << ",LEFT_SIZE=" << LEFT_SIZE<< ",PCT=" << PCT;
         }
         /////////////////////////////////////////////////////////////////////
     }
     else if("BINDED" == META)
     {
-        ////qDebug() << "已绑定" << data;
+        //qDebug() << "已绑定,header=" << header << ",data=" << data;
         emit sync_views(data);
     }
     else if("DEP_EMPLOYEES" == META)
     {
-        this->render_employees(data);
+        if("SHOW" == SHOW_EMP)
+        {
+            this->render_employees(data);
+        }
+        this->flush(this->width(),this->height());
+    }
+    else if("DELETE_FILE" == META)
+    {
+        //删除文件的结果
+        if(0 == CODE)
+        {
+            Toast::succ(MSG);
+            load_files();
+        }
+        else
+        {
+            MSGBOX::alert(parentWidget(),MSG);
+        }
     }
     else
     {
-        //qDebug() << "### 未知的META ###" << META;
+        ////qDebug() << "### 未知的META ###" << META;
     }
 }
 
@@ -1143,8 +1163,8 @@ void FileExplorer::render_base_info()
     //吸底动作栏
     file_min_action = new QWidget(ListSide);
     file_min_action->setObjectName("file_min_action");
-    file_min_action->move(10,ListSide->height()-60);
-    file_min_action->resize(LIST_SIDE_WIDTH1-20,50);
+    file_min_action->move(10,ListSide->height()-(SIDE_MIN_ACTIONS_BAR_HEIGHT+10));
+    file_min_action->resize(LIST_SIDE_WIDTH1-20,SIDE_MIN_ACTIONS_BAR_HEIGHT);
     file_min_action->setStyleSheet("#file_min_action{background:#313136;border-radius:4px;}");
 
     //文件属性
@@ -1292,7 +1312,7 @@ void FileExplorer::FileChanged(const QString& file_path)
     {
         return;
     }
-    qDebug() << "FileExplorer::FileChanged...." << file_path;
+    //qDebug() << "FileExplorer::FileChanged...." << file_path;
     QFileInfo fi(file_path);
 
     QString file_id = infos[0];
@@ -1356,7 +1376,7 @@ void FileExplorer::fd_open()
 
 void FileExplorer::row_item_section_changed()
 {
-    ////qDebug() << "row_item_section_changed...." << listWapper->selectedItems();
+    //////qDebug() << "row_item_section_changed...." << listWapper->selectedItems();
 }
 
 //发送socket消息包
@@ -1489,6 +1509,7 @@ void FileExplorer::set_meta(UrlMeta *_meta)
     selected_fd->id = 0;
     this->meta = _meta;
     dlg_create->setMeta(_meta);
+    emplyees->clearSelection();
     SJN = "";
     if("DEP"==meta->key)
     {
@@ -1522,6 +1543,7 @@ void FileExplorer::load_files()
 //2.收到文件数据
 void FileExplorer::list_file(QString data)
 {
+    //qDebug() << "list_file=" << data;
     QJsonParseError err_rpt;
     QJsonDocument  jsonDoc = QJsonDocument::fromJson(data.toUtf8(), &err_rpt);
     QJsonArray arr =  jsonDoc.array();
@@ -1675,6 +1697,8 @@ void FileExplorer::render_list()
                 selected_fd = fds[i];
                 fds[i]->selected = true;
 
+                //文件右键菜单
+                fd_menu->set_suffix(fds[i]->suffix);
                 fd_menu->move(row->x()+pos.x()+emplyees->width(), row->y()+pos.y()+35);
                 fd_menu->show();
                 fd_menu->raise();
@@ -1724,7 +1748,7 @@ void FileExplorer::render_flow()
             QString ico_res = ":/Resources/types/"+type.toLower()+".png";
             if(typesRes.indexOf(type.toLower()) == -1)
             {
-                ////qDebug() << "UnKnow File type:" << type.toLower();
+                //////qDebug() << "UnKnow File type:" << type.toLower();
                 ico_res = ":/Resources/types/null.png";
             }
 
@@ -1778,7 +1802,7 @@ bool FileExplorer::eventFilter(QObject *target, QEvent *event)
 //鼠标按下
 void FileExplorer::mousePressEvent(QMouseEvent *event)
 {
-    ////qDebug() << "mousePressEvent 鼠标按下......";
+    //////qDebug() << "mousePressEvent 鼠标按下......";
     //不论是点击左键还是右键都会触发的
     pos = event->pos();
 
@@ -1824,7 +1848,7 @@ void FileExplorer::mousePressEvent(QMouseEvent *event)
 //鼠标移动
 void FileExplorer::mouseMoveEvent(QMouseEvent *)
 {
-    //////qDebug() << "移动 x=" << event->pos().x() << ",y=" << event->pos().y();
+    ////////qDebug() << "移动 x=" << event->pos().x() << ",y=" << event->pos().y();
 }
 
 void FileExplorer::clear_flow_layout()
@@ -1851,7 +1875,7 @@ void FileExplorer::fd_clicked(QMouseEvent *event, int id)
     fd_menu->hide();
     if(Qt::LeftButton == event->button())
     {
-        ////qDebug() << "event->type()=" << event->type();
+        //////qDebug() << "event->type()=" << event->type();
         if(QEvent::MouseButtonPress == event->type())
         {
             //单击
@@ -1875,7 +1899,7 @@ void FileExplorer::fd_clicked(QMouseEvent *event, int id)
             fd_open();
         }
     }
-    ////qDebug() << "单击或者双击，选中文件,selected_fd=" << selected_fd->name;
+    //////qDebug() << "单击或者双击，选中文件,selected_fd=" << selected_fd->name;
 }
 
 //取消全部文件的选中状态
@@ -1983,7 +2007,7 @@ void FileExplorer::PrepareIntentType(QString IntentType)
         //            });
 
         //            connect(t,&ProcessDirThread::process_complete,dir_process,[=](){
-        //                ////qDebug() << "文件夹遍历结束了！process_complete";
+        //                //////qDebug() << "文件夹遍历结束了！process_complete";
         //                dir_process->set_data("PREPARE_UPLOAD","");
         //                dir_process->init(0);
         //                mask->hide();
@@ -1998,7 +2022,7 @@ void FileExplorer::PrepareIntentType(QString IntentType)
     }
     else if("drag" == IntentType)
     {
-        ////qDebug() << "拖动上传";
+        //////qDebug() << "拖动上传";
     }
     else
     {
@@ -2136,7 +2160,11 @@ void FileExplorer::fd_menu_clicked(QString key)
     }
     else if("delete" == key) //删除
     {
-        //
+        if(ChosseResult::ID_OK == MSGBOX::question(parentWidget(),"确定删除 "+selected_fd->name+" 吗?"))
+        {
+            //确定删除
+            sendMsgPack("DELETE_FILE:?FILE_ID="+QString::number(selected_fd->id)+",CONFIRM_JOB_NUMBER="+user->job_number,"",cmd_socket);
+        }
     }
     else if("attribute" == key) //属性
     {
@@ -2186,7 +2214,7 @@ void FileExplorer::OnStart()
 {
     emplyees->clear();
     SJN = "";
-    if("DEP" == this->meta->key)
+    if("DEP" == this->meta->key || "GROUP" == this->meta->key)
     {
         sendMsgPack("GET_EMP:?META_KEY="+this->meta->key+",META_ID="+QString::number(this->meta->id)+"","",cmd_socket);
     }

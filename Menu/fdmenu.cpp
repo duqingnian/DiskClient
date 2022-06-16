@@ -107,10 +107,34 @@ void FdMenu::render_ui()
         txt->move(30,8);
         txt->show();
 
+        if("sendto_ding_employee" == menus[i]->key)
+        {
+            btn->setEnabled(false);
+        }
+        if("share" == menus[i]->key)
+        {
+            btn->setEnabled(false);
+        }
 
         connect(btn,&QPushButton::clicked,this,[=]() {
             emit menu_clicked(menus[i]->key);
         });
+    }
+}
+
+void FdMenu::set_suffix(QString _suff)
+{
+    QPushButton* menu_item = findChild<QPushButton*>("location");
+
+    this->SUFFIX = _suff;
+    if("FOLDER" == this->SUFFIX)
+    {
+        //如果是文件夹，不能定位文件夹
+        menu_item->setEnabled(false);
+    }
+    else
+    {
+        menu_item->setEnabled(true);
     }
 }
 

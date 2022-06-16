@@ -92,7 +92,7 @@ void Welcome::render_tab()
 
     TABMETA* tab_help = new TABMETA();
     tab_help->objname = "tab_help";
-    tab_help->txt = "帮助信息";
+    tab_help->txt = "应用中心";
     tab_help->bgcolor = "#fff";
     right_tab_metas[tab_help->objname] = tab_help;
 

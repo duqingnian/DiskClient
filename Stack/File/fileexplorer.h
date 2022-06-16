@@ -188,6 +188,7 @@ private:
     int _height;
     bool db_click = false;
     FD* active_fd;
+    QString SHOW_EMP = "HIDE";
 
     //文件列表 表头
     Label* row_header_name;

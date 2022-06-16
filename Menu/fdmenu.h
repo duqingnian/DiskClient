@@ -20,6 +20,9 @@ public:
     QVector<MenuItem*> menus;
     void render_data();
     void render_ui();
+    void set_suffix(QString);
+private:
+    QString SUFFIX = "";
 signals:
     void menu_clicked(QString);
 private:

@@ -9,6 +9,14 @@
 #include <Component/Label.h>
 #include "Menu/filewelcomemenu.h"
 
+//部门和群组
+struct ALBUM{
+    int id = 0;
+    QString name = "";
+    QString type = "";
+    QString attr = "";
+};
+
 class FileWelcome : public QWidget
 {
     Q_OBJECT
@@ -36,13 +44,13 @@ public:
     Label* share_in;
 
     //部门文件
-    QVector<SIMPLE*> deps;
+    QVector<ALBUM*> deps;
     QWidget* depfile_wapper;
     FlowLayout* dep_layout;
 
     //群组文件
     QLabel* label_group;
-    QVector<SIMPLE*> groups;
+    QVector<ALBUM*> groups;
     QWidget* groupfile_wapper;
     FlowLayout* group_layout;
 

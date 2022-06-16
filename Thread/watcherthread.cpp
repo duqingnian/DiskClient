@@ -145,24 +145,30 @@ void WatcherThread::notifi_change(const QString &path, FILE_NOTIFY_INFORMATION *
         {
             return;
         }
+        QStringList office_suffix = {"doc","docx","xls","xlsx","csv","ppt","pptx"};
         switch(curEntry->Action)
         {
         case FILE_ACTION_ADDED:
-            //qDebug() << "文件添加[" << path <<"]";
+            qDebug() << "文件添加[" << path <<"]";
             break;
         case FILE_ACTION_REMOVED:
-            //qDebug() << "文件被删除[" << path <<"]";
+            qDebug() << "文件被删除[" << path <<"]";
             break;
         case FILE_ACTION_MODIFIED:
-            //qDebug() << "文件被修改[" << path <<"]";
+            qDebug() << "文件被修改[" << path <<"]";
             QThread::usleep(2);
             emit changed(path);
             break;
         case FILE_ACTION_RENAMED_OLD_NAME:
-            //qDebug() << "旧文件名[" << path <<"]";
+            if(office_suffix.contains(suffix))
+            {
+                qDebug() << "旧文件名[" << path <<"]";
+                QThread::usleep(2);
+                emit changed(path);
+            }
             break;
         case FILE_ACTION_RENAMED_NEW_NAME:
-            //qDebug() << "新文件名[" << path <<"]";
+            qDebug() << "新文件名[" << path <<"]";
             break;
         default:
             qDebug() << "未知操作=" << curEntry->Action << "[" << path <<"]";

@@ -20,6 +20,26 @@
 #include <Menu/menufileexplorercanvas.h>
 #include <QNetworkAccessManager>
 #include "Common/filemanager.h"
+#include <QDesktopServices>
+#include <QDir>
+#include <QFileDialog>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonDocument>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonObject>
+#include <QJsonParseError>
+#include <QMovie>
+#include <QProcess>
+#include <QThread>
+#include <QTimer>
+#include <QTimer>
+#include <Lib/HttpClient.h>
+#include <Thread/processdirthread.h>
+#include <Component/Msg.h>
+#include <Data/meta.h>
+#include "Component/Msg.h"
 
 struct ATTRIBUTE {
     QString key;
@@ -183,6 +203,9 @@ public:
 
     //渲染部门员工
     void render_employees(QString);
+
+    //是否含有权限
+    bool has_permission(QString permission_name);
 private:
     int _width;
     int _height;
@@ -195,6 +218,11 @@ private:
     Label* row_header_user;
     Label* row_header_version;
     Label* row_header_size;
+
+    //权限
+    QMap<QString, int> permission;
+    QMap<QString, EMP*> empMap;
+
 public slots:
     void readyRead();
     void disconnected();
@@ -234,6 +262,9 @@ signals:
 
     //重新载入部门文件数据
     void reload_meta_data(UrlMeta*);
+
+    //同步权限
+    void sync_permission(QString,int);
 };
 
 #endif // FILEEXPLORER_H

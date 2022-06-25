@@ -3,23 +3,6 @@
 #include "fileexplorer.h"
 #include "filerow.h"
 #include <QDebug>
-#include <QDesktopServices>
-#include <QDir>
-#include <QFileDialog>
-#include <QJsonArray>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonParseError>
-#include <QMovie>
-#include <QProcess>
-#include <QThread>
-#include <QTimer>
-#include <QTimer>
-#include <Lib/HttpClient.h>
-#include <Thread/processdirthread.h>
-#include <Component/Msg.h>
-#include <Data/meta.h>
-#include "Component/Msg.h"
 
 #define FD_WIDTH 176
 #define FD_HEIGHT 171
@@ -386,17 +369,20 @@ void FileExplorer::flush(int width, int height)
     else if("LIST" == DisplayMod)
     {
         //是不是部门，是部门的话 就显示部门的成员列表
-        if("SHOW" == SHOW_EMP)
-        {
-            emp_width = 120;
-        }
-        else
-        {
-            emp_width = 0;
-        }
         if("MY_FILE" == meta->key)
         {
             emp_width = 0;
+        }
+        else
+        {
+            if("SHOW" == SHOW_EMP)
+            {
+                emp_width = 120;
+            }
+            else
+            {
+                emp_width = 0;
+            }
         }
         reload_album->resize(emp_width,35);
         emplyees->resize(emp_width,height-35);
@@ -720,6 +706,7 @@ void FileExplorer::readyRead()
     }
 
     QString _header = header.mid(5);
+    //qDebug() << "_header=" << _header << ",data=" << data;
 
     QString META = "";
     int     CODE = 0;
@@ -832,6 +819,7 @@ void FileExplorer::readyRead()
             QString NAME = "";
             QString FILE_ID = "";
             QString OPEN = "0";
+            int SIZE = 0;
 
             for(QString hi : headers)
             {
@@ -847,6 +835,10 @@ void FileExplorer::readyRead()
                 else if("FILE_ID" == his[0])
                 {
                     FILE_ID = his[1].toInt();
+                }
+                else if("SIZE" == his[0])
+                {
+                    SIZE = his[1].toInt();
                 }
                 else if("OPEN" == his[0])
                 {
@@ -870,7 +862,17 @@ void FileExplorer::readyRead()
             {
                 QThread::usleep(10);
                 hide_loading();
-                QDesktopServices::openUrl(QUrl::fromLocalFile(FILE_SRC+"\\"+selected_fd->name));
+                //需要判断文件的size是不是正确
+                if(SIZE != _file.size())
+                {
+                    _file.remove();
+                    QThread::usleep(10);
+                    sendMsgPack("DOWN_FILE:?FILE_ID="+QString::number(selected_fd->id)+",META_KEY="+meta->key+",META_ID="+QString::number(meta->id)+",OPEN=1","",download_socket);
+                }
+                else
+                {
+                    QDesktopServices::openUrl(QUrl::fromLocalFile(FILE_SRC+"\\"+selected_fd->name));
+                }
             }
         }
     }
@@ -1100,8 +1102,33 @@ void FileExplorer::readyRead()
     }
     else if("BINDED" == META)
     {
-        //qDebug() << "已绑定,header=" << header << ",data=" << data;
-        emit sync_views(data);
+        QJsonParseError err_rpt;
+        QJsonDocument  doc = QJsonDocument::fromJson(data, &err_rpt);
+        if(err_rpt.error == QJsonParseError::NoError)
+        {
+            QJsonArray arr = doc.array();
+            QJsonObject obj = arr.at(0).toObject();
+            QString views = obj["views"].toString();
+            emit sync_views(views);
+
+            QString ps = obj["permissions"].toString();
+            QJsonDocument  psd = QJsonDocument::fromJson(ps.toUtf8());
+            QJsonArray permission_arr = psd.array();
+
+            for (int i=0; i<permission_arr.count(); i++)
+            {
+                QJsonObject po = permission_arr.at(i).toObject();
+
+                QString bundle = po.value("bundle").toString();
+                int bundle_id  = po.value("bundle_id").toInt();
+                QString pname  = po.value("pname").toString();
+                int pad        = po.value("pad").toInt();
+
+                permission["P_"+bundle+"_"+QString::number(bundle_id)+"_"+pname] = pad;
+            }
+        }else{
+            qDebug() << "绑定解析错误";
+        }
     }
     else if("DEP_EMPLOYEES" == META)
     {
@@ -1319,6 +1346,39 @@ void FileExplorer::FileChanged(const QString& file_path)
     QString file_md5 = md5_file(file_path);
     QString file_name = infos[2];
 
+    //自己的文件
+    //群组的公共文件
+    //其他人的文件
+    if("MY_FILE" == this->meta->key)
+    {
+        //do nothing
+    }
+    else
+    {
+        if(SJN.length() == 0)
+        {
+            //群组的公共文件
+            if(!has_permission("EDIT_FILE"))
+            {
+                return;
+            }
+        }
+        else
+        {
+            if(user->job_number == SJN)
+            {
+                //自己
+            }
+            else
+            {
+                if(!has_permission("MANAGE_EMPLOYEE"))
+                {
+                    return;
+                }
+            }
+        }
+    }
+
     UP_FILE* upload_file = new UP_FILE();
     upload_file->id = file_id.toInt();
     upload_file->suffix = fi.suffix();
@@ -1366,6 +1426,11 @@ void FileExplorer::fd_open()
         }
         else
         {
+            //如果没有打开文件的权限，双击也不能打开
+            if(!has_permission("OPEN_FILE"))
+            {
+                return;
+            }
             //需要去文件服务器查询最新的文件md5,因为有可能在其他电脑上更新了文件
             sendMsgPack("OPEN_FILE:?FILE_ID="+QString::number(selected_fd->id)+",OPEN:1,META_KEY="+meta->key+",META_ID="+QString::number(meta->id),"",cmd_socket);
         }
@@ -1506,6 +1571,7 @@ void FileExplorer::change_loading_tip(QString tip)
 //来自那个系列
 void FileExplorer::set_meta(UrlMeta *_meta)
 {
+    fd_menu->hide();
     selected_fd->id = 0;
     this->meta = _meta;
     dlg_create->setMeta(_meta);
@@ -1522,6 +1588,34 @@ void FileExplorer::set_meta(UrlMeta *_meta)
     else
     {}
 
+    //    QMap<QString, int>::const_iterator i = permission.constBegin();
+    //    while (i != permission.constEnd()) {
+    //        qDebug() << i.key() << ": " << i.value();
+    //        ++i;
+    //    }
+
+    //    qDebug() << "META:: key=" << this->meta->key << ",id=" << this->meta->id;
+
+    //创建文件夹权限
+    if(has_permission("CREATE_FOLDER"))
+    {
+        emit sync_permission("create",1);
+    }
+    else
+    {
+        emit sync_permission("create",0);
+    }
+    //上传文件权限
+    if(has_permission("UPLOAD_FILE"))
+    {
+        emit sync_permission("upload",1);
+    }
+    else
+    {
+        emit sync_permission("upload",0);
+    }
+
+    //载入文件
     load_files();
 }
 
@@ -1537,7 +1631,8 @@ void FileExplorer::load_files()
 {
     this->clear();
     show_loading();
-    sendMsgPack("LIST_FILES:?FD_ID="+QString::number(fd->id)+",META_KEY="+meta->key+",META_ID="+QString::number(meta->id)+",JOB_NUMBER="+user->job_number+",SJN="+SJN,"",cmd_socket);
+    QString cmd = "LIST_FILES:?FD_ID="+QString::number(fd->id)+",META_KEY="+meta->key+",META_ID="+QString::number(meta->id)+",JOB_NUMBER="+user->job_number+",SJN="+SJN;
+    sendMsgPack(cmd,"",cmd_socket);
 }
 
 //2.收到文件数据
@@ -1697,7 +1792,43 @@ void FileExplorer::render_list()
                 selected_fd = fds[i];
                 fds[i]->selected = true;
 
-                //文件右键菜单
+                //////////////////////////
+                /// 权限判断
+                //////////////////////////
+                if("FOLDER" == fds[i]->suffix)
+                {
+                    fd_menu->set_enable("open",true);
+                    fd_menu->set_enable("location",false);
+
+                    //重命名
+                    fd_menu->set_enable("rename",has_permission("RENAME_FOLDER"));
+
+                    //删除
+                    fd_menu->set_enable("delete",has_permission("DELETE_FOLDER"));
+                }
+                else
+                {
+                    fd_menu->set_enable("open",has_permission("OPEN_FILE"));
+                    fd_menu->set_enable("location",has_permission("OPEN_FILE"));
+
+                    //重命名
+                    fd_menu->set_enable("rename",has_permission("RENAME_FILE"));
+
+                    //删除
+                    fd_menu->set_enable("delete",has_permission("DELETE_FILE"));
+                }
+                //移动
+                fd_menu->set_enable("move",has_permission("MOVE_FILE"));
+
+                wait(5);
+                //开始判断 其他人的话，是不是有管理权限
+                if("MY_FILE" != this->meta->key && SJN.length() > 0 && user->job_number != SJN)
+                {
+                    fd_menu->set_enable("move",has_permission("MANAGE_EMPLOYEE"));
+                    fd_menu->set_enable("rename",has_permission("MANAGE_EMPLOYEE"));
+                    fd_menu->set_enable("delete",has_permission("MANAGE_EMPLOYEE"));
+                }
+
                 fd_menu->set_suffix(fds[i]->suffix);
                 fd_menu->move(row->x()+pos.x()+emplyees->width(), row->y()+pos.y()+35);
                 fd_menu->show();
@@ -1802,7 +1933,7 @@ bool FileExplorer::eventFilter(QObject *target, QEvent *event)
 //鼠标按下
 void FileExplorer::mousePressEvent(QMouseEvent *event)
 {
-    //////qDebug() << "mousePressEvent 鼠标按下......";
+    //qDebug() << "mousePressEvent 鼠标按下......";
     //不论是点击左键还是右键都会触发的
     pos = event->pos();
 
@@ -1979,46 +2110,46 @@ void FileExplorer::PrepareIntentType(QString IntentType)
     }
     else if("folder" == IntentType) //上传文件夹
     {
-        //        upload_dir = QFileDialog::getExistingDirectory(this, "请选择目录", "D:\\");
+        upload_dir = QFileDialog::getExistingDirectory(this, "请选择目录", "D:\\");
 
-        //        if (upload_dir.isEmpty())
-        //        {
-        //            return;
-        //        }
-        //        else
-        //        {
-        //            mask->show();
-        //            dir_process->init(fd->id);
-        //            dir_process->show();
-        //            dir_process->raise();
+        if (upload_dir.isEmpty())
+        {
+            return;
+        }
+        else
+        {
+            mask->show();
+            dir_process->init(fd->id);
+            dir_process->show();
+            dir_process->raise();
 
-        //            dir_process->set_data("dir_name",upload_dir);
-        //            dir_process->set_data("dir_path",upload_dir);
+            dir_process->set_data("dir_name",upload_dir);
+            dir_process->set_data("dir_path",upload_dir);
 
-        //            //开启一个线程去去处理文件数量和尺寸
-        //            ProcessDirThread* t = new ProcessDirThread();
-        //            t->set_dir(upload_dir);
-        //            t->start();
+            //开启一个线程去去处理文件数量和尺寸
+            ProcessDirThread* t = new ProcessDirThread();
+            t->set_dir(upload_dir);
+            t->start();
 
-        //            //发现了文件和文件夹
-        //            connect(t,&ProcessDirThread::find_file,this,&FileExplorer::append_file);
-        //            connect(t,&ProcessDirThread::sync_size,this,[=](unsigned long long size){
-        //                dir_process->set_data("ADD_SIZE",QString::number(size));
-        //            });
+            //发现了文件和文件夹
+            /*
+            connect(t,&ProcessDirThread::find_file,this,&FileExplorer::append_file);
+            connect(t,&ProcessDirThread::sync_size,this,[=](unsigned long long size){
+                dir_process->set_data("ADD_SIZE",QString::number(size));
+            });
 
-        //            connect(t,&ProcessDirThread::process_complete,dir_process,[=](){
-        //                //////qDebug() << "文件夹遍历结束了！process_complete";
-        //                dir_process->set_data("PREPARE_UPLOAD","");
-        //                dir_process->init(0);
-        //                mask->hide();
-        //                dir_process->hide();
+            connect(t,&ProcessDirThread::process_complete,dir_process,[=](){
+                qDebug() << "文件夹遍历结束了！process_complete";
+                dir_process->set_data("PREPARE_UPLOAD","");
+                mask->hide();
+                dir_process->hide();
 
-        //                upload_pannel->show();
-        //                upload_pannel->raise();
-        //                upload_pannel->touch_upload(this->meta->key,this->meta->id,fd->id);
-        //            });
-        //        }
-        MSGBOX::alert(this,"功能开发中 :)");
+                upload_pannel->show();
+                upload_pannel->raise();
+                upload_pannel->touch_upload(this->meta->key,this->meta->id,fd->id,SJN);
+            });
+            */
+        }
     }
     else if("drag" == IntentType)
     {
@@ -2028,6 +2159,21 @@ void FileExplorer::PrepareIntentType(QString IntentType)
     {
         //do nothing....
     }
+}
+
+void FileExplorer::append_file(QString T, QString abs_file)
+{
+    if("FILE" == T)
+    {
+        dir_process->set_data("ADD_FILE","");
+        moveto_queue(abs_file);
+    }
+    else if("DIR" == T)
+    {
+        dir_process->set_data("ADD_DIR","");
+    }
+    else
+    {}
 }
 
 //将要上传的文件压入上传面板的队列中
@@ -2071,21 +2217,6 @@ void FileExplorer::moveto_queue(QString abs_path)
     upload_file->state = UP_STATE::UPLOAD;
     wait(5);
     upload_pannel->add_queue(upload_file);
-}
-
-void FileExplorer::append_file(QString T, QString abs_file)
-{
-    if("FILE" == T)
-    {
-        dir_process->set_data("ADD_FILE","");
-        moveto_queue(abs_file);
-    }
-    else if("DIR" == T)
-    {
-        dir_process->set_data("ADD_DIR","");
-    }
-    else
-    {}
 }
 
 //点击了右键菜单
@@ -2216,6 +2347,7 @@ void FileExplorer::OnStart()
     SJN = "";
     if("DEP" == this->meta->key || "GROUP" == this->meta->key)
     {
+        //是不是有查看的权限
         sendMsgPack("GET_EMP:?META_KEY="+this->meta->key+",META_ID="+QString::number(this->meta->id)+"","",cmd_socket);
     }
 }
@@ -2223,18 +2355,49 @@ void FileExplorer::OnStart()
 //选择了部门员工
 void FileExplorer::select_employee(QListWidgetItem *item)
 {
+    fd_menu->hide();
     SJN = item->data(Qt::UserRole).toString();
-
     emit url_back_to(meta); //切换了用户，URL地址栏要重置到部门
-
     this->clear();
-    show_loading();
-    sendMsgPack("LIST_FILES:?FD_ID=-1,META_KEY="+meta->key+",META_ID="+QString::number(meta->id)+",SJN="+SJN+",JOB_NUMBER="+user->job_number,",",cmd_socket);
+
+    //如果是自己，赋予全部权限，如果不是自己 需要判断是不是可以看文件
+    if(user->job_number == SJN)
+    {
+        emit sync_permission("create",1);
+        emit sync_permission("upload",1);
+        show_loading();
+        sendMsgPack("LIST_FILES:?FD_ID=-1,META_KEY="+meta->key+",META_ID="+QString::number(meta->id)+",SJN="+SJN+",JOB_NUMBER="+user->job_number,",",cmd_socket);
+    }
+    else
+    {
+        //是不是可以管理成员文件
+        if(has_permission("MANAGE_EMPLOYEE"))
+        {
+            emit sync_permission("create",1);
+            emit sync_permission("upload",1);
+        }
+        else
+        {
+            emit sync_permission("create",0);
+            emit sync_permission("upload",0);
+        }
+        //是不是可以看部门成员的文件
+        if(has_permission("VIEW_EMP_FILES"))
+        {
+            show_loading();
+            sendMsgPack("LIST_FILES:?FD_ID=-1,META_KEY="+meta->key+",META_ID="+QString::number(meta->id)+",SJN="+SJN+",JOB_NUMBER="+user->job_number,",",cmd_socket);
+        }
+        else
+        {
+            Toast::err("暂无权限查看:["+empMap[SJN]->dep_name+"]的"+empMap[SJN]->name);
+        }
+    }
 }
 
 //渲染部门员工列表
 void FileExplorer::render_employees(QString data)
 {
+    empMap.clear();
     QJsonParseError err_rpt;
     QJsonDocument  jsonDoc = QJsonDocument::fromJson(data.toUtf8(), &err_rpt);
     QJsonArray _employees =  jsonDoc.array();
@@ -2243,12 +2406,16 @@ void FileExplorer::render_employees(QString data)
 
         QString emp_name   = employee.value("name").toString();
         QString emp_depid = employee.value("dep_id").toString();
+        QString emp_depname = employee.value("dep_name").toString();
         QString emp_job_number = employee.value("job_number").toString();
 
         EMP* emp = new EMP();
         emp->dep_id = emp_depid;
         emp->job_number = emp_job_number;
+        emp->dep_name = emp_depname;
         emp->name = emp_name;
+
+        empMap[emp->job_number] = emp;
 
         EmployeeRow* emp_row = new EmployeeRow();
         emp_row->setObjectName("DEP_"+emp_depid+"_EMP_"+emp_job_number);
@@ -2260,6 +2427,28 @@ void FileExplorer::render_employees(QString data)
 
         emplyees->setItemWidget(item, emp_row);
     }
+}
+
+bool FileExplorer::has_permission(QString permission_name)
+{
+    //如果是自己的文件，直接是有权限操作
+    if("MY_FILE" == this->meta->key)
+    {
+        return true;
+    }
+    if(user->job_number == SJN)
+    {
+        return true;
+    }
+    QString key = "P_"+this->meta->key+"_"+QString::number(this->meta->id)+"_"+permission_name;
+    if(permission.contains(key))
+    {
+        if(permission[key] == 1)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 FileExplorer::~FileExplorer()

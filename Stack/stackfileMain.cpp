@@ -11,6 +11,7 @@ StackFileMain::StackFileMain(QWidget *parent) : BaseController(parent)
     connect(stack_file_explorer,SIGNAL(append_urlbar(FD*)),this,SLOT(append_urlbar(FD*)));
     connect(stack_file_explorer,&FileExplorer::sync_views,stack_file_welcome,&FileWelcome::sync_views);
     connect(stack_file_explorer,&FileExplorer::url_back_to,this,&StackFileMain::url_back_to); //重置URL
+    connect(stack_file_explorer,&FileExplorer::sync_permission,this,&StackFileMain::sync_permission);
     //清除员工数据后，载入部门或者群组数据
     connect(stack_file_explorer,SIGNAL(reload_meta_data(UrlMeta*)),this,SLOT(reload_meta_data(UrlMeta*)));
     InitNavigate();
@@ -42,6 +43,34 @@ void StackFileMain::reload_meta_data(UrlMeta* meta)
     this->url_back_to(meta);
     wait(50);
     this->url_meta_clicked(meta);
+}
+
+void StackFileMain::sync_permission(QString pn, int enable)
+{
+    if("create" == pn)
+    {
+        if(1 == enable)
+        {
+            btn_create->setEnabled(true);
+        }
+        else
+        {
+            btn_create->setEnabled(false);
+        }
+    }
+    else if("upload" == pn)
+    {
+        if(1 == enable)
+        {
+            btn_upload->setEnabled(true);
+        }
+        else
+        {
+            btn_upload->setEnabled(false);
+        }
+    }
+    else
+    {}
 }
 
 void StackFileMain::appendSubPaths(QDir dir, QStringList& subPaths)
@@ -335,9 +364,6 @@ void StackFileMain::InitContent()
 
         render_urlbar();
 
-        btn_create->setEnabled(true);
-        btn_upload->setEnabled(true);
-
         quick_refresh->setEnabled(true);
         ico_refresh->setPixmap(QPixmap::fromImage(QImage(":/Resources/Navigate/refresh-1.png")));
         ico_refresh->setCursor(Qt::PointingHandCursor);
@@ -486,9 +512,6 @@ void StackFileMain::url_meta_clicked(UrlMeta* meta)
             }
             stack_file_explorer->change_folder(meta);
         }
-
-        btn_create->setEnabled(true);
-        btn_upload->setEnabled(true);
     }
     render_urlbar();
 }

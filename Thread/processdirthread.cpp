@@ -25,10 +25,10 @@ void ProcessDirThread::loop_dir(QString path, bool _sub)
 
     foreach(QFileInfo info,dir.entryInfoList())
     {
-        QThread::usleep(20);
+        QThread::usleep(5);
         if(info.isDir())
         {
-            QThread::usleep(10);
+            QThread::usleep(5);
             dir_count++;
             qDebug() << "[" << dir_count << "]文件夹=" << info.filePath();
             emit find_file("DIR",info.filePath());
@@ -37,16 +37,17 @@ void ProcessDirThread::loop_dir(QString path, bool _sub)
         else
         {
             file_count++;
-            QThread::usleep(2);
             qDebug() << "A[" << file_count << "]" << info.absoluteFilePath() << ",size=" << info.size();
             emit find_file("FILE",info.absoluteFilePath());
-//            emit sync_size(info.size());
+            emit sync_size(info.size());
+
+            QThread::usleep(5);
         }
     }
     if(_sub)
     {
-        qDebug() << "文件夹扫描完成";
-        //emit process_complete();
+        //qDebug() << "文件夹扫描完成";
+        emit process_complete();
     }
 }
 

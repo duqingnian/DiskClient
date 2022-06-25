@@ -238,7 +238,6 @@ void FileWelcome::clear_fd(FlowLayout* layout)
         {
             child->widget()->setParent(NULL);
         }
-
         delete child;
     }
 }
@@ -313,7 +312,7 @@ void FileWelcome::render_groups()
     }
 }
 
-//通过WEB_API来获取部门和群组
+//获取部门和群组
 void FileWelcome::sync_views(QString data)
 {
     if("" != data)

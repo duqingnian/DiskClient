@@ -4,7 +4,8 @@
 
 struct EMP{
     QString name="";
-    QString dep_id=""; //部门ID
+    QString dep_id="";   //部门ID
+    QString dep_name=""; //部门名称
     QString job_number="";
 };
 

@@ -11,8 +11,8 @@ DirProcess::DirProcess(QWidget *parent) :QDialog(parent),ui(new Ui::DirProcess)
     ui->setupUi(this);
     this->setStyleSheet("font-family: \"Microsoft Yahei\";");
 
-    this->setWindowFlags(Qt::FramelessWindowHint);
-    setWindowFlags(Qt::WindowStaysOnTopHint);
+    //this->setWindowFlags(Qt::FramelessWindowHint);
+    //setWindowFlags(Qt::WindowStaysOnTopHint);
 
     ui->label_icon->setStyleSheet("background:transparent;");
     ui->label_icon->setPixmap(QPixmap::fromImage(QImage(":/Resources/Common/folder.png")));
@@ -91,8 +91,16 @@ void DirProcess::set_data(QString name, QString data)
     }
     else if("PREPARE_UPLOAD" == name)
     {
+        qDebug() << "PREPARE_UPLOAD...............";
         timer.stop();
-        ui->label_loading->setPixmap(QPixmap::fromImage(QImage(":/Resources/Common/complete.png")));
+
+        movie_loading->stop();
+        QThread::usleep(10);
+        movie_complete = new QMovie(":/Resources/Common/complete.png");
+        ui->label_loading->setMovie(movie_complete);
+        ui->label_loading->resize(30,30);
+        ui->label_loading->setScaledContents(true);
+        movie_complete->start();
     }
     else
     {}

@@ -21,6 +21,7 @@ public:
     void render_data();
     void render_ui();
     void set_suffix(QString);
+    void set_enable(QString name, bool);
 private:
     QString SUFFIX = "";
 signals:

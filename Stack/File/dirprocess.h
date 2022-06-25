@@ -22,6 +22,7 @@ public:
     int seconds;
     QString dir_path;
     QMovie *movie_loading;
+    QMovie *movie_complete;
 public slots:
     void set_data(QString name,QString data);
 private:

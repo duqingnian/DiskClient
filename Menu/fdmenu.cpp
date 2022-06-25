@@ -36,7 +36,7 @@ void FdMenu::render_data()
     location->ico = "16x16/location.png";
     location->border = "border-bottom:1px solid #EFF0F1;";
 
-    MenuItem* ding = new MenuItem();
+    /*MenuItem* ding = new MenuItem();
     ding->text = "发送给钉钉同事";
     ding->key = "sendto_ding_employee";
     ding->ico = "16x16/ding.png";
@@ -45,7 +45,7 @@ void FdMenu::render_data()
     share->text = "共享";
     share->key = "share";
     share->ico = "16x16/share.png";
-    share->border = "border-bottom:1px solid #EFF0F1;";
+    share->border = "border-bottom:1px solid #EFF0F1;";*/
 
     MenuItem* move = new MenuItem();
     move->text = "移动";
@@ -71,8 +71,8 @@ void FdMenu::render_data()
 
     menus.append(open);
     menus.append(location);
-    menus.append(ding);
-    menus.append(share);
+    //menus.append(ding);
+    //menus.append(share);
     menus.append(move);
     menus.append(rename);
     menus.append(del);
@@ -107,15 +107,6 @@ void FdMenu::render_ui()
         txt->move(30,8);
         txt->show();
 
-        if("sendto_ding_employee" == menus[i]->key)
-        {
-            btn->setEnabled(false);
-        }
-        if("share" == menus[i]->key)
-        {
-            btn->setEnabled(false);
-        }
-
         connect(btn,&QPushButton::clicked,this,[=]() {
             emit menu_clicked(menus[i]->key);
         });
@@ -132,9 +123,11 @@ void FdMenu::set_suffix(QString _suff)
         //如果是文件夹，不能定位文件夹
         menu_item->setEnabled(false);
     }
-    else
-    {
-        menu_item->setEnabled(true);
-    }
+}
+
+void FdMenu::set_enable(QString name, bool state)
+{
+     QPushButton* btn = findChild<QPushButton*>(name);
+     btn->setEnabled(state);
 }
 

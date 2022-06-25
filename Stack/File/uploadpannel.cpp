@@ -204,8 +204,11 @@ void UploadPannel::sync_file_progrrss(QString BUNDLE,QString BUNDLE_ID,QString F
                 upload_file_item->completed();
             }
             wait(10);
-            emit do_some_action("REFRESH");
-            wait(10);
+            if(complete_count >= upload_file_list->count())
+            {
+                emit do_some_action("REFRESH");
+                wait(10);
+            }
             uploading = false;
             this->touch_upload(BUNDLE,BUNDLE_ID.toInt(),FD_ID.toInt(),SJN);  //尝试下次上传
         }

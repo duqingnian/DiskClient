@@ -105,7 +105,7 @@ int MSGBOX::alert(QWidget *parent, const QString &text)
 int MSGBOX::question(QWidget *parent, const QString &text)
 {
     MSGBOX * myMessageBox = new MSGBOX(parent);
-    myMessageBox->setWindowTitle("Confirm");
+    myMessageBox->setWindowTitle("请确认");
     myMessageBox->setContentText(text);
     myMessageBox->setMessageType(MESSAGE_QUESTION);
     myMessageBox->setButtonType(BUTTON_OK_AND_CANCEL);

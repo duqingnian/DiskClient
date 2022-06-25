@@ -116,6 +116,7 @@ void Welcome::render_tab()
 
     TAB_ATTR = new QWidget(TAB);
     TAB_ATTR->setObjectName("TAB_ATTR");
+    TAB_ATTR->move(this->width(),0);
 }
 
 void Welcome::render_tab_attr()
@@ -124,7 +125,7 @@ void Welcome::render_tab_attr()
     QMapIterator<QString,TABMETA*> it(right_tab_metas);
     while(it.hasNext()) {
         it.next();
-        int width = it.value()->txt.length() * 15 + 35;
+        int width = 96;
         Label* tab_item = new Label(TAB_ATTR);
         tab_item->setObjectName(it.value()->objname);
         tab_item->setText(it.value()->txt);
@@ -137,6 +138,8 @@ void Welcome::render_tab_attr()
 
         connect(tab_item, &Label::clicked, this, [=](){ this->SelectTab(tab_item->objectName()); });
         TabItems.append(tab_item);
+
+        TAB_ATTR->move(this->width()-this->border_width*2-x,0);
     }
 }
 

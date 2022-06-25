@@ -145,8 +145,7 @@ void Auth::checkLater()
                 if(uid.mid(0,6) == "ADOSTR" && uid.right(3) == "=E=")
                 {
                     loading();
-                    QString api_url = get_reg("api_url");
-                    HttpClient(api_url+"client/auth/ding/fetch.html").success([this](const QString &response) {
+                    HttpClient(get_reg("api_url")+"client/auth/ding/fetch.html").success([this](const QString &response) {
                         autologin(response.toUtf8());
                     }).param("uid", uid).header("uid", uid).header("token", md5(uid)).header("content-type", "application/x-www-form-urlencoded").post();
                 }

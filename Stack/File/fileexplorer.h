@@ -206,12 +206,23 @@ public:
 
     //是否含有权限
     bool has_permission(QString permission_name);
+
+
+
+    //文件夹上传相关
+    //bool uploading = false;
+    //void touch_upload(QString,int,int,QString);
+    //void sync_file_progrrss(QString BUNDLE,QString BUNDLE_ID,QString FD_ID,QString md5,QString state,float pct,unsigned long long SPEED);
 private:
     int _width;
     int _height;
     bool db_click = false;
     FD* active_fd;
     QString SHOW_EMP = "HIDE";
+    unsigned long long total_size = 0;
+    QMap<QString,int> DirIdMap;
+
+    QStringList file_queue;
 
     //文件列表 表头
     Label* row_header_name;
@@ -222,6 +233,10 @@ private:
     //权限
     QMap<QString, int> permission;
     QMap<QString, EMP*> empMap;
+
+    //上传的文件夹
+    QMap<QString,int>* dirMap; //服务器创建后返回的路径和ID的集合
+    QJsonArray dirArr;         //选择文件夹后的文件夹集合
 
 public slots:
     void readyRead();
@@ -248,6 +263,8 @@ public slots:
     void append_file(QString T,QString abs_file);
 
     void list_file(QString); //列出文件
+
+    void dir_map(QString,QString); //处理目录map
 signals:
     void append_urlbar(FD*);
 

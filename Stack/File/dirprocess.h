@@ -23,6 +23,13 @@ public:
     QString dir_path;
     QMovie *movie_loading;
     QMovie *movie_complete;
+
+    //准备上传中
+    void changeto_prepareing();
+
+    //正在上传
+    void changeto_uploading(int);
+
 public slots:
     void set_data(QString name,QString data);
 private:

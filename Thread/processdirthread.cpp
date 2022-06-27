@@ -28,20 +28,17 @@ void ProcessDirThread::loop_dir(QString path, bool _sub)
         QThread::usleep(5);
         if(info.isDir())
         {
-            QThread::usleep(5);
+            //QThread::usleep(5);
             dir_count++;
-            qDebug() << "[" << dir_count << "]文件夹=" << info.filePath();
             emit find_file("DIR",info.filePath());
             loop_dir(info.filePath(),false);
         }
         else
         {
             file_count++;
-            qDebug() << "A[" << file_count << "]" << info.absoluteFilePath() << ",size=" << info.size();
             emit find_file("FILE",info.absoluteFilePath());
             emit sync_size(info.size());
-
-            QThread::usleep(5);
+            //QThread::usleep(5);
         }
     }
     if(_sub)

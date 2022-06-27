@@ -271,14 +271,14 @@ void UploadPannel::touch_upload(QString meta_key,int meta_id,int fd_id,QString _
     }
 }
 
-void UploadPannel::set_descriptor(qintptr descriptor)
-{
-    //this->file_socket_descriptor = descriptor;
-}
-
 void UploadPannel::clear_queue()
 {
     uploads.clear();
+}
+
+qintptr UploadPannel::GetSocketDescriptor()
+{
+    return this->file_socket_descriptor;
 }
 
 void UploadPannel::_clear_upoload_queue()

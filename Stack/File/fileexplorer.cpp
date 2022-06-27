@@ -3,6 +3,7 @@
 #include "fileexplorer.h"
 #include "filerow.h"
 #include <QDebug>
+#include <QJsonArray>
 
 #define FD_WIDTH 176
 #define FD_HEIGHT 171
@@ -1151,6 +1152,16 @@ void FileExplorer::readyRead()
             MSGBOX::alert(parentWidget(),MSG);
         }
     }
+    else if("DIRMAP" == META)
+    {
+        this->dir_map(_header,data);
+    }
+    else if("ERROR" == META)
+    {
+        mask->hide();
+        dir_process->hide();
+        MSGBOX::error(this,MSG);
+    }
     else
     {
         ////qDebug() << "### 未知的META ###" << META;
@@ -2131,33 +2142,102 @@ void FileExplorer::PrepareIntentType(QString IntentType)
             t->set_dir(upload_dir);
             t->start();
 
-            //发现了文件和文件夹
-            /*
-            connect(t,&ProcessDirThread::find_file,this,&FileExplorer::append_file);
+            total_size = 0;
+            file_queue.clear();
+            for(int i=0; i<dirArr.count(); i++) {
+                dirArr.removeAt(0);
+            }
+
+            connect(t,&ProcessDirThread::find_file,this,[=](QString T, QString file_path){
+                if("DIR" == T)
+                {
+                    dir_process->set_data("ADD_DIR","");
+
+                    dirArr.append({file_path});
+                }
+                else if("FILE" == T)
+                {
+                    dir_process->set_data("ADD_FILE","");
+                    file_queue.append(file_path.replace(upload_dir,"$0"));
+                }
+                else
+                {}
+            });
             connect(t,&ProcessDirThread::sync_size,this,[=](unsigned long long size){
+                total_size += size;
                 dir_process->set_data("ADD_SIZE",QString::number(size));
             });
 
             connect(t,&ProcessDirThread::process_complete,dir_process,[=](){
-                qDebug() << "文件夹遍历结束了！process_complete";
-                dir_process->set_data("PREPARE_UPLOAD","");
-                mask->hide();
-                dir_process->hide();
+                dir_process->changeto_prepareing();
 
-                upload_pannel->show();
-                upload_pannel->raise();
-                upload_pannel->touch_upload(this->meta->key,this->meta->id,fd->id,SJN);
+                //牵扯到的子文件夹
+                QString data = QJsonDocument(dirArr).toJson(QJsonDocument::Compact).constData();
+
+                //发给服务器，服务器批量创建好子文件夹后，返回子文件夹和ID的映射后，开始在回调中开始上传
+                sendMsgPack("CREATE_DIRS:?FILE_ID="+QString::number(fd->id)+",META_KEY="+meta->key+",BASE_DIR="+upload_dir+",SJN="+SJN+",META_ID="+QString::number(meta->id),data,cmd_socket);
             });
-            */
         }
     }
     else if("drag" == IntentType)
     {
-        //////qDebug() << "拖动上传";
+        //qDebug() << "拖动上传";
     }
     else
     {
         //do nothing....
+    }
+}
+
+//开始上传文件
+void FileExplorer::dir_map(QString _header, QString data)
+{
+    _header.replace(":/","$#$");
+    dir_process->changeto_uploading(total_size);
+    QString BASE_DIR = "";
+    int BASE_ID = 0;
+
+    QStringList headers = _header.split(",");
+    for(QString hi : headers)
+    {
+        QStringList his = hi.split(":");
+        if("BASE_DIR" == his[0])
+        {
+            BASE_DIR = his[1];
+            BASE_DIR.replace("$#$",":/");
+        }
+        else if("BASE_ID" == his[0])
+        {
+            BASE_ID = his[1].toInt();
+        }
+        else{}
+    }
+
+    //渲染目录ID映射
+    QJsonParseError err_rpt;
+    QJsonDocument  jsonDoc = QJsonDocument::fromJson(data.toUtf8(), &err_rpt);
+    QJsonArray _map =  jsonDoc.array();
+    for (int i=0; i< _map.count(); i++) {
+        QJsonObject map = _map[i].toObject();
+
+        QString path = map.value("path").toString();
+        int     id   = map.value("id").toInt();
+
+        qDebug() << "path=" << path << ",id=" << id;
+        DirIdMap[path] = id;
+    }
+    qDebug() << "BASE_DIR=" << BASE_DIR;
+    for (int x=0; x<file_queue.count(); x++)
+    {
+        QString path_name = file_queue[x].mid(0,file_queue[x].lastIndexOf("/"));
+        int path_id = DirIdMap[path_name];
+
+        QString abs_path = file_queue[x];
+        abs_path.replace("$0",BASE_DIR);
+
+        qDebug()<<"abs_path=" << abs_path << ",id=" << path_id;
+
+        //开始上传
     }
 }
 

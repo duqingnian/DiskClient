@@ -8,6 +8,7 @@
 #include <QPoint>
 #include <QScrollArea>
 #include <QNetworkReply>
+#include <QDragEnterEvent>
 #include "Data/UrlMeta.h"
 #include "DropDown/dropdowncreate.h"
 #include "Dialog/dialogcreate.h"
@@ -115,6 +116,9 @@ public:
     void mousePressEvent(QMouseEvent *) override;
     void mouseMoveEvent(QMouseEvent *event) override;
 
+    void dragEnterEvent(QDragEnterEvent *event) override;
+    void dropEvent(QDropEvent *event) override;
+
     //新建弹窗
     DialogCreate* dlg_create;
 
@@ -207,12 +211,13 @@ public:
     //是否含有权限
     bool has_permission(QString permission_name);
 
-
-
     //文件夹上传相关
-    //bool uploading = false;
-    //void touch_upload(QString,int,int,QString);
-    //void sync_file_progrrss(QString BUNDLE,QString BUNDLE_ID,QString FD_ID,QString md5,QString state,float pct,unsigned long long SPEED);
+    QString BASE_DIR = "";
+    int BASE_ID = 0;
+
+    bool uploading = false;
+    UP_FILE* get_file_handle(QString abs_path);
+    void touch_upload();
 private:
     int _width;
     int _height;
@@ -221,7 +226,8 @@ private:
     QString SHOW_EMP = "HIDE";
     unsigned long long total_size = 0;
     QMap<QString,int> DirIdMap;
-
+    qintptr upload_socket_descriptor = 0;
+    unsigned long long prev_size = 0;
     QStringList file_queue;
 
     //文件列表 表头
@@ -237,7 +243,6 @@ private:
     //上传的文件夹
     QMap<QString,int>* dirMap; //服务器创建后返回的路径和ID的集合
     QJsonArray dirArr;         //选择文件夹后的文件夹集合
-
 public slots:
     void readyRead();
     void disconnected();
@@ -260,11 +265,12 @@ public slots:
 
     void Refresh(); //刷新的槽函数
 
-    void append_file(QString T,QString abs_file);
-
     void list_file(QString); //列出文件
 
     void dir_map(QString,QString); //处理目录map
+
+    //上传文件夹
+    void sync_dir_upload(QString BUNDLE,QString BUNDLE_ID,QString FD_ID,QString md5, QString state, float pct,unsigned long long SPEED,int buf_size);
 signals:
     void append_urlbar(FD*);
 

@@ -176,8 +176,7 @@ void UploadPannel::disconnected()
 
 }
 
-
-void UploadPannel::sync_file_progrrss(QString BUNDLE,QString BUNDLE_ID,QString FD_ID,QString md5, QString state, float pct,unsigned long long SPEED)
+void UploadPannel::sync_file_progrrss(QString BUNDLE,QString BUNDLE_ID,QString FD_ID,QString md5, QString state, float pct,unsigned long long SPEED,unsigned long long send_size)
 {
     if("UPLOADING" == state)
     {

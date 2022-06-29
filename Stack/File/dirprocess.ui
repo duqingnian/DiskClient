@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>500</width>
-    <height>534</height>
+    <height>634</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -357,15 +357,15 @@ border-top:0px;
      <x>30</x>
      <y>400</y>
      <width>440</width>
-     <height>101</height>
+     <height>201</height>
     </rect>
    </property>
    <widget class="QLabel" name="label_curr_file">
     <property name="geometry">
      <rect>
-      <x>10</x>
+      <x>80</x>
       <y>15</y>
-      <width>411</width>
+      <width>281</width>
       <height>20</height>
      </rect>
     </property>
@@ -381,17 +381,250 @@ border-top:0px;
    <widget class="QProgressBar" name="progressBar_uploading">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>60</y>
-      <width>420</width>
-      <height>30</height>
+      <x>80</x>
+      <y>84</y>
+      <width>345</width>
+      <height>10</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">#progressBar_uploading{
+     border-radius: 5px;
+     background-color: #DBDBDB;
+ }
+#progressBar_uploading::chunk {
+     background-color: #4188F9;
+	border-top-left-radius: 5px;
+border-bottom-left-radius:5px;
+ }</string>
+    </property>
     <property name="value">
-     <number>24</number>
+     <number>0</number>
     </property>
     <property name="textVisible">
      <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_disk_ico">
+    <property name="geometry">
+     <rect>
+      <x>15</x>
+      <y>15</y>
+      <width>50</width>
+      <height>50</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"/>
+    </property>
+    <property name="text">
+     <string>MAC_DISK</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label__sended_size">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>62</y>
+      <width>321</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+      <pointsize>9</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">#label__sended_size{
+font-weight:400;
+}</string>
+    </property>
+    <property name="text">
+     <string>已上传: 0.0 GB , 总大小: 0.0 GB</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label__file_num_progress">
+    <property name="geometry">
+     <rect>
+      <x>160</x>
+      <y>110</y>
+      <width>190</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+      <pointsize>9</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">#label__sended_size{
+font-weight:400;
+}</string>
+    </property>
+    <property name="text">
+     <string>0 / 0</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+    </property>
+   </widget>
+   <widget class="QProgressBar" name="progressBarCurrFile">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>38</y>
+      <width>345</width>
+      <height>10</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">#progressBarCurrFile{
+     border-radius: 5px;
+     background-color: #DBDBDB;
+ }
+#progressBarCurrFile::chunk {
+     background-color: #07c160;
+	border-top-left-radius: 5px;
+border-bottom-left-radius:5px;
+ }</string>
+    </property>
+    <property name="maximum">
+     <number>1000</number>
+    </property>
+    <property name="value">
+     <number>0</number>
+    </property>
+    <property name="textVisible">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>110</y>
+      <width>60</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+     </font>
+    </property>
+    <property name="text">
+     <string>文件数量：</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>137</y>
+      <width>60</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+     </font>
+    </property>
+    <property name="text">
+     <string>速度：</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label__speed">
+    <property name="geometry">
+     <rect>
+      <x>160</x>
+      <y>137</y>
+      <width>190</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+      <pointsize>9</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">#label__sended_size{
+font-weight:400;
+}</string>
+    </property>
+    <property name="text">
+     <string>0 MB每秒</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_4">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>165</y>
+      <width>60</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+     </font>
+    </property>
+    <property name="text">
+     <string>已用时：</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label__time_used">
+    <property name="geometry">
+     <rect>
+      <x>160</x>
+      <y>165</y>
+      <width>241</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+      <pointsize>9</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">#label__sended_size{
+font-weight:400;
+}</string>
+    </property>
+    <property name="text">
+     <string>0 时 0 分 0 秒</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
     </property>
    </widget>
   </widget>

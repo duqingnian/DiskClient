@@ -113,7 +113,7 @@ void FileManager::run()
                     {
                         len = buf_str.length();
                     }
-                    len = buf_str.length();
+                    //len = buf_str.length();
                     data.append(buf_str);
 
                     socketStream << data;
@@ -140,7 +140,7 @@ void FileManager::run()
                         data.clear();
 
                     }
-                    emit update_progress(META_KEY,QString::number(META_ID),QString::number(FD_ID),file->md5, "UPLOADING", PCT,SPEED);
+                    emit update_progress(META_KEY,QString::number(META_ID),QString::number(FD_ID),file->md5, "UPLOADING", PCT,SPEED,left_size < buf_size ? left_size: buf_size);
                 }while(running);
             }
             else
@@ -189,6 +189,7 @@ void FileManager::readyRead()
         QString BUNDLE = "";
         QString BUNDLE_ID = "0";
         QString FD_ID = "0";
+        QString BUF_SIZE = "0";
 
         QStringList headers = _header.split(",");
         for(int i=0;i<headers.length();i++)
@@ -201,10 +202,11 @@ void FileManager::readyRead()
             else if("BUNDLE" == his[0]){BUNDLE = his[1];}
             else if("BUNDLE_ID" == his[0]){BUNDLE_ID = his[1];}
             else if("FD_ID" == his[0]){FD_ID = his[1];}
+            else if("BUF_SIZE" == his[0]){BUF_SIZE = his[1];}
             else{}
         }
 
-        emit update_progress(BUNDLE,BUNDLE_ID,FD_ID,file->md5, "UPLOAD_COMPLETE", PCT.toFloat(),0);
+        emit update_progress(BUNDLE,BUNDLE_ID,FD_ID,file->md5, "UPLOAD_COMPLETE", PCT.toFloat(),0,BUF_SIZE.toInt());
     }
 }
 

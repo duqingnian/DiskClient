@@ -1666,5 +1666,6 @@
         <file>Resources/types/accdb.png</file>
         <file>Resources/types/gzip.png</file>
         <file>Resources/types/aac.png</file>
+        <file>Resources/dialog/disk.png</file>
     </qresource>
 </RCC>

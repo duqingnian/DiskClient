@@ -35,7 +35,7 @@ private slots:
     void readyRead();
     void disconnected();
 signals:
-    void update_progress(QString BUNDLE,QString BUNDLE_ID,QString FD_ID,QString md5, QString state, float pct,unsigned long long SPEED);
+    void update_progress(QString BUNDLE,QString BUNDLE_ID,QString FD_ID,QString md5, QString state, float pct,unsigned long long SPEED,int send_bytes);
 };
 
 #endif // FILEMANAGER_H

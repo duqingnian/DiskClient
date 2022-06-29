@@ -139,20 +139,18 @@ FileExplorer::FileExplorer(QWidget *parent) : BaseController(parent)
         else
         {
             box("无法连接到cmd服务器");
-            ////qDebug() << "无法连接到cmd服务器";
         }
     }
     else
     {
         box("cmd服务器连接失败!");
-        ////qDebug() << "cmd服务器连接失败";
     }
+    upload_socket_descriptor = upload_pannel->GetSocketDescriptor();
 
     download_socket = new QTcpSocket();
     download_socket->connectToHost(file_server_ip,file_server_port.toInt());
 
     connect(download_socket, SIGNAL(readyRead()), this, SLOT(downloadReadyRead()), Qt::DirectConnection);
-    //connect(cmd_socket, SIGNAL(disconnected()), this, SLOT(disconnected()));
     if(download_socket->waitForConnected())
     {
         if(download_socket->isOpen())
@@ -280,6 +278,7 @@ FileExplorer::FileExplorer(QWidget *parent) : BaseController(parent)
         listWapper->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         listWapper->resize(this->width() - LIST_SIDE_WIDTH1,400);
         listWapper->move(0,35);
+        listWapper->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
 
         ListSide = new QWidget(canvas);
         ListSide->setObjectName("ListSide");
@@ -1452,7 +1451,7 @@ void FileExplorer::fd_open()
 
 void FileExplorer::row_item_section_changed()
 {
-    //////qDebug() << "row_item_section_changed...." << listWapper->selectedItems();
+    //qDebug() << "row_item_section_changed...." << listWapper->selectedItems();
 }
 
 //发送socket消息包
@@ -1944,7 +1943,7 @@ bool FileExplorer::eventFilter(QObject *target, QEvent *event)
 //鼠标按下
 void FileExplorer::mousePressEvent(QMouseEvent *event)
 {
-    //qDebug() << "mousePressEvent 鼠标按下......";
+    qDebug() << "mousePressEvent 鼠标按下......";
     //不论是点击左键还是右键都会触发的
     pos = event->pos();
 
@@ -2129,10 +2128,12 @@ void FileExplorer::PrepareIntentType(QString IntentType)
         }
         else
         {
+            file_queue.clear();
             mask->show();
             dir_process->init(fd->id);
             dir_process->show();
             dir_process->raise();
+            dir_process->clear_cache_data();
 
             dir_process->set_data("dir_name",upload_dir);
             dir_process->set_data("dir_path",upload_dir);
@@ -2193,9 +2194,7 @@ void FileExplorer::PrepareIntentType(QString IntentType)
 void FileExplorer::dir_map(QString _header, QString data)
 {
     _header.replace(":/","$#$");
-    dir_process->changeto_uploading(total_size);
-    QString BASE_DIR = "";
-    int BASE_ID = 0;
+    dir_process->changeto_uploading(total_size);qDebug() << "total_size=" << total_size;
 
     QStringList headers = _header.split(",");
     for(QString hi : headers)
@@ -2223,41 +2222,21 @@ void FileExplorer::dir_map(QString _header, QString data)
         QString path = map.value("path").toString();
         int     id   = map.value("id").toInt();
 
-        qDebug() << "path=" << path << ",id=" << id;
         DirIdMap[path] = id;
     }
-    qDebug() << "BASE_DIR=" << BASE_DIR;
-    for (int x=0; x<file_queue.count(); x++)
-    {
-        QString path_name = file_queue[x].mid(0,file_queue[x].lastIndexOf("/"));
-        int path_id = DirIdMap[path_name];
-
-        QString abs_path = file_queue[x];
-        abs_path.replace("$0",BASE_DIR);
-
-        qDebug()<<"abs_path=" << abs_path << ",id=" << path_id;
-
-        //开始上传
-    }
-}
-
-void FileExplorer::append_file(QString T, QString abs_file)
-{
-    if("FILE" == T)
-    {
-        dir_process->set_data("ADD_FILE","");
-        moveto_queue(abs_file);
-    }
-    else if("DIR" == T)
-    {
-        dir_process->set_data("ADD_DIR","");
-    }
-    else
-    {}
+    QThread::usleep(5);
+    this->touch_upload();
 }
 
 //将要上传的文件压入上传面板的队列中
 void FileExplorer::moveto_queue(QString abs_path)
+{
+    UP_FILE* upload_file = this->get_file_handle(abs_path);
+    wait(5);
+    upload_pannel->add_queue(upload_file);
+}
+
+UP_FILE *FileExplorer::get_file_handle(QString abs_path)
 {
     QFileInfo file = QFileInfo(abs_path);
     QString file_name = file.fileName();
@@ -2287,7 +2266,7 @@ void FileExplorer::moveto_queue(QString abs_path)
     }
     else
     {
-        _md5 = md5(abs_path + user->job_number + QString::number(fd->id) + QString::number(get_time()) + random(6));
+        _md5 = md5(abs_path + user->job_number + QString::number(fize_size) + QString::number(get_time()) + random(6));
     }
 
     upload_file->md5 = _md5;
@@ -2295,8 +2274,68 @@ void FileExplorer::moveto_queue(QString abs_path)
     upload_file->path = abs_path;
     upload_file->size = fize_size;
     upload_file->state = UP_STATE::UPLOAD;
-    wait(5);
-    upload_pannel->add_queue(upload_file);
+
+    return upload_file;
+}
+
+void FileExplorer::touch_upload()
+{
+    if(!uploading && file_queue.count() > 0)
+    {
+        uploading = true;
+
+        QString fork_path = file_queue[0];
+        QString abs_file = fork_path;
+        abs_file.replace("$0",BASE_DIR);
+        int file_dir_id = DirIdMap[fork_path.mid(0,fork_path.lastIndexOf("/"))];
+
+        UP_FILE* F = this->get_file_handle(abs_file);
+        dir_process->set_data("SET_CURR_FILE",abs_file);
+
+        FileManager* fm = new FileManager();
+        fm->set_socket_descriptor(this->upload_socket_descriptor);
+        fm->set_file(this->meta->key,this->meta->id,file_dir_id,SJN,F);
+        fm->start();
+
+        connect(fm,&FileManager::update_progress,this,&FileExplorer::sync_dir_upload);
+    }
+    else
+    {
+        mask->hide();
+        dir_process->hide();
+        dir_process->set_data("COMPLETE","");
+        Refresh();
+        MSGBOX::alert(this,"全部上传完成");
+        dir_process->clear_cache_data();
+    }
+}
+
+void FileExplorer::dragEnterEvent(QDragEnterEvent *event)
+{
+    qDebug() << "dragEnterEvent";
+}
+
+void FileExplorer::dropEvent(QDropEvent *event)
+{
+    qDebug() << "dropEvent";
+}
+
+void FileExplorer::sync_dir_upload(QString BUNDLE,QString BUNDLE_ID,QString FD_ID,QString md5, QString state, float pct,unsigned long long SPEED,int buf_size)
+{
+    dir_process->update_upload_progress(buf_size);
+    dir_process->set_data("UPDATE_PCT",QString::number(pct));
+    dir_process->set_data("SPEED",QString::number(SPEED));
+    if("UPLOAD_COMPLETE" == state && 100 == pct)
+    {
+        dir_process->set_data("FILE+1","");
+        if(file_queue.count() > 0)
+        {
+            file_queue.removeFirst();
+            uploading = false;
+            QThread::usleep(10);
+            this->touch_upload();
+        }
+    }
 }
 
 //点击了右键菜单

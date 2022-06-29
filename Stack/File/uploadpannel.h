@@ -72,7 +72,7 @@ public slots:
     void disconnected();
 
     //更新上传文件的进度
-    void sync_file_progrrss(QString BUNDLE,QString BUNDLE_ID,QString FD_ID,QString md5,QString state,float pct,unsigned long long SPEED);
+    void sync_file_progrrss(QString BUNDLE,QString BUNDLE_ID,QString FD_ID,QString md5,QString state,float pct,unsigned long long SPEED,unsigned long long send_size);
 signals:
     void do_some_action(QString);
 

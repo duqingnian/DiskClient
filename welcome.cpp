@@ -92,8 +92,8 @@ void Welcome::render_tab()
 
     TABMETA* tab_help = new TABMETA();
     tab_help->objname = "tab_help";
-    tab_help->txt = "应用中心";
-    tab_help->bgcolor = "#fff";
+    tab_help->txt = "扩展应用";
+    tab_help->bgcolor = "#F9F9F9";
     right_tab_metas[tab_help->objname] = tab_help;
 
     int x = 0;
@@ -201,7 +201,7 @@ Welcome::~Welcome()
     delete ui;
 
     Socket::Instance()->disconnect();
-    Db::Instance()->disconnect();
+    //Db::Instance()->disconnect();
 
     qDebug() << "已关闭.";
 }

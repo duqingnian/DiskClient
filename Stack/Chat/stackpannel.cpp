@@ -133,6 +133,7 @@ void StackPannel::loadMsg()
     //    SyncMsgThread* t = new SyncMsgThread(target->unit->job_number);
     //    connect(t,&SyncMsgThread::sync_msg,this,[=](QString str){qDebug() << str;});
     //    t->start();
+    /*
     QString sql = "select * from `MSG` where `send_from`='"+target->unit->job_number+"' or send_to='"+target->unit->job_number+"' order by id desc limit 35";
     QSqlQuery query;
     if(!query.exec(sql))
@@ -186,7 +187,7 @@ void StackPannel::loadMsg()
             QString t = QDateTime::fromTime_t(words[0]->time.toInt()).toString("MM-dd hh:mm");
             emit post_msg(target->job_number,"text",words[0]->content,t);
         }
-    }
+    }*/
 }
 
 void StackPannel::resize_input()
@@ -226,6 +227,7 @@ void StackPannel::resize_input()
 //发送聊天信息
 void StackPannel::send_msg()
 {
+    /*
     QString msg = input->toPlainText().trimmed();
     if("" != msg)
     {
@@ -261,7 +263,7 @@ void StackPannel::send_msg()
             input->setEnabled(true);
             qDebug() << "消息发送失败了";
         }
-    }
+    }*/
 }
 
 void StackPannel::reset_input()

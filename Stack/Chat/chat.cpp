@@ -25,6 +25,7 @@ Chat::Chat(QWidget *parent) : BaseController(parent)
 
 void Chat::load_friends()
 {
+    /*
     QString select_sql = "select * from FRIEND order by idx desc";
     QSqlQuery sql_query;
     if(!sql_query.exec(select_sql))
@@ -61,6 +62,7 @@ void Chat::load_friends()
             });
         }
     }
+    */
 }
 
 void Chat::initTop()
@@ -179,14 +181,14 @@ void Chat::post_msg(QString send_to, QString msg_type, QString msg, QString time
 //来新消息了
 void Chat::new_msg(QString job_number, QString msg_type, QString msg)
 {
-    QDateTime dateTime(QDateTime::currentDateTime());
-    QString time = dateTime.toString("hh:mm");
+    //    QDateTime dateTime(QDateTime::currentDateTime());
+    //    QString time = dateTime.toString("hh:mm");
 
-    //更新最后
-    QString sql = "update `friend` set `last_msg` = '"+msg+"', `last_time` = "+QString::number(get_time())+" where `job_number` = '"+job_number+"'";
-    Db::Instance()->query(sql);
+    //    //更新最后
+    //    QString sql = "update `friend` set `last_msg` = '"+msg+"', `last_time` = "+QString::number(get_time())+" where `job_number` = '"+job_number+"'";
+    //    Db::Instance()->query(sql);
 
-    update_meta(job_number,msg_type,msg,time);
+    //    update_meta(job_number,msg_type,msg,time);
 }
 
 void Chat::update_meta(QString job_number, QString msg_type, QString msg, QString time)

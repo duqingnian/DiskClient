@@ -1667,5 +1667,14 @@
         <file>Resources/types/gzip.png</file>
         <file>Resources/types/aac.png</file>
         <file>Resources/dialog/disk.png</file>
+        <file>Resources/types/webp.png</file>
+        <file>Resources/Chromium/dialog-error.png</file>
+        <file>Resources/Chromium/edit-clear.png</file>
+        <file>Resources/Chromium/go-bottom.png</file>
+        <file>Resources/Chromium/go-next.png</file>
+        <file>Resources/Chromium/go-previous.png</file>
+        <file>Resources/Chromium/process-stop.png</file>
+        <file>Resources/Chromium/text-html.png</file>
+        <file>Resources/Chromium/view-refresh.png</file>
     </qresource>
 </RCC>

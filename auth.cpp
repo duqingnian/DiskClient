@@ -106,15 +106,15 @@ void Auth::checkLater()
     // 4.连接mysql数据库
 
 
-    if(false)
-    {
-        if(!Db::Instance()->isOpen())
-        {
-            app_env = false;
-            loading_label->hide();
-            error_label->setText("ERROR: 无法连接到数据库");
-        }
-    }
+//    if(false)
+//    {
+//        if(!Db::Instance()->isOpen())
+//        {
+//            app_env = false;
+//            loading_label->hide();
+//            error_label->setText("ERROR: 无法连接到数据库");
+//        }
+//    }
 
     // 5.是不是需要自动登录
     QString uid = get_reg("uid");
@@ -142,7 +142,7 @@ void Auth::checkLater()
             if(uid.length() > 10)
             {
                 //自动登录
-                if(uid.mid(0,6) == "ADOSTR" && uid.right(3) == "=E=")
+                if(uid.mid(0,6) == "ADOSTR" && uid.right(4) == "ENDL")
                 {
                     loading();
                     HttpClient(get_reg("api_url")+"client/auth/ding/fetch.html").success([this](const QString &response) {

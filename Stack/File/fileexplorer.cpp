@@ -62,7 +62,7 @@ FileExplorer::FileExplorer(QWidget *parent) : BaseController(parent)
     //V
     //typesRes << "";
     //W
-    typesRes << "wmv" << "wav" << "wmf";
+    typesRes << "wmv" << "wav" << "wmf" << "webp";
     //X
     typesRes << "xml" << "xls" << "xlsx";
     //Y

@@ -1,6 +1,7 @@
 QT += core gui
 QT += network
 QT += sql
+#QT += webenginewidgets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -11,11 +12,20 @@ SOURCES += \
     Auth/authqrcode.cpp \
     Auth/authsetting.cpp \
     Auth/authsms.cpp \
+    Chromium/browser.cpp \
+    Chromium/browserwindow.cpp \
+    Chromium/downloadmanagerwidget.cpp \
+    Chromium/downloadwidget.cpp \
+    Chromium/tabwidget.cpp \
+    Chromium/webpage.cpp \
+    Chromium/webpopupwindow.cpp \
+    Chromium/webview.cpp \
     Common/adohelper.cpp \
     Common/basecontroller.cpp \
     Common/db.cpp \
     Common/filemanager.cpp \
     Common/socket.cpp \
+    Common/version.cpp \
     Component/BaseWindow.cpp \
     Component/FlowLayout.cpp \
     Component/Msg.cpp \
@@ -62,11 +72,20 @@ HEADERS += \
     Auth/authqrcode.h \
     Auth/authsetting.h \
     Auth/authsms.h \
+    Chromium/browser.h \
+    Chromium/browserwindow.h \
+    Chromium/downloadmanagerwidget.h \
+    Chromium/downloadwidget.h \
+    Chromium/tabwidget.h \
+    Chromium/webpage.h \
+    Chromium/webpopupwindow.h \
+    Chromium/webview.h \
     Common/adohelper.h \
     Common/basecontroller.h \
     Common/db.h \
     Common/filemanager.h \
     Common/socket.h \
+    Common/version.h \
     Component/BaseWindow.h \
     Component/FlowLayout.h \
     Component/Msg.h \
@@ -121,6 +140,11 @@ FORMS += \
     Auth/authqrcode.ui \
     Auth/authsetting.ui \
     Auth/authsms.ui \
+    Chromium/certificateerrordialog.ui \
+    Chromium/downloadmanagerwidget.ui \
+    Chromium/downloadwidget.ui \
+    Chromium/passworddialog.ui \
+    Common/version.ui \
     Component/Msg.ui \
     Component/Toast.ui \
     Dialog/dialogcreate.ui \
@@ -184,6 +208,14 @@ DISTFILES += \
     Resources/16x16/word.png \
     Resources/16x16/wordx.png \
     Resources/16x16/xlsx.png \
+    Resources/Chromium/dialog-error.png \
+    Resources/Chromium/edit-clear.png \
+    Resources/Chromium/go-bottom.png \
+    Resources/Chromium/go-next.png \
+    Resources/Chromium/go-previous.png \
+    Resources/Chromium/process-stop.png \
+    Resources/Chromium/text-html.png \
+    Resources/Chromium/view-refresh.png \
     Resources/fd/ai.png \
     Resources/fd/bmp.png \
     Resources/fd/css.png \

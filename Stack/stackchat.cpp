@@ -75,8 +75,8 @@ void StackChat::new_message()
         }
     }
 
+    /*
     int ms = get_time();
-
     //消息入库
     QString sql = "INSERT INTO `MSG` VALUES (NULL, '"+MSG_TYPE+"', '"+MSG_FROM+"', '"+MSG_TO+"', '"+MSG_BODY+"', "+QString::number(ms)+", 0)";
     Db::Instance()->query(sql);
@@ -134,7 +134,7 @@ void StackChat::new_message()
     if(chatPannelList.count(MSG_FROM) > 0)
     {
         chatPannelList[MSG_FROM]->new_message(MSG_TYPE,MSG_BODY);
-    }
+    }*/
 }
 
 //左侧点击了好友

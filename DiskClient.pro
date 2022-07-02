@@ -12,14 +12,6 @@ SOURCES += \
     Auth/authqrcode.cpp \
     Auth/authsetting.cpp \
     Auth/authsms.cpp \
-    Chromium/browser.cpp \
-    Chromium/browserwindow.cpp \
-    Chromium/downloadmanagerwidget.cpp \
-    Chromium/downloadwidget.cpp \
-    Chromium/tabwidget.cpp \
-    Chromium/webpage.cpp \
-    Chromium/webpopupwindow.cpp \
-    Chromium/webview.cpp \
     Common/adohelper.cpp \
     Common/basecontroller.cpp \
     Common/db.cpp \
@@ -72,14 +64,6 @@ HEADERS += \
     Auth/authqrcode.h \
     Auth/authsetting.h \
     Auth/authsms.h \
-    Chromium/browser.h \
-    Chromium/browserwindow.h \
-    Chromium/downloadmanagerwidget.h \
-    Chromium/downloadwidget.h \
-    Chromium/tabwidget.h \
-    Chromium/webpage.h \
-    Chromium/webpopupwindow.h \
-    Chromium/webview.h \
     Common/adohelper.h \
     Common/basecontroller.h \
     Common/db.h \
@@ -141,8 +125,6 @@ FORMS += \
     Auth/authsetting.ui \
     Auth/authsms.ui \
     Chromium/certificateerrordialog.ui \
-    Chromium/downloadmanagerwidget.ui \
-    Chromium/downloadwidget.ui \
     Chromium/passworddialog.ui \
     Common/version.ui \
     Component/Msg.ui \
